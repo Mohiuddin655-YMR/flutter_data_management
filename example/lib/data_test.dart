@@ -27,6 +27,10 @@ class _DataTestState extends State<DataTest> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Wrap(
+                    runSpacing: 12,
+                    spacing: 12,
+                    runAlignment: WrapAlignment.center,
+                    alignment: WrapAlignment.center,
                     children: [
                       ElevatedButton(
                         onPressed: () {

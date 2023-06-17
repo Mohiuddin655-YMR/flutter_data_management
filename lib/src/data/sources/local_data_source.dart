@@ -2,9 +2,9 @@ part of 'sources.dart';
 
 abstract class LocalDataSourceImpl<T extends Entity>
     extends LocalDataSource<T> {
-  const LocalDataSourceImpl({
+  LocalDataSourceImpl({
     required super.path,
-    required super.preferences,
+    super.preferences,
   });
 
   String _source<R>(
@@ -33,7 +33,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     try {
-      return preferences.input(_source(source), null).then((value) {
+      return database.input(_source(source), null).then((value) {
         if (value) {
           return response.withResult([]);
         } else {
@@ -59,7 +59,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
     try {
       var I = await gets(source: source);
       var request = I.result.where((E) => !id.equals(E.id)).toList();
-      return preferences.input(_source(source), request._).then((value) {
+      return database.input(_source(source), request._).then((value) {
         if (value) {
           return response.withResult(request);
         } else {
@@ -108,7 +108,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     try {
-      return preferences.output<T>(_source(source), build).then((value) {
+      return database.output<T>(_source(source), build).then((value) {
         return response.withResult(value);
       }).onError((e, s) {
         return response.withException(e, status: Status.failure);
@@ -130,7 +130,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
       final isInsertable = !isExisted(data.id, request);
       if (isInsertable) {
         request.add(data);
-        return preferences.input(_source(source), request._).then((value) {
+        return database.input(_source(source), request._).then((value) {
           if (value) {
             return response.withResult(request);
           } else {
@@ -157,7 +157,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     try {
-      return preferences.input(_source(source), data._).then((value) {
+      return database.input(_source(source), data._).then((value) {
         if (value) {
           return response.withResult(data);
         } else {
@@ -273,16 +273,17 @@ abstract class LocalDataSourceImpl<T extends Entity>
   }
 }
 
-extension LocalExtension on SharedPreferences {
+extension LocalExtension on Future<SharedPreferences> {
   Future<bool> input(
     String key,
     String? value,
   ) async {
     try {
+      final db = await this;
       if (value.isValid) {
-        return setString(key, value.use);
+        return db.setString(key, value.use);
       } else {
-        return remove(key);
+        return db.remove(key);
       }
     } catch (_) {
       return Future.error(_);
@@ -294,7 +295,8 @@ extension LocalExtension on SharedPreferences {
     OnDataBuilder<T> builder,
   ) async {
     try {
-      return getString(key)._.map((E) => builder(E)).toList();
+      final db = await this;
+      return db.getString(key)._.map((E) => builder(E)).toList();
     } catch (_) {
       return Future.error(_);
     }
