@@ -21,8 +21,12 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
   Future<Response<T>> clear<R>({
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
-  }) {
-    return Future.error("Currently not initialized!");
+  }) async {
+    final response = Response<T>();
+    return response.withException(
+      "Currently not initialized!",
+      status: Status.undefined,
+    );
   }
 
   @override
@@ -41,22 +45,28 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
           final reference = await database.delete(url, data: value);
           final code = reference.statusCode;
           if (code == 200 || code == encryptor.status.deleted) {
-            final result = reference.data;
-            return response.modify(result: result);
+            return response.withFeedback(reference.data);
           } else {
-            final error = "Data unmodified [${reference.statusCode}]";
-            return response.modify(snapshot: reference, exception: error);
+            return response.modify(
+              snapshot: reference,
+              exception: "Data unmodified [${reference.statusCode}]",
+              status: Status.unmodified,
+            );
           }
         } else {
-          const error = "Unacceptable request!";
-          return response.modify(exception: error);
+          return response.withException(
+            "Unacceptable request!",
+            status: Status.invalid,
+          );
         }
       } else {
-        const error = "Undefined request!";
-        return response.modify(exception: error);
+        return response.withException(
+          "Undefined request!",
+          status: Status.error,
+        );
       }
     } catch (_) {
-      return response.modify(exception: _.toString());
+      return response.withException(_, status: Status.failure);
     }
   }
 
@@ -80,22 +90,28 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
           final code = reference.statusCode;
           if ((code == 200 || code == encryptor.status.ok) &&
               data is Map<String, dynamic>) {
-            final result = build(data);
-            return response.modify(data: result);
+            return response.withData(build(data));
           } else {
-            final error = "Data unmodified [${reference.statusCode}]";
-            return response.modify(snapshot: reference, exception: error);
+            return response.modify(
+              snapshot: reference,
+              exception: "Data unmodified [${reference.statusCode}]",
+              status: Status.unmodified,
+            );
           }
         } else {
-          const error = "Unacceptable request.";
-          return response.modify(exception: error);
+          return response.withException(
+            "Unacceptable request.",
+            status: Status.invalid,
+          );
         }
       } else {
-        const error = "Undefined request.";
-        return response.modify(exception: error);
+        return response.withException(
+          "Undefined request.",
+          status: Status.undefined,
+        );
       }
     } catch (_) {
-      return response.modify(exception: _.toString());
+      return response.withException(_, status: Status.failure);
     }
   }
 
@@ -140,21 +156,28 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
                 return build(item);
               }).toList();
             }
-            return response.modify(result: result);
+            return response.withResult(result);
           } else {
-            const error = "Data unmodified!";
-            return response.modify(snapshot: data, exception: error);
+            return response.modify(
+              snapshot: data,
+              exception: "Data unmodified!",
+              status: Status.unmodified,
+            );
           }
         } else {
-          final error = "Unacceptable response [${reference.statusCode}]";
-          return response.modify(exception: error);
+          return response.withException(
+            "Unacceptable response [${reference.statusCode}]",
+            status: Status.invalid,
+          );
         }
       } else {
-        const error = "Unacceptable request!";
-        return response.modify(exception: error);
+        return response.withException(
+          "Unacceptable request!",
+          status: Status.invalid,
+        );
       }
     } catch (_) {
-      return response.modify(exception: _.toString());
+      return response.withException(_, status: Status.failure);
     }
   }
 
@@ -174,19 +197,25 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
         final reference = await database.post(url, data: value);
         final code = reference.statusCode;
         if (code == 200 || code == 201 || code == encryptor.status.created) {
-          final result = reference.data;
-          return response.modify(result: result);
+          return response.withFeedback(reference.data);
         } else {
-          final error = "Data unmodified [${reference.statusCode}]";
-          return response.modify(snapshot: reference, exception: error);
+          return response.modify(
+            snapshot: reference,
+            exception: "Data unmodified [${reference.statusCode}]",
+            status: Status.unmodified,
+          );
         }
       } else {
-        const error = "Unacceptable request!";
-        return response.modify(exception: error);
+        return response.withException(
+          "Unacceptable request!",
+          status: Status.invalid,
+        );
       }
     } else {
-      const error = "Undefined data!";
-      return response.modify(exception: error);
+      return response.withException(
+        "Undefined data!",
+        status: Status.unmodified,
+      );
     }
   }
 
@@ -195,8 +224,12 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     List<T> data, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
-  }) {
-    return Future.error("Currently not initialized!");
+  }) async {
+    final response = Response<T>();
+    return response.withException(
+      "Currently not initialized!",
+      status: Status.undefined,
+    );
   }
 
   @override
@@ -204,8 +237,12 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
-  }) {
-    return Future.error("Currently not initialized!");
+  }) async {
+    final response = Response<T>();
+    return response.withException(
+      "Currently not initialized!",
+      status: Status.undefined,
+    );
   }
 
   @override
@@ -230,31 +267,38 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
             final code = reference.statusCode;
             if ((code == 200 || code == encryptor.status.ok) &&
                 data is Map<String, dynamic>) {
-              final result = build(data);
               controller.add(
-                response.modify(data: result),
+                response.withData(build(data)),
               );
             } else {
-              final error = "Data unmodified [${reference.statusCode}]";
-              controller.addError(
-                response.modify(snapshot: reference, exception: error),
+              controller.add(
+                response.modify(
+                  data: null,
+                  snapshot: reference,
+                  exception: "Data unmodified [${reference.statusCode}]",
+                  status: Status.unmodified,
+                ),
               );
             }
           });
         } else {
-          const error = "Unacceptable request!";
-          controller.addError(
-            response.modify(exception: error),
+          controller.add(
+            response.withException(
+              "Unacceptable request!",
+              status: Status.invalid,
+            ),
           );
         }
       } else {
-        const error = "Undefined request!";
-        controller.addError(
-          response.modify(exception: error),
+        controller.add(
+          response.withException(
+            "Undefined request!",
+            status: Status.undefined,
+          ),
         );
       }
     } catch (_) {
-      controller.addError(_);
+      controller.add(response.withException(_, status: Status.failure));
     }
     controller.stream;
   }
@@ -284,29 +328,36 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
                 return build(item);
               }).toList();
               controller.add(
-                response.modify(result: result),
+                response.withResult(result),
               );
             } else {
-              final error = "Data unmodified [${reference.statusCode}]";
-              controller.addError(
-                response.modify(snapshot: reference, exception: error),
+              controller.add(
+                response.modify(
+                  result: [],
+                  exception: "Unacceptable request!",
+                  status: Status.invalid,
+                ),
               );
             }
           });
         } else {
-          const error = "Unacceptable request!";
-          controller.addError(
-            response.modify(exception: error),
+          controller.add(
+            response.withException(
+              "Unacceptable request!",
+              status: Status.invalid,
+            ),
           );
         }
       } else {
-        const error = "Undefined request!";
-        controller.addError(
-          response.modify(exception: error),
+        controller.add(
+          response.withException(
+            "Undefined request!",
+            status: Status.undefined,
+          ),
         );
       }
     } catch (_) {
-      controller.addError(_);
+      controller.add(response.withException(_, status: Status.failure));
     }
 
     controller.stream;
@@ -327,22 +378,28 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
           final reference = await database.put(url, data: value);
           final code = reference.statusCode;
           if (code == 200 || code == encryptor.status.updated) {
-            final result = reference.data;
-            return response.modify(result: result);
+            return response.withFeedback(reference.data);
           } else {
-            final error = "Data unmodified [${reference.statusCode}]";
-            return response.modify(snapshot: reference, exception: error);
+            return response.modify(
+              snapshot: reference,
+              exception: "Data unmodified [${reference.statusCode}]",
+              status: Status.unmodified,
+            );
           }
         } else {
-          const error = "Unacceptable request!";
-          return response.modify(exception: error);
+          return response.withException(
+            "Unacceptable request!",
+            status: Status.invalid,
+          );
         }
       } else {
-        const error = "Undefined data!";
-        return response.modify(exception: error);
+        return response.withException(
+          "Undefined data!",
+          status: Status.undefined,
+        );
       }
     } catch (_) {
-      return response.modify(exception: _.toString());
+      return response.withException(_, status: Status.failure);
     }
   }
 }

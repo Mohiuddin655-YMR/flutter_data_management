@@ -3,22 +3,21 @@ import 'package:example/di.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class DataTest extends StatefulWidget {
-  const DataTest({Key? key}) : super(key: key);
+class LocalDataTest extends StatefulWidget {
+  const LocalDataTest({Key? key}) : super(key: key);
 
   @override
-  State<DataTest> createState() => _DataTestState();
+  State<LocalDataTest> createState() => _LocalDataTestState();
 }
 
-class _DataTestState extends State<DataTest> {
-
+class _LocalDataTestState extends State<LocalDataTest> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => locator<UserController>(),
-      child: BlocBuilder<UserController, Response<User>>(
+      create: (context) => locator<CartController>(),
+      child: BlocBuilder<CartController, Response<Cart>>(
         builder: (context, state) {
-          UserController controller = context.read<UserController>();
+          CartController controller = context.read<CartController>();
           return SizedBox(
             width: double.infinity,
             child: SingleChildScrollView(
@@ -35,9 +34,9 @@ class _DataTestState extends State<DataTest> {
                       ElevatedButton(
                         onPressed: () {
                           controller.insert(
-                            User(
+                            Cart(
                               id: "1",
-                              email: "example@gmail.com",
+                              quantity: "example@gmail.com",
                             ),
                           );
                         },
@@ -47,13 +46,13 @@ class _DataTestState extends State<DataTest> {
                         onPressed: () {
                           controller.inserts(
                             [
-                              User(
+                              Cart(
                                 id: "2",
-                                email: "example2@gmail.com",
+                                quantity: "example2@gmail.com",
                               ),
-                              User(
+                              Cart(
                                 id: "3",
-                                email: "example3@gmail.com",
+                                quantity: "example3@gmail.com",
                               ),
                             ],
                           );
@@ -63,9 +62,9 @@ class _DataTestState extends State<DataTest> {
                       ElevatedButton(
                         onPressed: () {
                           controller.update(
-                            User(
+                            Cart(
                               id: "1",
-                              email: "example.updated@gmail.com",
+                              quantity: "example.updated@gmail.com",
                             ),
                           );
                         },
@@ -110,11 +109,7 @@ class _DataTestState extends State<DataTest> {
                     color: Colors.grey.withAlpha(50),
                     margin: const EdgeInsets.symmetric(vertical: 24),
                     child: Text(
-                      state.source
-                          .toString()
-                          .replaceAll("{", "")
-                          .replaceAll("}", "")
-                          .replaceAll(",", "\n"),
+                      state.toString(),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -143,7 +138,7 @@ class _DataTestState extends State<DataTest> {
                     child: StreamBuilder(
                       stream: controller.lives(),
                       builder: (context, snapshot) {
-                        var value = snapshot.data ?? Response();
+                        var value = snapshot.data ?? Response<Cart>();
                         return Text(
                           value.result.toString(),
                           textAlign: TextAlign.center,
@@ -163,83 +158,64 @@ class _DataTestState extends State<DataTest> {
 
 /// Step-5
 /// Create a data controller for access all place
-class UserController extends RemoteDataController<User> {
-  UserController({
+class CartController extends LocalDataController<Cart> {
+  CartController({
     required super.handler,
   });
 }
 
 /// Step-4
 /// When you complete the repository to use User model for locally or remotely
-class UserHandler extends RemoteDataHandlerImpl<User> {
-  UserHandler({
+class CartHandler extends LocalDataHandlerImpl<Cart> {
+  CartHandler({
     required super.repository,
   });
 }
 
 /// Step-3
 /// When you use to auto detected to use remote or local data
-class UserRepository extends RemoteDataRepositoryImpl<User> {
-  UserRepository({
-    super.local,
-    super.isCacheMode = true,
-    required super.remote,
+class CartRepository extends LocalDataRepositoryImpl<Cart> {
+  CartRepository({
+    required super.local,
   });
-}
-
-/// Step - 2
-/// When you use remote database (ex. Firebase Firestore, Firebase Realtime, Api, Encrypted Api data)
-/// Use for remote data => insert, update, delete, get, gets, live, lives, clear
-class RemoteUserDataSource extends RealtimeDataSourceImpl<User> {
-  RemoteUserDataSource({
-    super.path = "users",
-  });
-
-  @override
-  User build(source) {
-    return User.from(source);
-  }
 }
 
 /// Step - 2
 /// When you use local database (ex. SharedPreference)
 /// Use for local data => insert, update, delete, get, gets, live, lives, clear
-class LocalUserDataSource extends LocalDataSourceImpl<User> {
-  LocalUserDataSource({
-    required super.preferences,
-    super.path = "users",
+class CartDataSource extends LocalDataSourceImpl<Cart> {
+  CartDataSource({
+    super.preferences,
+    super.path = "carts",
   });
 
   @override
-  User build(source) {
-    return User.from(source);
+  Cart build(source) {
+    return Cart.from(source);
   }
 }
 
 /// Step - 1
 /// Use for local or remote data model
-class User extends Entity {
-  final String? email;
+class Cart extends Entity {
   final String? name;
-  final String? phone;
-  final Address? address;
+  final double? price;
+  final int? quantity;
 
-  User({
+  Cart({
     super.id,
-    super.timeMills,
-    this.email,
     this.name,
-    this.phone,
-    this.address,
+    this.price,
+    this.quantity,
   });
 
-  factory User.from(dynamic source) {
-    return User(
+  factory Cart.from(dynamic source) {
+    return Cart(
       id: Entity.value("id", source),
       timeMills: Entity.value("time_mills", source),
-      email: Entity.value("email", source),
+      quantity: Entity.value("email", source),
       name: Entity.value("name", source),
-      phone: Entity.value("phone", source),
+      price: Entity.value("phone", source),
       address: Entity.object("address", source, (value) {
         return Address.from(value);
       }),
@@ -249,9 +225,9 @@ class User extends Entity {
   @override
   Map<String, dynamic> get source {
     return super.source.attach({
-      "email": email,
+      "email": quantity,
       "name": name,
-      "phone": phone,
+      "phone": price,
       "address": address?.source,
     });
   }

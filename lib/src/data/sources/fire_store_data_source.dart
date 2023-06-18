@@ -247,7 +247,9 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
           if (event.exists || event.data() != null) {
             controller.add(response.withData(build(event.data())));
           } else {
-            controller.add(response.withException("Data not found!"));
+            controller.add(
+              response.withException("Data not found!").withData(null),
+            );
           }
         });
       } catch (_) {
@@ -274,7 +276,9 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
             var v = event.docs.map((e) => build(e.data())).toList();
             controller.add(response.withResult(v));
           } else {
-            controller.add(response.withException("Data not found!"));
+            controller.add(
+              response.withException("Data not found!").withResult([]),
+            );
           }
         });
       } catch (_) {

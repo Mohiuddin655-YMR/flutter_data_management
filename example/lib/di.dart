@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:data_manager/core.dart';
-import 'package:example/data_test.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'remote_data_test.dart';
 
 GetIt locator = GetIt.instance;
 

@@ -170,7 +170,9 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
           for (var i in data) {
             await reference.child(i.id).get().then((value) async {
               if (!value.exists) {
-                await reference.child(i.id).setWithPriority(i.source, i.timeMills);
+                await reference
+                    .child(i.id)
+                    .setWithPriority(i.source, i.timeMills);
               }
             });
           }
@@ -230,7 +232,9 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
           if (event.snapshot.exists || event.snapshot.value != null) {
             controller.add(response.withData(build(event.snapshot.value)));
           } else {
-            controller.add(response.withException("Data not found!"));
+            controller.add(
+              response.withException("Data not found!").withData(null),
+            );
           }
         });
       } catch (_) {
@@ -256,7 +260,9 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
             var v = event.snapshot.children.map((e) => build(e.value)).toList();
             controller.add(response.withResult(v));
           } else {
-            controller.add(response.withException("Data not found!"));
+            controller.add(
+              response.withException("Data not found!").withResult([]),
+            );
           }
         });
       } catch (_) {

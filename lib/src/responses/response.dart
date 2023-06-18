@@ -6,6 +6,7 @@ class Response<T> {
   bool? _available;
   bool? _cancel;
   bool? _complete;
+  bool? _error;
   bool? _failed;
   bool? _internetError;
   bool? _loading;
@@ -30,6 +31,7 @@ class Response<T> {
     bool? available,
     bool? cancel,
     bool? complete,
+    bool? error,
     bool? failed,
     bool? internetError,
     bool? loading,
@@ -50,6 +52,7 @@ class Response<T> {
   })  : _available = available,
         _cancel = cancel,
         _complete = complete,
+        _error = error,
         _failed = failed,
         _internetError = internetError,
         _loading = loading,
@@ -72,6 +75,7 @@ class Response<T> {
       cancel: response._cancel,
       complete: response._complete,
       data: response._data,
+      error: response._error,
       exception: response._exception,
       failed: response._failed,
       feedback: response.feedback,
@@ -97,6 +101,7 @@ class Response<T> {
     bool? available,
     bool? cancel,
     bool? complete,
+    bool? error,
     bool? failed,
     bool? internetError,
     bool? loading,
@@ -119,10 +124,11 @@ class Response<T> {
       available: available,
       cancel: cancel,
       complete: complete,
-      data: data ?? _data,
+      data: data,
+      error: error,
       exception: exception,
       failed: failed,
-      feedback: feedback ?? this.feedback,
+      feedback: feedback,
       internetError: internetError,
       loading: loading ?? false,
       message: message,
@@ -130,8 +136,8 @@ class Response<T> {
       paused: paused,
       progress: progress ?? _progress,
       requestCode: requestCode ?? this.requestCode,
-      result: result ?? _result,
-      snapshot: snapshot ?? this.snapshot,
+      result: result,
+      snapshot: snapshot,
       status: status,
       stopped: stopped,
       successful: successful,
@@ -144,6 +150,7 @@ class Response<T> {
     bool? available,
     bool? cancel,
     bool? complete,
+    bool? error,
     bool? failed,
     bool? internetError,
     bool? loading,
@@ -166,6 +173,7 @@ class Response<T> {
     _available = available ?? _available;
     _cancel = cancel ?? _cancel;
     _complete = complete ?? _complete;
+    _error = error ?? _error;
     _failed = failed ?? _failed;
     _internetError = internetError ?? _internetError;
     _loading = loading ?? _loading;
@@ -175,7 +183,6 @@ class Response<T> {
     _successful = successful ?? _successful;
     _timeout = timeout ?? _timeout;
     _valid = valid ?? _valid;
-
     _data = data ?? _data;
     _result = result ?? _result;
     _progress = progress ?? _progress;
@@ -184,55 +191,6 @@ class Response<T> {
     _message = message ?? _message;
     feedback = feedback ?? this.feedback;
     snapshot = snapshot ?? this.snapshot;
-
-    return this;
-  }
-
-  Response<T> clear({
-    bool? available,
-    bool? cancel,
-    bool? complete,
-    bool? failed,
-    bool? internetError,
-    bool? loading,
-    bool? nullable,
-    bool? paused,
-    bool? stopped,
-    bool? successful,
-    bool? timeout,
-    bool? valid,
-    T? data,
-    List<T>? result,
-    double? progress,
-    Status? status,
-    String? exception,
-    String? message,
-    dynamic feedback,
-    dynamic snapshot,
-  }) {
-    successful = successful ?? ((data != null || result != null) ? true : null);
-    _available = available;
-    _cancel = cancel;
-    _complete = complete;
-    _failed = failed;
-    _internetError = internetError;
-    _loading = loading;
-    _nullable = nullable;
-    _paused = paused;
-    _stopped = stopped;
-    _successful = successful;
-    _timeout = timeout;
-    _valid = valid;
-
-    _data = data;
-    _result = result;
-    _progress = progress;
-    _status = status;
-    _exception = exception;
-    _message = message;
-    feedback = feedback;
-    snapshot = snapshot;
-
     return this;
   }
 
@@ -301,6 +259,7 @@ class Response<T> {
     _status = status;
     _exception = exception;
     _successful = false;
+    _error = true;
     _message = null;
     _loading = false;
     return this;
@@ -404,6 +363,10 @@ class Response<T> {
 
   set isComplete(bool value) => _complete = value;
 
+  bool get isError => _error ?? false;
+
+  set isError(bool value) => _error = value;
+
   bool get isFailed => _failed ?? false;
 
   set isFailed(bool value) => _failed = value;
@@ -468,33 +431,30 @@ class Response<T> {
 
   set message(String value) => _message = value;
 
-  Map<String, dynamic> get source => {
-        "Request Code": requestCode,
-        "Available": _available,
-        "Cancel": _cancel,
-        "Complete": _complete,
-        "Failed": _failed,
-        "Internet Error": _internetError,
-        "Loading": _loading,
-        "Nullable": _nullable,
-        "Paused": _paused,
-        "Stopped": _stopped,
-        "Successful": _successful,
-        "Timeout": _timeout,
-        "Valid": _valid,
-        "Progress": _progress,
-        "Status": _status,
-        "Exception": _exception,
-        "Message": _message,
-        "Feedback": feedback,
-        "Snapshot": snapshot,
-        "Data": _data,
-        "Result": _result,
-      };
-
   @override
   String toString() {
-    return source.toString();
+    return "Request Code : $requestCode\n"
+        "Available : $_available\n"
+        "Cancel : $_cancel\n"
+        "Complete : $_complete\n"
+        "Error : $_error\n"
+        "Failed : $_failed\n"
+        "Internet Error : $_internetError\n"
+        "Loading : $_loading\n"
+        "Nullable : $_nullable\n"
+        "Paused : $_paused\n"
+        "Stopped : $_stopped\n"
+        "Successful : $_successful\n"
+        "Timeout : $_timeout\n"
+        "Valid : $_valid\n"
+        "Progress : $_progress\n"
+        "Status : $_status\n"
+        "Exception : $_exception\n"
+        "Message : $_message\n"
+        "Feedback : $feedback\n"
+        "Snapshot : $snapshot\n"
+        "Data : $_data\n"
+        "Result : $_result";
   }
 }
 

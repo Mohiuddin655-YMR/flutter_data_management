@@ -256,19 +256,19 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
             final data = reference.data;
             final code = reference.statusCode;
             if ((code == 200 || code == api.status.ok) && data is Map) {
-              final result = build(data);
-              controller.add(response.withData(result));
+              controller.add(response.withData(build(data)));
             } else {
               controller.add(response.modify(
                 snapshot: reference,
                 exception: "Data unmodified [${reference.statusCode}]",
                 status: Status.unmodified,
+                data: null,
               ));
             }
           });
         } else {
-          controller.add(response.modify(
-            exception: "Undefined ID [$id]",
+          controller.add(response.withException(
+            "Undefined ID [$id]",
             status: Status.undefined,
           ));
         }
@@ -308,6 +308,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
               snapshot: reference,
               exception: "Data unmodified [${reference.statusCode}]",
               status: Status.unmodified,
+              result: [],
             ));
           }
         });

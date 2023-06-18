@@ -1,9 +1,11 @@
-import 'package:example/data_test.dart';
 import 'package:example/di.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'remote_data_test.dart';
 
 late SharedPreferences preferences;
 
@@ -38,10 +40,17 @@ class Application extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const Scaffold(
+      home: Scaffold(
         body: SafeArea(
           child: Center(
-            child: DataTest(),
+            child: MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create: (context) => locator<UserController>(),
+                ),
+              ],
+              child: const RemoteDataTest(),
+            ),
           ),
         ),
       ),
