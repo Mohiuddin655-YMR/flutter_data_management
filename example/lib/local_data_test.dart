@@ -36,8 +36,9 @@ class _LocalDataTestState extends State<LocalDataTest> {
                           controller.insert(
                             Cart(
                               id: "1",
-                              price: 86,
+                              price: 29860,
                               quantity: 3,
+                              name: "Oppo F17 Pro",
                             ),
                           );
                         },
@@ -64,8 +65,31 @@ class _LocalDataTestState extends State<LocalDataTest> {
                       ),
                       ElevatedButton(
                         onPressed: () {
+                          controller.inserts(
+                            [
+                              Cart(
+                                id: "2",
+                                price: 35,
+                                quantity: 1,
+                              ),
+                              Cart(
+                                id: "4",
+                                price: 50,
+                                quantity: 2,
+                              ),
+                            ],
+                          );
+                        },
+                        child: const Text("Inserts with Duplicate"),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
                           controller.update(
-                            Cart(id: "1", price: 46, quantity: 1),
+                            Cart(
+                              id: "1",
+                              price: 24897,
+                              quantity: 1,
+                            ),
                           );
                         },
                         child: const Text("Update"),
@@ -223,7 +247,7 @@ class Cart extends Entity {
   @override
   Map<String, dynamic> get source {
     return super.source.attach({
-      "name": name,
+      "name": name ?? "Name",
       "price": price,
       "quantity": quantity,
     });

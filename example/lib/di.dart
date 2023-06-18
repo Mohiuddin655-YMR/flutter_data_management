@@ -17,7 +17,7 @@ Future<void> diInit() async {
 
 void _carts() {
   locator.registerLazySingleton<LocalDataSource<Cart>>(() {
-    return CartDataSource(preferences: locator());
+    return CartDataSource();
   });
 
   locator.registerLazySingleton<LocalDataRepository<Cart>>(() {

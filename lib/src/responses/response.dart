@@ -18,6 +18,7 @@ class Response<T> {
   bool? _valid;
 
   T? _data;
+  List<T>? _backups;
   List<T>? _result;
   List<T>? _ignores;
   double? _progress;
@@ -27,361 +28,11 @@ class Response<T> {
   dynamic feedback;
   dynamic snapshot;
 
-  Response({
-    this.requestCode = 0,
-    bool? available,
-    bool? cancel,
-    bool? complete,
-    bool? error,
-    bool? failed,
-    bool? internetError,
-    bool? loading,
-    bool? nullable,
-    bool? paused,
-    bool? stopped,
-    bool? successful,
-    bool? timeout,
-    bool? valid,
-    T? data,
-    List<T>? ignores,
-    List<T>? result,
-    double? progress,
-    Status? status,
-    String? exception,
-    String? message,
-    this.feedback,
-    this.snapshot,
-  })  : _available = available,
-        _cancel = cancel,
-        _complete = complete,
-        _error = error,
-        _failed = failed,
-        _internetError = internetError,
-        _loading = loading,
-        _nullable = nullable,
-        _paused = paused,
-        _stopped = stopped,
-        _successful = successful,
-        _timeout = timeout,
-        _valid = valid,
-        _data = data,
-        _result = result,
-        _ignores = ignores,
-        _progress = progress,
-        _status = status,
-        _exception = exception,
-        _message = message;
-
-  Response<T> from(Response<T> response) {
-    return copy(
-      available: response._available,
-      cancel: response._cancel,
-      complete: response._complete,
-      data: response._data,
-      error: response._error,
-      exception: response._exception,
-      failed: response._failed,
-      feedback: response.feedback,
-      internetError: response._internetError,
-      loading: response._loading,
-      message: response._message,
-      nullable: response._nullable,
-      paused: response._paused,
-      progress: response._progress,
-      requestCode: response.requestCode,
-      ignores: response._ignores,
-      result: response._result,
-      snapshot: response.snapshot,
-      status: response._status,
-      stopped: response._stopped,
-      successful: response._successful,
-      timeout: response._timeout,
-      valid: response._valid,
-    );
-  }
-
-  Response<T> copy({
-    int? requestCode,
-    bool? available,
-    bool? cancel,
-    bool? complete,
-    bool? error,
-    bool? failed,
-    bool? internetError,
-    bool? loading,
-    bool? nullable,
-    bool? paused,
-    bool? stopped,
-    bool? successful,
-    bool? timeout,
-    bool? valid,
-    T? data,
-    List<T>? ignores,
-    List<T>? result,
-    double? progress,
-    Status? status,
-    String? exception,
-    String? message,
-    dynamic feedback,
-    dynamic snapshot,
-  }) {
-    return Response<T>(
-      available: available,
-      cancel: cancel,
-      complete: complete,
-      data: data,
-      error: error,
-      exception: exception,
-      failed: failed,
-      feedback: feedback,
-      internetError: internetError,
-      loading: loading ?? false,
-      message: message,
-      nullable: nullable,
-      paused: paused,
-      progress: progress ?? _progress,
-      requestCode: requestCode ?? this.requestCode,
-      ignores: ignores,
-      result: result,
-      snapshot: snapshot,
-      status: status,
-      stopped: stopped,
-      successful: successful,
-      timeout: timeout,
-      valid: valid,
-    );
-  }
-
-  Response<T> modify({
-    bool? available,
-    bool? cancel,
-    bool? complete,
-    bool? error,
-    bool? failed,
-    bool? internetError,
-    bool? loading,
-    bool? nullable,
-    bool? paused,
-    bool? stopped,
-    bool? successful,
-    bool? timeout,
-    bool? valid,
-    T? data,
-    List<T>? ignores,
-    List<T>? result,
-    double? progress,
-    Status? status,
-    String? exception,
-    String? message,
-    dynamic feedback,
-    dynamic snapshot,
-  }) {
-    successful = successful ?? ((data != null || result != null) ? true : null);
-    _available = available ?? _available;
-    _cancel = cancel ?? _cancel;
-    _complete = complete ?? _complete;
-    _error = error ?? _error;
-    _failed = failed ?? _failed;
-    _internetError = internetError ?? _internetError;
-    _loading = loading ?? _loading;
-    _nullable = nullable ?? _nullable;
-    _paused = paused ?? _paused;
-    _stopped = stopped ?? _stopped;
-    _successful = successful ?? _successful;
-    _timeout = timeout ?? _timeout;
-    _valid = valid ?? _valid;
-    _data = data ?? _data;
-    _ignores = ignores ?? _ignores;
-    _result = result ?? _result;
-    _progress = progress ?? _progress;
-    _status = status ?? _status;
-    _exception = exception ?? _exception;
-    _message = message ?? _message;
-    feedback = feedback ?? this.feedback;
-    snapshot = snapshot ?? this.snapshot;
-    return this;
-  }
-
-  Response<T> withStatus(Status status, {String? message}) {
-    _status = status;
-    _successful = status.isSuccessful;
-    _loading = false;
-    _message = message;
-    return this;
-  }
-
-  Response<T> withFeedback(
-    dynamic feedback, {
-    String? message,
-    String? exception,
-    Status status = Status.ok,
-    bool loaded = true,
-  }) {
-    this.feedback = feedback;
-    _status = status;
-    _successful = status.isSuccessful;
-    _message = message;
-    _exception = exception;
-    _complete = loaded;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withData(T? data, {String? message}) {
-    _status = Status.ok;
-    _data = data;
-    _message = message;
-    _successful = true;
-    _complete = true;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withIgnore(T ignore, {String? message, Status? status}) {
-    var a = ignores;
-    a.insert(0, ignore);
-    _ignores = a;
-    _status = status;
-    _successful = false;
-    _message = message;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withIgnores(List<T>? ignores, {String? message, Status? status}) {
-    _ignores = ignores;
-    _status = status;
-    _successful = false;
-    _message = message;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withResult(List<T>? result, {String? message}) {
-    _status = Status.ok;
-    _result = result;
-    _message = message;
-    _successful = true;
-    _complete = true;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withMessage(String? message, {Status status = Status.ok}) {
-    _status = status;
-    _message = message;
-    _successful = true;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withSnapshot(dynamic snapshot, {String? message}) {
-    this.snapshot = snapshot;
-    _message = message;
-    _complete = true;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withException(dynamic exception, {Status? status}) {
-    _status = status;
-    _exception = exception;
-    _successful = false;
-    _error = true;
-    _message = null;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withSuccessful(bool successful, {String? message}) {
-    _status = Status.ok;
-    _successful = successful;
-    _message = message;
-    _complete = true;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withProgress(double progress, {String? message}) {
-    _status = Status.running;
-    _progress = progress;
-    _message = message;
-    return this;
-  }
-
-  Response<T> withAvailable(bool available, {String? message}) {
-    _available = available;
-    _loading = false;
-    _message = message;
-    return this;
-  }
-
-  Response<T> withComplete(bool complete, {String? message}) {
-    _complete = complete;
-    _loading = false;
-    _message = message;
-    return this;
-  }
-
-  Response<T> withCancel(bool cancel, {String? message}) {
-    _cancel = cancel;
-    _loading = false;
-    _message = message;
-    return this;
-  }
-
-  Response<T> withValid(bool valid) {
-    _valid = valid;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withLoaded(bool loaded) {
-    _loading = !loaded;
-    return this;
-  }
-
-  Response<T> withInternetError(String message) {
-    withException(message, status: Status.networkError);
-    _internetError = true;
-    return this;
-  }
-
-  Response<T> withPaused(bool paused) {
-    _paused = paused;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withNullable(bool nullable) {
-    _nullable = nullable;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withStopped(bool stopped) {
-    _stopped = stopped;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withFailed(bool failed) {
-    _failed = failed;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withTimeout(bool timeout) {
-    _timeout = timeout;
-    _loading = false;
-    return this;
-  }
-
-  Snapshot? getSnapshot<Snapshot>() => snapshot is Snapshot ? snapshot : null;
-
   bool get isAvailable => _available ?? false;
 
   set isAvailable(bool value) => _available = value;
+
+  bool get isBackup => backups.isNotEmpty;
 
   bool get isCancel => _cancel ?? false;
 
@@ -441,6 +92,10 @@ class Response<T> {
 
   set data(T? value) => _data = value;
 
+  List<T> get backups => _backups ?? [];
+
+  set backups(List<T> value) => _backups = value;
+
   List<T> get ignores => _ignores ?? [];
 
   set ignores(List<T> value) => _ignores = value;
@@ -464,6 +119,383 @@ class Response<T> {
   String get message => _message ?? "";
 
   set message(String value) => _message = value;
+
+  Response({
+    this.requestCode = 0,
+    bool? available,
+    bool? cancel,
+    bool? complete,
+    bool? error,
+    bool? failed,
+    bool? internetError,
+    bool? loading,
+    bool? nullable,
+    bool? paused,
+    bool? stopped,
+    bool? successful,
+    bool? timeout,
+    bool? valid,
+    T? data,
+    List<T>? backups,
+    List<T>? ignores,
+    List<T>? result,
+    double? progress,
+    Status? status,
+    String? exception,
+    String? message,
+    this.feedback,
+    this.snapshot,
+  })  : _available = available,
+        _cancel = cancel,
+        _complete = complete,
+        _error = error,
+        _failed = failed,
+        _internetError = internetError,
+        _loading = loading,
+        _nullable = nullable,
+        _paused = paused,
+        _stopped = stopped,
+        _successful = successful,
+        _timeout = timeout,
+        _valid = valid,
+        _data = data,
+        _backups = backups,
+        _ignores = ignores,
+        _result = result,
+        _progress = progress,
+        _status = status,
+        _exception = exception,
+        _message = message;
+
+  Response<T> from(Response<T> response) {
+    return copy(
+      available: response._available,
+      cancel: response._cancel,
+      complete: response._complete,
+      data: response._data,
+      error: response._error,
+      exception: response._exception,
+      failed: response._failed,
+      feedback: response.feedback,
+      internetError: response._internetError,
+      loading: response._loading,
+      message: response._message,
+      nullable: response._nullable,
+      paused: response._paused,
+      progress: response._progress,
+      requestCode: response.requestCode,
+      backups: response._backups,
+      ignores: response._ignores,
+      result: response._result,
+      snapshot: response.snapshot,
+      status: response._status,
+      stopped: response._stopped,
+      successful: response._successful,
+      timeout: response._timeout,
+      valid: response._valid,
+    );
+  }
+
+  Response<T> copy({
+    int? requestCode,
+    bool? available,
+    bool? cancel,
+    bool? complete,
+    bool? error,
+    bool? failed,
+    bool? internetError,
+    bool? loading,
+    bool? nullable,
+    bool? paused,
+    bool? stopped,
+    bool? successful,
+    bool? timeout,
+    bool? valid,
+    T? data,
+    List<T>? backups,
+    List<T>? ignores,
+    List<T>? result,
+    double? progress,
+    Status? status,
+    String? exception,
+    String? message,
+    dynamic feedback,
+    dynamic snapshot,
+  }) {
+    return Response<T>(
+      available: available,
+      cancel: cancel,
+      complete: complete,
+      data: data,
+      error: error,
+      exception: exception,
+      failed: failed,
+      feedback: feedback,
+      internetError: internetError,
+      loading: loading ?? false,
+      message: message,
+      nullable: nullable,
+      paused: paused,
+      progress: progress ?? _progress,
+      requestCode: requestCode ?? this.requestCode,
+      backups: backups,
+      ignores: ignores,
+      result: result,
+      snapshot: snapshot,
+      status: status,
+      stopped: stopped,
+      successful: successful,
+      timeout: timeout,
+      valid: valid,
+    );
+  }
+
+  Response<T> modify({
+    bool? available,
+    bool? cancel,
+    bool? complete,
+    bool? error,
+    bool? failed,
+    bool? internetError,
+    bool? loading,
+    bool? nullable,
+    bool? paused,
+    bool? stopped,
+    bool? successful,
+    bool? timeout,
+    bool? valid,
+    T? data,
+    List<T>? backups,
+    List<T>? ignores,
+    List<T>? result,
+    double? progress,
+    Status? status,
+    String? exception,
+    String? message,
+    dynamic feedback,
+    dynamic snapshot,
+  }) {
+    successful = successful ?? ((data != null || result != null) ? true : null);
+    _available = available ?? _available;
+    _cancel = cancel ?? _cancel;
+    _complete = complete ?? _complete;
+    _error = error ?? _error;
+    _failed = failed ?? _failed;
+    _internetError = internetError ?? _internetError;
+    _loading = loading ?? _loading;
+    _nullable = nullable ?? _nullable;
+    _paused = paused ?? _paused;
+    _stopped = stopped ?? _stopped;
+    _successful = successful ?? _successful;
+    _timeout = timeout ?? _timeout;
+    _valid = valid ?? _valid;
+    _data = data ?? _data;
+    _backups = backups ?? _backups;
+    _ignores = ignores ?? _ignores;
+    _result = result ?? _result;
+    _progress = progress ?? _progress;
+    _status = status ?? _status;
+    _exception = exception ?? _exception;
+    _message = message ?? _message;
+    feedback = feedback ?? this.feedback;
+    snapshot = snapshot ?? this.snapshot;
+    return this;
+  }
+
+  Response<T> withAvailable(bool available, {String? message}) {
+    _available = available;
+    _loading = false;
+    _message = message;
+    return this;
+  }
+
+  Response<T> withCancel(bool cancel, {String? message}) {
+    _cancel = cancel;
+    _loading = false;
+    _message = message;
+    return this;
+  }
+
+  Response<T> withComplete(bool complete, {String? message}) {
+    _complete = complete;
+    _loading = false;
+    _message = message;
+    return this;
+  }
+
+  Response<T> withData(T? data, {String? message}) {
+    _status = Status.ok;
+    _data = data;
+    _message = message;
+    _successful = true;
+    _complete = true;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withException(dynamic exception, {Status? status}) {
+    _status = status;
+    _exception = exception;
+    _successful = false;
+    _error = true;
+    _message = null;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withFailed(bool failed) {
+    _failed = failed;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withFeedback(
+    dynamic feedback, {
+    String? message,
+    String? exception,
+    Status status = Status.ok,
+    bool loaded = true,
+  }) {
+    this.feedback = feedback;
+    _status = status;
+    _successful = status.isSuccessful;
+    _message = message;
+    _exception = exception;
+    _complete = loaded;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withBackup(T? value, {String? message, Status? status}) {
+    _backups = _backups.set(value);
+    _status = status;
+    _data = null;
+    _successful = false;
+    _message = message;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withBackups(List<T>? value, {String? message, Status? status}) {
+    _backups = _backups.attach(value);
+    _result = [];
+    _status = status;
+    _successful = false;
+    _message = message;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withIgnore(T value, {String? message, Status? status}) {
+    _ignores = _ignores.setAt(0, value);
+    _status = status;
+    _successful = false;
+    _message = message;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withIgnores(List<T>? value, {String? message, Status? status}) {
+    _ignores = value;
+    _status = status;
+    _successful = false;
+    _message = message;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withInternetError(String message) {
+    withException(message, status: Status.networkError);
+    _internetError = true;
+    return this;
+  }
+
+  Response<T> withLoaded(bool loaded) {
+    _loading = !loaded;
+    return this;
+  }
+
+  Response<T> withMessage(String? message, {Status status = Status.ok}) {
+    _status = status;
+    _message = message;
+    _successful = true;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withNullable(bool nullable) {
+    _nullable = nullable;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withPaused(bool paused) {
+    _paused = paused;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withProgress(double progress, {String? message}) {
+    _status = Status.running;
+    _progress = progress;
+    _message = message;
+    return this;
+  }
+
+  Response<T> withResult(List<T>? result, {String? message}) {
+    _status = Status.ok;
+    _result = result;
+    _message = message;
+    _successful = true;
+    _complete = true;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withSnapshot(dynamic snapshot, {String? message}) {
+    this.snapshot = snapshot;
+    _message = message;
+    _complete = true;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withStatus(Status status, {String? message}) {
+    _status = status;
+    _successful = status.isSuccessful;
+    _loading = false;
+    _message = message;
+    return this;
+  }
+
+  Response<T> withStopped(bool stopped) {
+    _stopped = stopped;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withSuccessful(bool successful, {String? message}) {
+    _status = Status.ok;
+    _successful = successful;
+    _message = message;
+    _complete = true;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withTimeout(bool timeout) {
+    _timeout = timeout;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withValid(bool valid) {
+    _valid = valid;
+    _loading = false;
+    return this;
+  }
+
+  Snapshot? getSnapshot<Snapshot>() => snapshot is Snapshot ? snapshot : null;
 
   @override
   String toString() {
@@ -489,6 +521,7 @@ class Response<T> {
         "Snapshot : $snapshot\n"
         "Data : $_data\n"
         "Result : $_result\n"
+        "Backups : $_backups\n"
         "Ignores : $_ignores";
   }
 }
@@ -563,6 +596,26 @@ extension ResponseStatusExtension on Status {
   bool get isUnmodified => this == Status.unmodified;
 
   bool get isError => this == Status.error;
+}
+
+extension _ListExtension<T> on List<T>? {
+  List<T> set(T? value) {
+    var current = this ?? [];
+    if (value != null) current.add(value);
+    return current;
+  }
+
+  List<T> setAt(int index, T? value) {
+    var current = this ?? [];
+    if (value != null) current.insert(index, value);
+    return current;
+  }
+
+  List<T> attach(List<T>? value) {
+    var current = this ?? [];
+    if (value != null) current.addAll(value);
+    return current;
+  }
 }
 
 class ResponseMessages {
