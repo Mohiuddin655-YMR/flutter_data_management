@@ -1,4 +1,4 @@
-import 'package:data_manager/core.dart';
+import 'package:data_management/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -92,7 +92,7 @@ class _RemoteDataTestState extends State<RemoteDataTest> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    controller.isAvailable("5");
+                    controller.isAvailable("1");
                   },
                   child: const Text("Available"),
                 ),

@@ -143,7 +143,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
           return response.withException(e, status: Status.failure);
         });
       } else {
-        return response.withException("Already data added!");
+        return response.withIgnore(data, message: "Already data added!");
       }
     } catch (_) {
       return response.withException(_, status: Status.failure);
@@ -157,18 +157,34 @@ abstract class LocalDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     try {
-      return database.input(_source(source), data._).then((value) {
-        if (value) {
-          return response.withResult(data);
+      var I = await gets(source: source);
+      final request = I.result;
+      for (var item in data) {
+        final isInsertable = !isExisted(item.id, request);
+        if (isInsertable) {
+          request.add(item);
+          await database.input(_source(source), request._).then((value) {
+            if (value) {
+              response.withResult(request);
+            } else {
+              response.withException(
+                "Insertion error!",
+                status: Status.error,
+              );
+            }
+          }).onError((e, s) {
+            response.withException(e, status: Status.failure);
+          });
         } else {
-          return response.withException(
-            "Insertion error!",
-            status: Status.error,
+          var ignores = response.ignores;
+          ignores.insert(0, item);
+          response.withIgnores(
+            ignores,
+            message: "Already data added!",
           );
         }
-      }).onError((e, s) {
-        return response.withException(e, status: Status.failure);
-      });
+      }
+      return response;
     } catch (_) {
       return response.withException(_, status: Status.failure);
     }
@@ -198,7 +214,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
     final response = Response<T>();
     try {
       if (id.isNotEmpty) {
-        Timer.periodic(const Duration(milliseconds: 100), (timer) async {
+        Timer.periodic(const Duration(milliseconds: 500), (timer) async {
           final I = await get(id, source: source);
           var result = I.data;
           if (result.isValid) {
@@ -228,7 +244,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
     final controller = StreamController<Response<T>>();
     final response = Response<T>();
     try {
-      Timer.periodic(const Duration(milliseconds: 100), (timer) async {
+      Timer.periodic(const Duration(milliseconds: 500), (timer) async {
         final I = await gets(source: source);
         var result = I.result;
         if (result.isValid) {

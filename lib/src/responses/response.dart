@@ -19,6 +19,7 @@ class Response<T> {
 
   T? _data;
   List<T>? _result;
+  List<T>? _ignores;
   double? _progress;
   Status? _status;
   String? _exception;
@@ -42,6 +43,7 @@ class Response<T> {
     bool? timeout,
     bool? valid,
     T? data,
+    List<T>? ignores,
     List<T>? result,
     double? progress,
     Status? status,
@@ -64,6 +66,7 @@ class Response<T> {
         _valid = valid,
         _data = data,
         _result = result,
+        _ignores = ignores,
         _progress = progress,
         _status = status,
         _exception = exception,
@@ -86,6 +89,7 @@ class Response<T> {
       paused: response._paused,
       progress: response._progress,
       requestCode: response.requestCode,
+      ignores: response._ignores,
       result: response._result,
       snapshot: response.snapshot,
       status: response._status,
@@ -112,6 +116,7 @@ class Response<T> {
     bool? timeout,
     bool? valid,
     T? data,
+    List<T>? ignores,
     List<T>? result,
     double? progress,
     Status? status,
@@ -136,6 +141,7 @@ class Response<T> {
       paused: paused,
       progress: progress ?? _progress,
       requestCode: requestCode ?? this.requestCode,
+      ignores: ignores,
       result: result,
       snapshot: snapshot,
       status: status,
@@ -161,6 +167,7 @@ class Response<T> {
     bool? timeout,
     bool? valid,
     T? data,
+    List<T>? ignores,
     List<T>? result,
     double? progress,
     Status? status,
@@ -184,6 +191,7 @@ class Response<T> {
     _timeout = timeout ?? _timeout;
     _valid = valid ?? _valid;
     _data = data ?? _data;
+    _ignores = ignores ?? _ignores;
     _result = result ?? _result;
     _progress = progress ?? _progress;
     _status = status ?? _status;
@@ -225,6 +233,26 @@ class Response<T> {
     _message = message;
     _successful = true;
     _complete = true;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withIgnore(T ignore, {String? message, Status? status}) {
+    var a = ignores;
+    a.insert(0, ignore);
+    _ignores = a;
+    _status = status;
+    _successful = false;
+    _message = message;
+    _loading = false;
+    return this;
+  }
+
+  Response<T> withIgnores(List<T>? ignores, {String? message, Status? status}) {
+    _ignores = ignores;
+    _status = status;
+    _successful = false;
+    _message = message;
     _loading = false;
     return this;
   }
@@ -367,6 +395,8 @@ class Response<T> {
 
   set isError(bool value) => _error = value;
 
+  bool get isIgnored => ignores.isNotEmpty;
+
   bool get isFailed => _failed ?? false;
 
   set isFailed(bool value) => _failed = value;
@@ -411,6 +441,10 @@ class Response<T> {
 
   set data(T? value) => _data = value;
 
+  List<T> get ignores => _ignores ?? [];
+
+  set ignores(List<T> value) => _ignores = value;
+
   List<T> get result => _result ?? [];
 
   set result(List<T> value) => _result = value;
@@ -454,7 +488,8 @@ class Response<T> {
         "Feedback : $feedback\n"
         "Snapshot : $snapshot\n"
         "Data : $_data\n"
-        "Result : $_result";
+        "Result : $_result\n"
+        "Ignores : $_ignores";
   }
 }
 

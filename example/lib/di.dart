@@ -1,25 +1,43 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:data_manager/core.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:data_management/core.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'remote_data_test.dart';
+import 'local_data_test.dart';
 
 GetIt locator = GetIt.instance;
 
 Future<void> diInit() async {
   final local = await SharedPreferences.getInstance();
-  final database = FirebaseFirestore.instance;
-  final realtime = FirebaseDatabase.instance;
   locator.registerLazySingleton<SharedPreferences>(() => local);
-  locator.registerLazySingleton<FirebaseFirestore>(() => database);
-  locator.registerLazySingleton<FirebaseDatabase>(() => realtime);
-  _user();
+  _carts();
+  _products();
   await locator.allReady();
 }
 
-void _user() {
+void _carts() {
+  locator.registerLazySingleton<LocalDataSource<Cart>>(() {
+    return CartDataSource(preferences: locator());
+  });
+
+  locator.registerLazySingleton<LocalDataRepository<Cart>>(() {
+    return CartRepository(
+      local: locator(),
+    );
+  });
+
+  locator.registerLazySingleton<LocalDataHandler<Cart>>(() {
+    return CartHandler(repository: locator());
+  });
+
+  locator.registerFactory<CartController>(() {
+    return CartController(
+      handler: locator(),
+    );
+  });
+}
+
+void _products() {
   locator.registerLazySingleton<LocalDataSource<User>>(() {
     return LocalUserDataSource(preferences: locator());
   });

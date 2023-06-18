@@ -1,4 +1,4 @@
-import 'package:data_manager/core.dart';
+import 'package:data_management/core.dart';
 import 'package:example/di.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,7 +36,8 @@ class _LocalDataTestState extends State<LocalDataTest> {
                           controller.insert(
                             Cart(
                               id: "1",
-                              quantity: "example@gmail.com",
+                              price: 86,
+                              quantity: 3,
                             ),
                           );
                         },
@@ -48,11 +49,13 @@ class _LocalDataTestState extends State<LocalDataTest> {
                             [
                               Cart(
                                 id: "2",
-                                quantity: "example2@gmail.com",
+                                price: 35,
+                                quantity: 1,
                               ),
                               Cart(
                                 id: "3",
-                                quantity: "example3@gmail.com",
+                                price: 50,
+                                quantity: 2,
                               ),
                             ],
                           );
@@ -62,10 +65,7 @@ class _LocalDataTestState extends State<LocalDataTest> {
                       ElevatedButton(
                         onPressed: () {
                           controller.update(
-                            Cart(
-                              id: "1",
-                              quantity: "example.updated@gmail.com",
-                            ),
+                            Cart(id: "1", price: 46, quantity: 1),
                           );
                         },
                         child: const Text("Update"),
@@ -96,7 +96,7 @@ class _LocalDataTestState extends State<LocalDataTest> {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          controller.isAvailable("5");
+                          controller.isAvailable("1");
                         },
                         child: const Text("Available"),
                       ),
@@ -204,6 +204,7 @@ class Cart extends Entity {
 
   Cart({
     super.id,
+    super.timeMills,
     this.name,
     this.price,
     this.quantity,
@@ -211,55 +212,20 @@ class Cart extends Entity {
 
   factory Cart.from(dynamic source) {
     return Cart(
-      id: Entity.value("id", source),
-      timeMills: Entity.value("time_mills", source),
-      quantity: Entity.value("email", source),
-      name: Entity.value("name", source),
-      price: Entity.value("phone", source),
-      address: Entity.object("address", source, (value) {
-        return Address.from(value);
-      }),
+      id: Entity.value<String>("id", source),
+      timeMills: Entity.value<int>("time_mills", source),
+      name: Entity.value<String>("name", source),
+      price: Entity.value<double>("price", source),
+      quantity: Entity.value<int>("quantity", source),
     );
   }
 
   @override
   Map<String, dynamic> get source {
     return super.source.attach({
-      "email": quantity,
       "name": name,
-      "phone": price,
-      "address": address?.source,
-    });
-  }
-}
-
-/// Optional
-/// Use for user sub entity
-class Address extends Entity {
-  final String? city;
-  final String? country;
-  final int? zipCode;
-
-  Address({
-    this.city,
-    this.country,
-    this.zipCode,
-  });
-
-  factory Address.from(dynamic source) {
-    return Address(
-      city: Entity.value<String>("city", source),
-      country: Entity.value<String>('country', source),
-      zipCode: Entity.value<int>("zip_code", source),
-    );
-  }
-
-  @override
-  Map<String, dynamic> get source {
-    return super.source.attach({
-      "city": city,
-      "country": country,
-      "zip_code": zipCode,
+      "price": price,
+      "quantity": quantity,
     });
   }
 }

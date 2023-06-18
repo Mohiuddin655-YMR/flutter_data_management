@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'local_data_test.dart';
 import 'remote_data_test.dart';
 
 late SharedPreferences preferences;
@@ -48,8 +49,11 @@ class Application extends StatelessWidget {
                 BlocProvider(
                   create: (context) => locator<UserController>(),
                 ),
+                BlocProvider(
+                  create: (context) => locator<CartController>(),
+                ),
               ],
-              child: const RemoteDataTest(),
+              child: const LocalDataTest(),
             ),
           ),
         ),
