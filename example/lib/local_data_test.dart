@@ -3,6 +3,8 @@ import 'package:example/di.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'remote_data_test.dart';
+
 class LocalDataTest extends StatefulWidget {
   const LocalDataTest({Key? key}) : super(key: key);
 
@@ -11,6 +13,31 @@ class LocalDataTest extends StatefulWidget {
 }
 
 class _LocalDataTestState extends State<LocalDataTest> {
+  late Product p1 = Product(
+    id: "1",
+    timeMills: Entity.ms,
+    name: "Oppo F17 Pro",
+    price: 23500,
+  );
+  late Product p2 = Product(
+    id: "2",
+    timeMills: Entity.ms,
+    name: "Oppo A5s",
+    price: 14000,
+  );
+  late Cart c1 = Cart(
+    id: "1",
+    timeMills: Entity.ms,
+    quantity: 3,
+    product: p1,
+  );
+  late Cart c2 = Cart(
+    id: "2",
+    timeMills: Entity.ms,
+    quantity: 2,
+    product: p2,
+  );
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -32,67 +59,23 @@ class _LocalDataTestState extends State<LocalDataTest> {
                     alignment: WrapAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: () {
-                          controller.insert(
-                            Cart(
-                              id: "1",
-                              price: 29860,
-                              quantity: 3,
-                              name: "Oppo F17 Pro",
-                            ),
-                          );
-                        },
+                        child: const Text("Availability"),
+                        onPressed: () => controller.isAvailable("1"),
+                      ),
+                      ElevatedButton(
                         child: const Text("Insert"),
+                        onPressed: () => controller.create(c1),
                       ),
                       ElevatedButton(
-                        onPressed: () {
-                          controller.inserts(
-                            [
-                              Cart(
-                                id: "2",
-                                price: 35,
-                                quantity: 1,
-                              ),
-                              Cart(
-                                id: "3",
-                                price: 50,
-                                quantity: 2,
-                              ),
-                            ],
-                          );
-                        },
                         child: const Text("Inserts"),
+                        onPressed: () => controller.creates([c1, c2]),
                       ),
                       ElevatedButton(
-                        onPressed: () {
-                          controller.inserts(
-                            [
-                              Cart(
-                                id: "2",
-                                price: 35,
-                                quantity: 1,
-                              ),
-                              Cart(
-                                id: "4",
-                                price: 50,
-                                quantity: 2,
-                              ),
-                            ],
-                          );
-                        },
-                        child: const Text("Inserts with Duplicate"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          controller.update(
-                            Cart(
-                              id: "1",
-                              price: 24897,
-                              quantity: 1,
-                            ),
-                          );
-                        },
                         child: const Text("Update"),
+                        onPressed: () => controller.update(
+                          id: c1.id,
+                          data: c1.copyWith(quantity: 1).source,
+                        ),
                       ),
                       ElevatedButton(
                         onPressed: () {
@@ -117,12 +100,6 @@ class _LocalDataTestState extends State<LocalDataTest> {
                           controller.gets();
                         },
                         child: const Text("Gets"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          controller.isAvailable("1");
-                        },
-                        child: const Text("Available"),
                       ),
                     ],
                   ),
@@ -222,34 +199,44 @@ class CartDataSource extends LocalDataSourceImpl<Cart> {
 /// Step - 1
 /// Use for local or remote data model
 class Cart extends Entity {
-  final String? name;
-  final double? price;
   final int? quantity;
+  final Product? product;
 
   Cart({
     super.id,
     super.timeMills,
-    this.name,
-    this.price,
     this.quantity,
+    this.product,
   });
 
   factory Cart.from(dynamic source) {
     return Cart(
       id: Entity.value<String>("id", source),
       timeMills: Entity.value<int>("time_mills", source),
-      name: Entity.value<String>("name", source),
-      price: Entity.value<double>("price", source),
       quantity: Entity.value<int>("quantity", source),
+      product: Entity.object("product", source, (value) => Product.from(value)),
     );
   }
 
   @override
   Map<String, dynamic> get source {
     return super.source.attach({
-      "name": name ?? "Name",
-      "price": price,
       "quantity": quantity,
+      "product": product?.source,
     });
+  }
+
+  Cart copyWith({
+    String? id,
+    int? timeMills,
+    int? quantity,
+    Product? product,
+  }) {
+    return Cart(
+      id: id ?? this.id,
+      timeMills: timeMills ?? this.timeMills,
+      quantity: quantity ?? this.quantity,
+      product: product ?? this.product,
+    );
   }
 }

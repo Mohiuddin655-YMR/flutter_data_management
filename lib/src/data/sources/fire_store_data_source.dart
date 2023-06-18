@@ -25,110 +25,26 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   }
 
   @override
-  Future<Response<T>> clear<R>({
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    final response = Response<T>();
-    if (isConnected) {
-      try {
-        var reference = _source(source);
-        return reference.get().then((value) async {
-          for (var i in value.docs) {
-            await reference.doc(build(i.data()).id).delete();
-          }
-          return response.withResult([]);
-        }).onError((e, s) {
-          return response.withException(
-            e,
-            status: Status.failure,
-          );
-        });
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
-  }
-
-  @override
-  Future<Response<T>> delete<R>(
+  Future<Response<T>> isAvailable<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
-        await _source(source).doc(id).delete();
-        return response.withData(null);
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
-  }
-
-  @override
-  Future<Response<T>> get<R>(
-    String id, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    final response = Response<T>();
-    if (isConnected) {
-      try {
-        final result = await _source(source).doc(id).get();
-        if (result.exists && result.data() != null) {
-          return response.withData(build(result.data()));
-        } else {
-          return response.withException("Data not found!");
+      if (id.isNotEmpty) {
+        try {
+          return _source(source).doc(id).get().then((value) {
+            return response.withAvailable(!value.exists);
+          });
+        } catch (_) {
+          return response.withException(_, status: Status.failure);
         }
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
-  }
-
-  @override
-  Future<Response<T>> getUpdates<R>({
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-  }) {
-    return gets(
-      isConnected: isConnected,
-      forUpdates: true,
-      source: source,
-    );
-  }
-
-  @override
-  Future<Response<T>> gets<R>({
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-    bool forUpdates = false,
-  }) async {
-    final response = Response<T>();
-    if (isConnected) {
-      try {
-        final result = await _source(source).get();
-        if (result.docs.isNotEmpty || result.docChanges.isNotEmpty) {
-          if (forUpdates) {
-            var v = result.docChanges.map((e) => build(e.doc.data())).toList();
-            return response.withResult(v);
-          } else {
-            var v = result.docs.map((e) => build(e.data())).toList();
-            return response.withResult(v);
-          }
-        } else {
-          return response.withException("Data not found!");
-        }
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
+      } else {
+        return response.withException(
+          "Id isn't valid!",
+          status: Status.invalid,
+        );
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -181,15 +97,25 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
     if (isConnected) {
       if (data.isNotEmpty) {
         try {
-          final reference = _source(source);
+          final I = _source(source);
           for (var i in data) {
-            await reference.doc(i.id).get().then((value) async {
-              if (!value.exists) {
-                await reference
-                    .doc(i.id)
-                    .set(i.source, SetOptions(merge: true));
-              }
-            });
+            await I.doc(i.id).get().then(
+              (value) async {
+                if (!value.exists) {
+                  await I.doc(i.id).set(
+                        i.source,
+                        SetOptions(merge: true),
+                      );
+                } else {
+                  var ignores = response.ignores;
+                  ignores.insert(0, i);
+                  response.withIgnores(
+                    ignores,
+                    message: "Already data added!",
+                  );
+                }
+              },
+            );
           }
           return response.withResult(data);
         } catch (_) {
@@ -207,30 +133,157 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   }
 
   @override
-  Future<Response<T>> isAvailable<R>(
+  Future<Response<T>> update<R>(
+    String id,
+    Map<String, dynamic> data, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    final response = Response<T>();
+    if (isConnected) {
+      try {
+        final I = _source(source).doc(id);
+        return await I.get().then((value) async {
+          if (value.exists) {
+            await I.update(data);
+            return response.withBackup(build(value.data()));
+          } else {
+            return response.withException(
+              'Data not found!',
+              status: Status.notFound,
+            );
+          }
+        });
+      } catch (_) {
+        return response.withException(_, status: Status.failure);
+      }
+    } else {
+      return response.withStatus(Status.networkError);
+    }
+  }
+
+  @override
+  Future<Response<T>> delete<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      if (id.isNotEmpty) {
-        try {
-          return _source(source).doc(id).get().then((value) {
-            return response.withAvailable(!value.exists);
-          });
-        } catch (_) {
-          return response.withException(_, status: Status.failure);
-        }
-      } else {
-        return response.withException(
-          "Id isn't valid!",
-          status: Status.invalid,
-        );
+      try {
+        final I = _source(source).doc(id);
+        return await I.get().then((value) async {
+          if (value.exists) {
+            await I.delete();
+            return response.withBackup(build(value.data()));
+          } else {
+            return response.withException(
+              'Data not found!',
+              status: Status.notFound,
+            );
+          }
+        });
+      } catch (_) {
+        return response.withException(_, status: Status.failure);
       }
     } else {
       return response.withStatus(Status.networkError);
     }
+  }
+
+  @override
+  Future<Response<T>> clear<R>({
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    final response = Response<T>();
+    if (isConnected) {
+      try {
+        var I = _source(source);
+        List<T> old = [];
+        return I.get().then((value) async {
+          for (var i in value.docs) {
+            var single = build(i.data());
+            old.add(single);
+            await I.doc(single.id).delete();
+          }
+          return response.withBackups(old);
+        }).onError((e, s) {
+          return response.withException(
+            e,
+            status: Status.failure,
+          );
+        });
+      } catch (_) {
+        return response.withException(_, status: Status.failure);
+      }
+    } else {
+      return response.withStatus(Status.networkError);
+    }
+  }
+
+  @override
+  Future<Response<T>> get<R>(
+    String id, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    final response = Response<T>();
+    if (isConnected) {
+      try {
+        final result = await _source(source).doc(id).get();
+        if (result.exists && result.data() != null) {
+          return response.withData(build(result.data()));
+        } else {
+          return response.withException("Data not found!");
+        }
+      } catch (_) {
+        return response.withException(_, status: Status.failure);
+      }
+    } else {
+      return response.withStatus(Status.networkError);
+    }
+  }
+
+  @override
+  Future<Response<T>> gets<R>({
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+    bool forUpdates = false,
+  }) async {
+    final response = Response<T>();
+    if (isConnected) {
+      try {
+        final result = await _source(source).get();
+        if (result.docs.isNotEmpty || result.docChanges.isNotEmpty) {
+          if (forUpdates) {
+            var v = result.docChanges.map((e) => build(e.doc.data())).toList();
+            return response.withResult(v);
+          } else {
+            var v = result.docs.map((e) => build(e.data())).toList();
+            return response.withResult(v);
+          }
+        } else {
+          return response.withException("Data not found!");
+        }
+      } catch (_) {
+        return response.withException(_, status: Status.failure);
+      }
+    } else {
+      return response.withStatus(Status.networkError);
+    }
+  }
+
+  @override
+  Future<Response<T>> getUpdates<R>({
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  }) {
+    return gets(
+      isConnected: isConnected,
+      forUpdates: true,
+      source: source,
+    );
   }
 
   @override
@@ -288,24 +341,5 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
       controller.add(response.withStatus(Status.networkError));
     }
     return controller.stream;
-  }
-
-  @override
-  Future<Response<T>> update<R>(
-    T data, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    final response = Response<T>();
-    if (isConnected) {
-      try {
-        await _source(source).doc(data.id).update(data.source);
-        return response.withData(data);
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
   }
 }

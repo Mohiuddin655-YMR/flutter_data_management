@@ -18,7 +18,8 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
   }
 
   @override
-  Future<Response<T>> clear<R>({
+  Future<Response<T>> isAvailable<R>(
+    String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
   }) async {
@@ -27,6 +28,98 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
       "Currently not initialized!",
       status: Status.undefined,
     );
+  }
+
+  @override
+  Future<Response<T>> insert<R>(
+    T data, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    final response = Response<T>();
+    if (data.source.isNotEmpty) {
+      final value = await input(data.source);
+      if (value.isNotEmpty) {
+        final url = data.id.isNotEmpty
+            ? currentUrl(data.id, source)
+            : currentSource(source);
+        final reference = await database.post(url, data: value);
+        final code = reference.statusCode;
+        if (code == 200 || code == 201 || code == encryptor.status.created) {
+          return response.withFeedback(reference.data);
+        } else {
+          return response.modify(
+            snapshot: reference,
+            exception: "Data unmodified [${reference.statusCode}]",
+            status: Status.unmodified,
+          );
+        }
+      } else {
+        return response.withException(
+          "Unacceptable request!",
+          status: Status.invalid,
+        );
+      }
+    } else {
+      return response.withException(
+        "Undefined data!",
+        status: Status.unmodified,
+      );
+    }
+  }
+
+  @override
+  Future<Response<T>> inserts<R>(
+    List<T> data, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    final response = Response<T>();
+    return response.withException(
+      "Currently not initialized!",
+      status: Status.undefined,
+    );
+  }
+
+  @override
+  Future<Response<T>> update<R>(
+    String id,
+    Map<String, dynamic> data, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    final response = Response<T>();
+    try {
+      if (id.isValid && data.isValid) {
+        final value = await input(data);
+        if (value.isNotEmpty) {
+          final url = currentUrl(id, source);
+          final reference = await database.put(url, data: value);
+          final code = reference.statusCode;
+          if (code == 200 || code == encryptor.status.updated) {
+            return response.withFeedback(reference.data);
+          } else {
+            return response.modify(
+              snapshot: reference,
+              exception: "Data unmodified [${reference.statusCode}]",
+              status: Status.unmodified,
+            );
+          }
+        } else {
+          return response.withException(
+            "Unacceptable request!",
+            status: Status.invalid,
+          );
+        }
+      } else {
+        return response.withException(
+          "Undefined data!",
+          status: Status.undefined,
+        );
+      }
+    } catch (_) {
+      return response.withException(_, status: Status.failure);
+    }
   }
 
   @override
@@ -68,6 +161,18 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     } catch (_) {
       return response.withException(_, status: Status.failure);
     }
+  }
+
+  @override
+  Future<Response<T>> clear<R>({
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    final response = Response<T>();
+    return response.withException(
+      "Currently not initialized!",
+      status: Status.undefined,
+    );
   }
 
   @override
@@ -113,20 +218,6 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     } catch (_) {
       return response.withException(_, status: Status.failure);
     }
-  }
-
-  @override
-  Future<Response<T>> getUpdates<R>({
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-    Map<String, dynamic>? extra,
-  }) {
-    return gets(
-      isConnected: isConnected,
-      forUpdates: true,
-      extra: extra,
-      source: source,
-    );
   }
 
   @override
@@ -182,66 +273,16 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
   }
 
   @override
-  Future<Response<T>> insert<R>(
-    T data, {
+  Future<Response<T>> getUpdates<R>({
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
-  }) async {
-    final response = Response<T>();
-    if (data.source.isNotEmpty) {
-      final value = await input(data.source);
-      if (value.isNotEmpty) {
-        final url = data.id.isNotEmpty
-            ? currentUrl(data.id, source)
-            : currentSource(source);
-        final reference = await database.post(url, data: value);
-        final code = reference.statusCode;
-        if (code == 200 || code == 201 || code == encryptor.status.created) {
-          return response.withFeedback(reference.data);
-        } else {
-          return response.modify(
-            snapshot: reference,
-            exception: "Data unmodified [${reference.statusCode}]",
-            status: Status.unmodified,
-          );
-        }
-      } else {
-        return response.withException(
-          "Unacceptable request!",
-          status: Status.invalid,
-        );
-      }
-    } else {
-      return response.withException(
-        "Undefined data!",
-        status: Status.unmodified,
-      );
-    }
-  }
-
-  @override
-  Future<Response<T>> inserts<R>(
-    List<T> data, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    final response = Response<T>();
-    return response.withException(
-      "Currently not initialized!",
-      status: Status.undefined,
-    );
-  }
-
-  @override
-  Future<Response<T>> isAvailable<R>(
-    String id, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    final response = Response<T>();
-    return response.withException(
-      "Currently not initialized!",
-      status: Status.undefined,
+    Map<String, dynamic>? extra,
+  }) {
+    return gets(
+      isConnected: isConnected,
+      forUpdates: true,
+      extra: extra,
+      source: source,
     );
   }
 
@@ -361,46 +402,6 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     }
 
     controller.stream;
-  }
-
-  @override
-  Future<Response<T>> update<R>(
-    T data, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    final response = Response<T>();
-    try {
-      if (data.source.isNotEmpty) {
-        final value = await input(data.source);
-        if (value.isNotEmpty) {
-          final url = currentUrl(data.id, source);
-          final reference = await database.put(url, data: value);
-          final code = reference.statusCode;
-          if (code == 200 || code == encryptor.status.updated) {
-            return response.withFeedback(reference.data);
-          } else {
-            return response.modify(
-              snapshot: reference,
-              exception: "Data unmodified [${reference.statusCode}]",
-              status: Status.unmodified,
-            );
-          }
-        } else {
-          return response.withException(
-            "Unacceptable request!",
-            status: Status.invalid,
-          );
-        }
-      } else {
-        return response.withException(
-          "Undefined data!",
-          status: Status.undefined,
-        );
-      }
-    } catch (_) {
-      return response.withException(_, status: Status.failure);
-    }
   }
 }
 

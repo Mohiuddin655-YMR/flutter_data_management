@@ -47,13 +47,13 @@ class Application extends StatelessWidget {
             child: MultiBlocProvider(
               providers: [
                 BlocProvider(
-                  create: (context) => locator<UserController>(),
+                  create: (context) => locator<ProductController>(),
                 ),
                 BlocProvider(
                   create: (context) => locator<CartController>(),
                 ),
               ],
-              child: const LocalDataTest(),
+              child: const RemoteDataTest(),
             ),
           ),
         ),

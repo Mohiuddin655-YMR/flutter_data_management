@@ -10,10 +10,22 @@ class RemoteDataTest extends StatefulWidget {
 }
 
 class _RemoteDataTestState extends State<RemoteDataTest> {
-  late UserController controller = context.read<UserController>();
+  late ProductController controller = context.read<ProductController>();
 
   @override
   Widget build(BuildContext context) {
+    var p1 = Product(
+      id: "1",
+      timeMills: Entity.ms,
+      name: "Oppo F17 Pro",
+      price: 23500,
+    );
+    var p2 = Product(
+      id: "2",
+      timeMills: Entity.ms,
+      name: "Oppo A5s",
+      price: 14000,
+    );
     return SizedBox(
       width: double.infinity,
       child: SingleChildScrollView(
@@ -28,77 +40,45 @@ class _RemoteDataTestState extends State<RemoteDataTest> {
               alignment: WrapAlignment.center,
               children: [
                 ElevatedButton(
-                  onPressed: () {
-                    controller.insert(
-                      User(
-                        id: "1",
-                        email: "example@gmail.com",
-                      ),
-                    );
-                  },
+                  child: const Text("Availability"),
+                  onPressed: () => controller.isAvailable("1"),
+                ),
+                ElevatedButton(
                   child: const Text("Insert"),
+                  onPressed: () => controller.create(p1),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    controller.inserts(
-                      [
-                        User(
-                          id: "2",
-                          email: "example2@gmail.com",
-                        ),
-                        User(
-                          id: "3",
-                          email: "example3@gmail.com",
-                        ),
-                      ],
-                    );
-                  },
                   child: const Text("Inserts"),
+                  onPressed: () => controller.creates([p1, p2]),
                 ),
                 ElevatedButton(
+                  child: const Text("Update"),
                   onPressed: () {
                     controller.update(
-                      User(
-                        id: "1",
-                        email: "example.updated@gmail.com",
-                      ),
+                      id: p1.id,
+                      data: p1.copyWith(price: 20500).source,
                     );
                   },
-                  child: const Text("Update"),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    controller.delete("1");
-                  },
+                  onPressed: () => controller.delete("1"),
                   child: const Text("Delete"),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    controller.clear();
-                  },
+                  onPressed: () => controller.clear(),
                   child: const Text("Clear"),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    controller.get("1");
-                  },
+                  onPressed: () => controller.get("1"),
                   child: const Text("Get"),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    controller.gets();
-                  },
+                  onPressed: () => controller.gets(),
                   child: const Text("Gets"),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    controller.isAvailable("1");
-                  },
-                  child: const Text("Available"),
                 ),
               ],
             ),
-            BlocConsumer<UserController, Response<User>>(
+            BlocConsumer<ProductController, Response<Product>>(
               builder: (context, state) {
                 return Container(
                   width: double.infinity,
@@ -186,24 +166,24 @@ class _RemoteDataTestState extends State<RemoteDataTest> {
 
 /// Step-5
 /// Create a data controller for access all place
-class UserController extends RemoteDataController<User> {
-  UserController({
+class ProductController extends RemoteDataController<Product> {
+  ProductController({
     required super.handler,
   });
 }
 
 /// Step-4
 /// When you complete the repository to use User model for locally or remotely
-class UserHandler extends RemoteDataHandlerImpl<User> {
-  UserHandler({
+class ProductHandler extends RemoteDataHandlerImpl<Product> {
+  ProductHandler({
     required super.repository,
   });
 }
 
 /// Step-3
 /// When you use to auto detected to use remote or local data
-class UserRepository extends RemoteDataRepositoryImpl<User> {
-  UserRepository({
+class ProductRepository extends RemoteDataRepositoryImpl<Product> {
+  ProductRepository({
     super.local,
     super.isCacheMode = true,
     required super.remote,
@@ -213,100 +193,84 @@ class UserRepository extends RemoteDataRepositoryImpl<User> {
 /// Step - 2
 /// When you use remote database (ex. Firebase Firestore, Firebase Realtime, Api, Encrypted Api data)
 /// Use for remote data => insert, update, delete, get, gets, live, lives, clear
-class RemoteUserDataSource extends RealtimeDataSourceImpl<User> {
-  RemoteUserDataSource({
-    super.path = "users",
+class RemoteProductDataSource extends RealtimeDataSourceImpl<Product> {
+  RemoteProductDataSource({
+    super.path = "products",
   });
 
   @override
-  User build(source) {
-    return User.from(source);
+  Product build(source) {
+    return Product.from(source);
   }
 }
 
 /// Step - 2
 /// When you use local database (ex. SharedPreference)
 /// Use for local data => insert, update, delete, get, gets, live, lives, clear
-class LocalUserDataSource extends LocalDataSourceImpl<User> {
-  LocalUserDataSource({
+class LocalProductDataSource extends LocalDataSourceImpl<Product> {
+  LocalProductDataSource({
     required super.preferences,
-    super.path = "users",
+    super.path = "products",
   });
 
   @override
-  User build(source) {
-    return User.from(source);
+  Product build(source) {
+    return Product.from(source);
   }
 }
 
 /// Step - 1
 /// Use for local or remote data model
-class User extends Entity {
-  final String? email;
+class Product extends Entity {
   final String? name;
-  final String? phone;
-  final Address? address;
+  final double? price;
 
-  User({
+  Product({
     super.id,
     super.timeMills,
-    this.email,
     this.name,
-    this.phone,
-    this.address,
+    this.price,
   });
 
-  factory User.from(dynamic source) {
-    return User(
-      id: Entity.value("id", source),
-      timeMills: Entity.value("time_mills", source),
-      email: Entity.value("email", source),
-      name: Entity.value("name", source),
-      phone: Entity.value("phone", source),
-      address: Entity.object("address", source, (value) {
-        return Address.from(value);
-      }),
+  factory Product.from(dynamic source) {
+    return Product(
+      id: Entity.value<String>("id", source),
+      timeMills: Entity.value<int>("time_mills", source),
+      name: Entity.value<String>("name", source),
+      price: Entity.value<double>("price", source),
+    );
+  }
+
+  Product copyWith({
+    String? id,
+    int? timeMills,
+    String? name,
+    double? price,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      timeMills: timeMills ?? this.timeMills,
+      name: name ?? this.name,
+      price: price ?? this.price,
     );
   }
 
   @override
   Map<String, dynamic> get source {
     return super.source.attach({
-      "email": email,
-      "name": name,
-      "phone": phone,
-      "address": address?.source,
+      "name": name ?? "Name",
+      "price": price,
     });
   }
-}
 
-/// Optional
-/// Use for user sub entity
-class Address extends Entity {
-  final String? city;
-  final String? country;
-  final int? zipCode;
-
-  Address({
-    this.city,
-    this.country,
-    this.zipCode,
-  });
-
-  factory Address.from(dynamic source) {
-    return Address(
-      city: Entity.value<String>("city", source),
-      country: Entity.value<String>('country', source),
-      zipCode: Entity.value<int>("zip_code", source),
-    );
-  }
-
-  @override
-  Map<String, dynamic> get source {
-    return super.source.attach({
-      "city": city,
-      "country": country,
-      "zip_code": zipCode,
+  static List<Product> get carts {
+    return List.generate(5, (index) {
+      return Product(
+        id: "ID${index + 1}",
+        timeMills: Entity.ms,
+        name: "Product - ${index + 1}",
+        price: 45 + (index * 5),
+      );
     });
   }
 }

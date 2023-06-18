@@ -116,13 +116,14 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   @override
   Future<Response<T>> update<R>(
-    T data, {
+    String id,
+    Map<String, dynamic> data, {
     OnDataSourceBuilder<R>? source,
   }) async {
     final response = Response<T>();
     try {
       final I = await gets(source: source);
-      var finder = I.result.findBy(data);
+      var finder = I.result.findToUpdate(data.withId(id), build);
       if (finder.$3) {
         return database.input(_source(source), finder.$2._).then((value) {
           if (value) {
@@ -330,7 +331,10 @@ extension _LocalExtension on Future<SharedPreferences> {
 extension _LocalListExtension<T extends Entity> on List<T> {
   String get _ => jsonEncode(map((_) => _.source).toList());
 
-  (T?, List<T>, bool) findBy(T data) {
+  (T?, List<T>, bool) findToUpdate(
+    Map<String, dynamic> data,
+    OnDataBuilder<T> builder,
+  ) {
     T? B;
     var i = indexWhere((E) {
       if (data.id.equals(E.id)) {
@@ -342,7 +346,7 @@ extension _LocalListExtension<T extends Entity> on List<T> {
     });
     if (i > -1) {
       removeAt(i);
-      insert(i, data);
+      insert(i, builder(data));
       return (B, this, true);
     } else {
       return (null, this, false);
@@ -361,6 +365,12 @@ extension _LocalListExtension<T extends Entity> on List<T> {
     }).toList();
     return (B, I);
   }
+}
+
+extension _LocalMapExtension on Map<String, dynamic> {
+  String get id => this["id"];
+
+  Map<String, dynamic> withId(String id) => attach({"id": id});
 }
 
 extension _LocalStringExtension on String? {

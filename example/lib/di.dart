@@ -38,25 +38,25 @@ void _carts() {
 }
 
 void _products() {
-  locator.registerLazySingleton<LocalDataSource<User>>(() {
-    return LocalUserDataSource(preferences: locator());
+  locator.registerLazySingleton<LocalDataSource<Product>>(() {
+    return LocalProductDataSource(preferences: locator());
   });
-  locator.registerLazySingleton<RemoteDataSource<User>>(() {
-    return RemoteUserDataSource();
+  locator.registerLazySingleton<RemoteDataSource<Product>>(() {
+    return RemoteProductDataSource();
   });
 
-  locator.registerLazySingleton<RemoteDataRepository<User>>(() {
-    return UserRepository(
+  locator.registerLazySingleton<RemoteDataRepository<Product>>(() {
+    return ProductRepository(
       remote: locator(),
     );
   });
 
-  locator.registerLazySingleton<RemoteDataHandler<User>>(() {
-    return UserHandler(repository: locator());
+  locator.registerLazySingleton<RemoteDataHandler<Product>>(() {
+    return ProductHandler(repository: locator());
   });
 
-  locator.registerFactory<UserController>(() {
-    return UserController(
+  locator.registerFactory<ProductController>(() {
+    return ProductController(
       handler: locator(),
     );
   });

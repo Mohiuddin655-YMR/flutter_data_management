@@ -6,42 +6,11 @@ class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
   });
 
   @override
-  Future<Response<T>> clear<R>({
-    OnDataSourceBuilder<R>? source,
-  }) {
-    return local.clear(source: source);
-  }
-
-  @override
-  Future<Response<T>> delete<R>(
+  Future<Response<T>> isAvailable<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    return local.delete(id, source: source);
-  }
-
-  @override
-  Future<Response<T>> get<R>(
-    String id, {
-    OnDataSourceBuilder<R>? source,
-  }) {
-    return local.get(id, source: source);
-  }
-
-  @override
-  Future<Response<T>> getUpdates<R>({
-    OnDataSourceBuilder<R>? source,
-  }) {
-    return local.getUpdates(source: source);
-  }
-
-  @override
-  Future<Response<T>> gets<R>({
-    OnDataSourceBuilder<R>? source,
-  }) {
-    return local.gets(
-      source: source,
-    );
+    return local.isAvailable(id, source: source);
   }
 
   @override
@@ -61,11 +30,51 @@ class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
   }
 
   @override
-  Future<Response<T>> isAvailable<R>(
+  Future<Response<T>> update<R>(
+    String id,
+    Map<String, dynamic> data, {
+    OnDataSourceBuilder<R>? source,
+  }) {
+    return local.update(id, data, source: source);
+  }
+
+  @override
+  Future<Response<T>> delete<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    return local.isAvailable(id, source: source);
+    return local.delete(id, source: source);
+  }
+
+  @override
+  Future<Response<T>> clear<R>({
+    OnDataSourceBuilder<R>? source,
+  }) {
+    return local.clear(source: source);
+  }
+
+  @override
+  Future<Response<T>> get<R>(
+    String id, {
+    OnDataSourceBuilder<R>? source,
+  }) {
+    return local.get(id, source: source);
+  }
+
+  @override
+  Future<Response<T>> gets<R>({
+    OnDataSourceBuilder<R>? source,
+  }) {
+    return local.gets(
+      source: source,
+    );
+  }
+
+  @override
+  Future<Response<T>> getUpdates<R>({
+    OnDataSourceBuilder<R>? source,
+  }) {
+    return local.getUpdates(source: source);
   }
 
   @override
@@ -81,13 +90,5 @@ class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
     OnDataSourceBuilder<R>? source,
   }) {
     return local.lives(source: source);
-  }
-
-  @override
-  Future<Response<T>> update<R>(
-    T data, {
-    OnDataSourceBuilder<R>? source,
-  }) {
-    return local.update(data, source: source);
   }
 }

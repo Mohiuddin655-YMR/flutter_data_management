@@ -1,6 +1,7 @@
 part of 'repositories.dart';
 
-class RemoteDataRepositoryImpl<T extends Entity> extends RemoteDataRepository<T> {
+class RemoteDataRepositoryImpl<T extends Entity>
+    extends RemoteDataRepository<T> {
   RemoteDataRepositoryImpl({
     required super.remote,
     super.connectivity,
@@ -9,103 +10,22 @@ class RemoteDataRepositoryImpl<T extends Entity> extends RemoteDataRepository<T>
   });
 
   @override
-  Future<Response<T>> clear<R>({
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    if (isCacheMode && isLocal) {
-      return local!.clear(source: source);
-    } else {
-      var connected = await isConnected;
-      var response = await remote.clear(
-        isConnected: connected,
-        source: source,
-      );
-      if (response.isSuccessful && isLocal) {
-        await local!.clear(source: source);
-      }
-      return response;
-    }
-  }
-
-  @override
-  Future<Response<T>> delete<R>(
+  Future<Response<T>> isAvailable<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) async {
     if (isCacheMode && isLocal) {
-      return local!.delete(id, source: source);
-    } else {
-      var connected = await isConnected;
-      var response = await remote.delete(
-        id,
-        isConnected: connected,
-        source: source,
-      );
-      if (response.isSuccessful && isLocal) {
-        await local!.delete(id, source: source);
-      }
-      return response;
-    }
-  }
-
-  @override
-  Future<Response<T>> get<R>(
-    String id, {
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    if (isCacheMode && isLocal) {
-      return local!.get(id, source: source);
+      return local!.isAvailable(id, source: source);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return local!.get(id, source: source);
-      } else {
-        return remote.get(
+        return local!.isAvailable(
           id,
-          isConnected: connected,
-          source: source,
-        );
-      }
-    }
-  }
-
-  @override
-  Future<Response<T>> getUpdates<R>({
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    if (isCacheMode && isLocal) {
-      return local!.getUpdates(source: source);
-    } else {
-      var connected = await isConnected;
-      if (!connected && isLocal) {
-        return local!.getUpdates(
           source: source,
         );
       } else {
-        return remote.getUpdates(
-          isConnected: connected,
-          source: source,
-        );
-      }
-    }
-  }
-
-  @override
-  Future<Response<T>> gets<R>({
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    if (isCacheMode && isLocal) {
-      return local!.gets(
-        source: source,
-      );
-    } else {
-      var connected = await isConnected;
-      if (!connected && isLocal) {
-        return local!.gets(
-          source: source,
-        );
-      } else {
-        return remote.gets(
+        return remote.isAvailable(
+          id,
           isConnected: connected,
           source: source,
         );
@@ -156,22 +76,126 @@ class RemoteDataRepositoryImpl<T extends Entity> extends RemoteDataRepository<T>
   }
 
   @override
-  Future<Response<T>> isAvailable<R>(
+  Future<Response<T>> update<R>(
+    String id,
+    Map<String, dynamic> data, {
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    if (isCacheMode && isLocal) {
+      return local!.update(id, data, source: source);
+    } else {
+      var connected = await isConnected;
+      var response = await remote.update(
+        id,
+        data,
+        isConnected: connected,
+        source: source,
+      );
+      if (response.isSuccessful && isLocal) {
+        await local!.update(id, data, source: source);
+      }
+      return response;
+    }
+  }
+
+  @override
+  Future<Response<T>> delete<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) async {
     if (isCacheMode && isLocal) {
-      return local!.isAvailable(id, source: source);
+      return local!.delete(id, source: source);
+    } else {
+      var connected = await isConnected;
+      var response = await remote.delete(
+        id,
+        isConnected: connected,
+        source: source,
+      );
+      if (response.isSuccessful && isLocal) {
+        await local!.delete(id, source: source);
+      }
+      return response;
+    }
+  }
+
+  @override
+  Future<Response<T>> clear<R>({
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    if (isCacheMode && isLocal) {
+      return local!.clear(source: source);
+    } else {
+      var connected = await isConnected;
+      var response = await remote.clear(
+        isConnected: connected,
+        source: source,
+      );
+      if (response.isSuccessful && isLocal) {
+        await local!.clear(source: source);
+      }
+      return response;
+    }
+  }
+
+  @override
+  Future<Response<T>> get<R>(
+    String id, {
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    if (isCacheMode && isLocal) {
+      return local!.get(id, source: source);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return local!.isAvailable(
+        return local!.get(id, source: source);
+      } else {
+        return remote.get(
           id,
+          isConnected: connected,
+          source: source,
+        );
+      }
+    }
+  }
+
+  @override
+  Future<Response<T>> gets<R>({
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    if (isCacheMode && isLocal) {
+      return local!.gets(
+        source: source,
+      );
+    } else {
+      var connected = await isConnected;
+      if (!connected && isLocal) {
+        return local!.gets(
           source: source,
         );
       } else {
-        return remote.isAvailable(
-          id,
+        return remote.gets(
+          isConnected: connected,
+          source: source,
+        );
+      }
+    }
+  }
+
+  @override
+  Future<Response<T>> getUpdates<R>({
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    if (isCacheMode && isLocal) {
+      return local!.getUpdates(source: source);
+    } else {
+      var connected = await isConnected;
+      if (!connected && isLocal) {
+        return local!.getUpdates(
+          source: source,
+        );
+      } else {
+        return remote.getUpdates(
           isConnected: connected,
           source: source,
         );
@@ -221,27 +245,6 @@ class RemoteDataRepositoryImpl<T extends Entity> extends RemoteDataRepository<T>
           source: source,
         );
       }
-    }
-  }
-
-  @override
-  Future<Response<T>> update<R>(
-    T data, {
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    if (isCacheMode && isLocal) {
-      return local!.update(data, source: source);
-    } else {
-      var connected = await isConnected;
-      var response = await remote.update(
-        data,
-        isConnected: connected,
-        source: source,
-      );
-      if (response.isSuccessful && isLocal) {
-        await local!.update(data, source: source);
-      }
-      return response;
     }
   }
 }

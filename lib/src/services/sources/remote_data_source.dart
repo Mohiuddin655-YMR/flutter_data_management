@@ -69,7 +69,8 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
 
   @override
   Future<Response<T>> update<R>(
-    T data, {
+    String id,
+    Map<String, dynamic> data, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
   });

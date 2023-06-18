@@ -22,7 +22,8 @@ abstract class DataSource<T extends Entity> {
   });
 
   Future<Response<T>> update<R>(
-    T data, {
+    String id,
+    Map<String, dynamic> data, {
     OnDataSourceBuilder<R>? source,
   });
 

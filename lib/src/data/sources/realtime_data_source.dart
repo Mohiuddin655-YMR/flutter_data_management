@@ -23,101 +23,26 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   }
 
   @override
-  Future<Response<T>> clear<R>({
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    final response = Response<T>();
-    if (isConnected) {
-      try {
-        await _source(source).remove();
-        return response.withResult([]);
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
-  }
-
-  @override
-  Future<Response<T>> delete<R>(
+  Future<Response<T>> isAvailable<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
-        await _source(source).child(id).remove();
-        return response.withData(null);
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
-  }
-
-  @override
-  Future<Response<T>> get<R>(
-    String id, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    final response = Response<T>();
-    if (isConnected) {
-      try {
-        final result = await _source(source).child(id).get();
-        if (result.exists && result.value != null) {
-          return response.withData(build(result.value));
-        } else {
-          return response.withException(
-            "Data not found!",
-            status: Status.error,
-          );
+      if (id.isNotEmpty) {
+        try {
+          return _source(source).child(id).get().then((value) {
+            return response.withAvailable(!value.exists);
+          });
+        } catch (_) {
+          return response.withException(_, status: Status.failure);
         }
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
-  }
-
-  @override
-  Future<Response<T>> getUpdates<R>({
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-  }) {
-    return gets(
-      isConnected: isConnected,
-      forUpdates: true,
-      source: source,
-    );
-  }
-
-  @override
-  Future<Response<T>> gets<R>({
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-    bool forUpdates = false,
-  }) async {
-    final response = Response<T>();
-    if (isConnected) {
-      try {
-        final result = await _source(source).get();
-        if (result.exists) {
-          var list = result.children.map((e) => build(e.value)).toList();
-          return response.withResult(list);
-        } else {
-          return response.withException(
-            "Data not found!",
-            status: Status.error,
-          );
-        }
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
+      } else {
+        return response.withException(
+          "Id isn't valid!",
+          status: Status.invalid,
+        );
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -166,15 +91,24 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
     if (isConnected) {
       if (data.isNotEmpty) {
         try {
-          final reference = _source(source);
+          final I = _source(source);
           for (var i in data) {
-            await reference.child(i.id).get().then((value) async {
-              if (!value.exists) {
-                await reference
-                    .child(i.id)
-                    .setWithPriority(i.source, i.timeMills);
-              }
-            });
+            await I.child(i.id).get().then(
+              (value) async {
+                if (!value.exists) {
+                  await I
+                      .child(i.id)
+                      .setWithPriority(i.source, i.timeMills);
+                } else {
+                  var ignores = response.ignores;
+                  ignores.insert(0, i);
+                  response.withIgnores(
+                    ignores,
+                    message: "Already data added!",
+                  );
+                }
+              },
+            );
           }
           return response.withResult(data);
         } catch (_) {
@@ -192,30 +126,154 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   }
 
   @override
-  Future<Response<T>> isAvailable<R>(
+  Future<Response<T>> update<R>(
+    String id,
+    Map<String, dynamic> data, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    final response = Response<T>();
+    if (isConnected) {
+      try {
+        final I = _source(source).child(id);
+        return await I.get().then((value) async {
+          if (value.exists) {
+            await I.update(data);
+            return response.withBackup(build(value.value));
+          } else {
+            return response.withException(
+              'Data not found!',
+              status: Status.notFound,
+            );
+          }
+        });
+      } catch (_) {
+        return response.withException(_, status: Status.failure);
+      }
+    } else {
+      return response.withStatus(Status.networkError);
+    }
+  }
+
+  @override
+  Future<Response<T>> delete<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      if (id.isNotEmpty) {
-        try {
-          return _source(source).child(id).get().then((value) {
-            return response.withAvailable(!value.exists);
-          });
-        } catch (_) {
-          return response.withException(_, status: Status.failure);
-        }
-      } else {
-        return response.withException(
-          "Id isn't valid!",
-          status: Status.invalid,
-        );
+      try {
+        final I = _source(source).child(id);
+        return await I.get().then((value) async {
+          if (value.exists) {
+            await I.remove();
+            return response.withBackup(build(value.value));
+          } else {
+            return response.withException(
+              'Data not found!',
+              status: Status.notFound,
+            );
+          }
+        });
+      } catch (_) {
+        return response.withException(_, status: Status.failure);
       }
     } else {
       return response.withStatus(Status.networkError);
     }
+  }
+
+  @override
+  Future<Response<T>> clear<R>({
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    final response = Response<T>();
+    if (isConnected) {
+      try {
+        var I = _source(source);
+        return I.get().then((value) async {
+          var old = value.children.map((e) => build(e.value)).toList();
+          await I.remove();
+          return response.withBackups(old);
+        }).onError((e, s) {
+          return response.withException(
+            e,
+            status: Status.failure,
+          );
+        });
+      } catch (_) {
+        return response.withException(_, status: Status.failure);
+      }
+    } else {
+      return response.withStatus(Status.networkError);
+    }
+  }
+
+  @override
+  Future<Response<T>> get<R>(
+    String id, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    final response = Response<T>();
+    if (isConnected) {
+      try {
+        final result = await _source(source).child(id).get();
+        if (result.exists && result.value != null) {
+          return response.withData(build(result.value));
+        } else {
+          return response.withException(
+            "Data not found!",
+            status: Status.error,
+          );
+        }
+      } catch (_) {
+        return response.withException(_, status: Status.failure);
+      }
+    } else {
+      return response.withStatus(Status.networkError);
+    }
+  }
+
+  @override
+  Future<Response<T>> gets<R>({
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+    bool forUpdates = false,
+  }) async {
+    final response = Response<T>();
+    if (isConnected) {
+      try {
+        final result = await _source(source).get();
+        if (result.exists) {
+          var list = result.children.map((e) => build(e.value)).toList();
+          return response.withResult(list);
+        } else {
+          return response.withException(
+            "Data not found!",
+            status: Status.error,
+          );
+        }
+      } catch (_) {
+        return response.withException(_, status: Status.failure);
+      }
+    } else {
+      return response.withStatus(Status.networkError);
+    }
+  }
+
+  @override
+  Future<Response<T>> getUpdates<R>({
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  }) {
+    return gets(
+      isConnected: isConnected,
+      forUpdates: true,
+      source: source,
+    );
   }
 
   @override
@@ -272,24 +330,5 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
       controller.add(response.withStatus(Status.networkError));
     }
     return controller.stream;
-  }
-
-  @override
-  Future<Response<T>> update<R>(
-    T data, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-  }) async {
-    final response = Response<T>();
-    if (isConnected) {
-      try {
-        await _source(source).child(data.id).update(data.source);
-        return response.withData(data);
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
   }
 }

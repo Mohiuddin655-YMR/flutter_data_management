@@ -6,51 +6,12 @@ class RemoteDataHandlerImpl<T extends Entity> extends RemoteDataHandler<T> {
   });
 
   @override
-  Future<Response<T>> clear<R>({
-    OnDataSourceBuilder<R>? source,
-  }) {
-    return repository.clear(
-      source: source,
-    );
-  }
-
-  @override
-  Future<Response<T>> delete<R>(
+  Future<Response<T>> isAvailable<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    return repository.delete(
+    return repository.isAvailable(
       id,
-      source: source,
-    );
-  }
-
-  @override
-  Future<Response<T>> get<R>(
-    String id, {
-    OnDataSourceBuilder<R>? source,
-  }) {
-    return repository.get(
-      id,
-      source: source,
-    );
-  }
-
-  @override
-  Future<Response<T>> getUpdates<R>({
-    OnDataSourceBuilder<R>? source,
-    bool localMode = false,
-  }) {
-    return repository.getUpdates(
-      source: source,
-    );
-  }
-
-  @override
-  Future<Response<T>> gets<R>({
-    OnDataSourceBuilder<R>? source,
-  }) {
-    return repository.gets(
       source: source,
     );
   }
@@ -78,12 +39,64 @@ class RemoteDataHandlerImpl<T extends Entity> extends RemoteDataHandler<T> {
   }
 
   @override
-  Future<Response<T>> isAvailable<R>(
+  Future<Response<T>> update<R>(
+    String id,
+    Map<String, dynamic> data, {
+    OnDataSourceBuilder<R>? source,
+  }) {
+    return repository.update(
+      id,
+      data,
+      source: source,
+    );
+  }
+
+  @override
+  Future<Response<T>> delete<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    return repository.isAvailable(
+    return repository.delete(
       id,
+      source: source,
+    );
+  }
+
+  @override
+  Future<Response<T>> clear<R>({
+    OnDataSourceBuilder<R>? source,
+  }) {
+    return repository.clear(
+      source: source,
+    );
+  }
+
+  @override
+  Future<Response<T>> get<R>(
+    String id, {
+    OnDataSourceBuilder<R>? source,
+  }) {
+    return repository.get(
+      id,
+      source: source,
+    );
+  }
+
+  @override
+  Future<Response<T>> gets<R>({
+    OnDataSourceBuilder<R>? source,
+  }) {
+    return repository.gets(
+      source: source,
+    );
+  }
+
+  @override
+  Future<Response<T>> getUpdates<R>({
+    OnDataSourceBuilder<R>? source,
+    bool localMode = false,
+  }) {
+    return repository.getUpdates(
       source: source,
     );
   }
@@ -104,17 +117,6 @@ class RemoteDataHandlerImpl<T extends Entity> extends RemoteDataHandler<T> {
     OnDataSourceBuilder<R>? source,
   }) {
     return repository.lives(
-      source: source,
-    );
-  }
-
-  @override
-  Future<Response<T>> update<R>(
-    T data, {
-    OnDataSourceBuilder<R>? source,
-  }) {
-    return repository.update(
-      data,
       source: source,
     );
   }

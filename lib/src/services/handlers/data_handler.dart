@@ -1,26 +1,8 @@
 part of 'handlers.dart';
 
 abstract class DataHandler<T extends Entity> {
-
-  Future<Response<T>> clear<R>({
-    OnDataSourceBuilder<R>? source,
-  });
-
-  Future<Response<T>> delete<R>(
+  Future<Response<T>> isAvailable<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
-  });
-
-  Future<Response<T>> get<R>(
-    String id, {
-    OnDataSourceBuilder<R>? source,
-  });
-
-  Future<Response<T>> getUpdates<R>({
-    OnDataSourceBuilder<R>? source,
-  });
-
-  Future<Response<T>> gets<R>({
     OnDataSourceBuilder<R>? source,
   });
 
@@ -34,8 +16,31 @@ abstract class DataHandler<T extends Entity> {
     OnDataSourceBuilder<R>? source,
   });
 
-  Future<Response<T>> isAvailable<R>(
+  Future<Response<T>> update<R>(
+    String id,
+    Map<String, dynamic> data, {
+    OnDataSourceBuilder<R>? source,
+  });
+
+  Future<Response<T>> delete<R>(
     String id, {
+    OnDataSourceBuilder<R>? source,
+  });
+
+  Future<Response<T>> clear<R>({
+    OnDataSourceBuilder<R>? source,
+  });
+
+  Future<Response<T>> get<R>(
+    String id, {
+    OnDataSourceBuilder<R>? source,
+  });
+
+  Future<Response<T>> gets<R>({
+    OnDataSourceBuilder<R>? source,
+  });
+
+  Future<Response<T>> getUpdates<R>({
     OnDataSourceBuilder<R>? source,
   });
 
@@ -45,11 +50,6 @@ abstract class DataHandler<T extends Entity> {
   });
 
   Stream<Response<T>> lives<R>({
-    OnDataSourceBuilder<R>? source,
-  });
-
-  Future<Response<T>> update<R>(
-    T data, {
     OnDataSourceBuilder<R>? source,
   });
 }
