@@ -2,29 +2,28 @@ import 'package:data_management/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class RemoteDataTest extends StatefulWidget {
-  const RemoteDataTest({Key? key}) : super(key: key);
+class ApiDataTest extends StatefulWidget {
+  const ApiDataTest({Key? key}) : super(key: key);
 
   @override
-  State<RemoteDataTest> createState() => _RemoteDataTestState();
+  State<ApiDataTest> createState() => _ApiDataTestState();
 }
 
-class _RemoteDataTestState extends State<RemoteDataTest> {
-  late ProductController controller = context.read<ProductController>();
+class _ApiDataTestState extends State<ApiDataTest> {
+  late PostController controller = context.read<PostController>();
 
   @override
   Widget build(BuildContext context) {
-    var p1 = Product(
-      id: "1",
-      timeMills: Entity.ms,
-      name: "Oppo F17 Pro",
-      price: 23500,
+    var p1 = Post(
+      id: 1000,
+      title: "This is a title 1",
+      body: "This is a body 1",
     );
-    var p2 = Product(
-      id: "2",
-      timeMills: Entity.ms,
-      name: "Oppo A5s",
-      price: 14000,
+    var p2 = Post(
+      id: 2,
+      userId: 1,
+      title: "This is a title 2",
+      body: "This is a body 2",
     );
     return SizedBox(
       width: double.infinity,
@@ -55,8 +54,8 @@ class _RemoteDataTestState extends State<RemoteDataTest> {
                   child: const Text("Update"),
                   onPressed: () {
                     controller.update(
-                      id: p1.id,
-                      data: p1.copyWith(price: 20500).source,
+                      id: p1.id.toString(),
+                      data: p1.copyWith(title: "Title updated!").source,
                     );
                   },
                 ),
@@ -78,7 +77,7 @@ class _RemoteDataTestState extends State<RemoteDataTest> {
                 ),
               ],
             ),
-            BlocConsumer<ProductController, Response<Product>>(
+            BlocConsumer<PostController, Response<Post>>(
               builder: (context, state) {
                 return Container(
                   width: double.infinity,
@@ -94,20 +93,16 @@ class _RemoteDataTestState extends State<RemoteDataTest> {
               },
               listener: (context, state) {
                 if (state.isLoading) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Loading..."),
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(state.message),
                   ));
-                } else if (state.isError ||
-                    state.isFailed ||
-                    state.isInternetError ||
-                    state.isNullable ||
-                    state.isTimeout) {
+                } else if (state.isMessage) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(state.message),
+                  ));
+                } else if (state.isException) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(state.exception),
-                  ));
-                } else if (state.isAvailable) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Available"),
                   ));
                 } else if (state.isValid) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -124,39 +119,39 @@ class _RemoteDataTestState extends State<RemoteDataTest> {
                 }
               },
             ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              alignment: Alignment.center,
-              color: Colors.grey.withAlpha(50),
-              margin: const EdgeInsets.symmetric(vertical: 24),
-              child: StreamBuilder(
-                  stream: controller.live("1"),
-                  builder: (context, snapshot) {
-                    var value = snapshot.data ?? Response();
-                    return Text(
-                      value.data.toString(),
-                      textAlign: TextAlign.center,
-                    );
-                  }),
-            ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              alignment: Alignment.center,
-              color: Colors.grey.withAlpha(50),
-              margin: const EdgeInsets.symmetric(vertical: 24),
-              child: StreamBuilder(
-                stream: controller.lives(),
-                builder: (context, snapshot) {
-                  var value = snapshot.data ?? Response();
-                  return Text(
-                    value.result.toString(),
-                    textAlign: TextAlign.center,
-                  );
-                },
-              ),
-            ),
+            // Container(
+            //   width: double.infinity,
+            //   padding: const EdgeInsets.all(24),
+            //   alignment: Alignment.center,
+            //   color: Colors.grey.withAlpha(50),
+            //   margin: const EdgeInsets.symmetric(vertical: 24),
+            //   child: StreamBuilder(
+            //       stream: controller.live("1"),
+            //       builder: (context, snapshot) {
+            //         var value = snapshot.data ?? Response();
+            //         return Text(
+            //           value.data.toString(),
+            //           textAlign: TextAlign.center,
+            //         );
+            //       }),
+            // ),
+            // Container(
+            //   width: double.infinity,
+            //   padding: const EdgeInsets.all(24),
+            //   alignment: Alignment.center,
+            //   color: Colors.grey.withAlpha(50),
+            //   margin: const EdgeInsets.symmetric(vertical: 24),
+            //   child: StreamBuilder(
+            //     stream: controller.lives(),
+            //     builder: (context, snapshot) {
+            //       var value = snapshot.data ?? Response();
+            //       return Text(
+            //         value.result.toString(),
+            //         textAlign: TextAlign.center,
+            //       );
+            //     },
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -166,24 +161,24 @@ class _RemoteDataTestState extends State<RemoteDataTest> {
 
 /// Step-5
 /// Create a data controller for access all place
-class ProductController extends RemoteDataController<Product> {
-  ProductController({
+class PostController extends RemoteDataController<Post> {
+  PostController({
     required super.handler,
   });
 }
 
 /// Step-4
 /// When you complete the repository to use User model for locally or remotely
-class ProductHandler extends RemoteDataHandlerImpl<Product> {
-  ProductHandler({
+class PostHandler extends RemoteDataHandlerImpl<Post> {
+  PostHandler({
     required super.repository,
   });
 }
 
 /// Step-3
 /// When you use to auto detected to use remote or local data
-class ProductRepository extends RemoteDataRepositoryImpl<Product> {
-  ProductRepository({
+class PostRepository extends RemoteDataRepositoryImpl<Post> {
+  PostRepository({
     super.local,
     super.isCacheMode = true,
     required super.remote,
@@ -193,84 +188,82 @@ class ProductRepository extends RemoteDataRepositoryImpl<Product> {
 /// Step - 2
 /// When you use remote database (ex. Firebase Firestore, Firebase Realtime, Api, Encrypted Api data)
 /// Use for remote data => insert, update, delete, get, gets, live, lives, clear
-class RemoteProductDataSource extends RealtimeDataSourceImpl<Product> {
-  RemoteProductDataSource({
-    super.path = "products",
+class RemotePostDataSource extends ApiDataSourceImpl<Post> {
+  RemotePostDataSource({
+    super.path = "posts",
+    super.api = const Api(
+      api: "https://jsonplaceholder.typicode.com",
+      status: ApiStatus(ok: 200),
+      autoGenerateId: true,
+    ),
   });
 
   @override
-  Product build(source) {
-    return Product.from(source);
+  Post build(source) {
+    return Post.from(source);
   }
 }
 
 /// Step - 2
 /// When you use local database (ex. SharedPreference)
 /// Use for local data => insert, update, delete, get, gets, live, lives, clear
-class LocalProductDataSource extends LocalDataSourceImpl<Product> {
-  LocalProductDataSource({
+class LocalPostDataSource extends LocalDataSourceImpl<Post> {
+  LocalPostDataSource({
     required super.preferences,
     super.path = "products",
   });
 
   @override
-  Product build(source) {
-    return Product.from(source);
+  Post build(source) {
+    return Post.from(source);
   }
 }
 
 /// Step - 1
 /// Use for local or remote data model
-class Product extends Entity {
-  final String? name;
-  final double? price;
+class Post extends Entity<int> {
+  final int? userId;
+  final String? title;
+  final String? body;
 
-  Product({
+  Post({
     super.id,
     super.timeMills,
-    this.name,
-    this.price,
+    this.userId,
+    this.title,
+    this.body,
   });
 
-  factory Product.from(dynamic source) {
-    return Product(
-      id: Entity.value<String>("id", source),
-      timeMills: Entity.value<int>("time_mills", source),
-      name: Entity.value<String>("name", source),
-      price: Entity.value<double>("price", source),
+  factory Post.from(dynamic source) {
+    return Post(
+      id: Entity.value<int>("id", source),
+      userId: Entity.value<int>("userId", source),
+      title: Entity.value<String>("title", source),
+      body: Entity.value<String>("body", source),
     );
   }
 
-  Product copyWith({
-    String? id,
-    int? timeMills,
-    String? name,
-    double? price,
+  Post copyWith({
+    int? id,
+    int? userId,
+    String? title,
+    String? body,
   }) {
-    return Product(
+    return Post(
       id: id ?? this.id,
-      timeMills: timeMills ?? this.timeMills,
-      name: name ?? this.name,
-      price: price ?? this.price,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      body: body ?? this.body,
     );
   }
 
   @override
   Map<String, dynamic> get source {
     return super.source.attach({
-      "name": name ?? "Name",
-      "price": price,
-    });
-  }
-
-  static List<Product> get carts {
-    return List.generate(5, (index) {
-      return Product(
-        id: "ID${index + 1}",
-        timeMills: Entity.ms,
-        name: "Product - ${index + 1}",
-        price: 45 + (index * 5),
-      );
+      "id": id.toString(),
+      "userId": id,
+      "title": title ?? "Title",
+      "body": body,
     });
   }
 }

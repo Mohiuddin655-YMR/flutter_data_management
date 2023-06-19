@@ -1,19 +1,19 @@
 part of 'entities.dart';
 
-class Entity {
-  String? _id;
+class Entity<ID extends dynamic> {
+  ID? _id;
   int? _timeMills;
 
-  String get id => _id ?? key;
+  ID get id => _id ?? key;
 
   int get timeMills => _timeMills ?? ms;
 
-  set id(String value) => _id = value;
+  set id(ID value) => _id = value;
 
   set timeMills(int value) => _timeMills = value;
 
   Entity({
-    String? id,
+    ID? id,
     int? timeMills,
   })  : _id = id,
         _timeMills = timeMills;

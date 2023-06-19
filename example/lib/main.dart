@@ -1,12 +1,14 @@
 import 'package:example/di.dart';
+import 'package:example/firebase_realtime_data_test.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'api_data_test.dart';
+import 'firebase_firestore_data_test.dart';
 import 'local_data_test.dart';
-import 'remote_data_test.dart';
 
 late SharedPreferences preferences;
 
@@ -47,13 +49,19 @@ class Application extends StatelessWidget {
             child: MultiBlocProvider(
               providers: [
                 BlocProvider(
+                  create: (context) => locator<CartController>(),
+                ),
+                BlocProvider(
+                  create: (context) => locator<PostController>(),
+                ),
+                BlocProvider(
                   create: (context) => locator<ProductController>(),
                 ),
                 BlocProvider(
-                  create: (context) => locator<CartController>(),
+                  create: (context) => locator<UserController>(),
                 ),
               ],
-              child: const RemoteDataTest(),
+              child: const ApiDataTest(),
             ),
           ),
         ),

@@ -100,12 +100,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
             response.withException(e, status: Status.failure);
           });
         } else {
-          var ignores = response.ignores;
-          ignores.insert(0, item);
-          response.withIgnores(
-            ignores,
-            message: "Already data added!",
-          );
+          response.withIgnore(item, message: "Already inserted!");
         }
       }
       return response;

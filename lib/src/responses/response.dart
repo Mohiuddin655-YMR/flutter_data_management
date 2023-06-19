@@ -46,11 +46,13 @@ class Response<T> {
 
   set isError(bool value) => _error = value;
 
-  bool get isIgnored => ignores.isNotEmpty;
+  bool get isException => _exception?.isNotEmpty ?? status.isExceptionMode;
 
   bool get isFailed => _failed ?? false;
 
   set isFailed(bool value) => _failed = value;
+
+  bool get isIgnored => ignores.isNotEmpty;
 
   bool get isInternetError => _internetError ?? false;
 
@@ -63,6 +65,8 @@ class Response<T> {
   bool get isLoading => _loading ?? false;
 
   set isLoading(bool value) => _loading = value;
+
+  bool get isMessage => _message?.isNotEmpty ?? status.isMessageMode;
 
   bool get isNullable => _nullable ?? false;
 
@@ -112,11 +116,11 @@ class Response<T> {
 
   set status(Status value) => _status = value;
 
-  String get exception => _exception ?? "";
+  String get exception => _exception ?? status.exception;
 
   set exception(String value) => _exception = value;
 
-  String get message => _message ?? "";
+  String get message => _message ?? status.message;
 
   set message(String value) => _message = value;
 
@@ -302,10 +306,11 @@ class Response<T> {
     return this;
   }
 
-  Response<T> withAvailable(bool available, {String? message}) {
+  Response<T> withAvailable(bool available, {String? message, T? data}) {
     _available = available;
-    _loading = false;
+    _data = data;
     _message = message;
+    _loading = false;
     return this;
   }
 
@@ -386,17 +391,8 @@ class Response<T> {
     return this;
   }
 
-  Response<T> withIgnore(T value, {String? message, Status? status}) {
+  Response<T> withIgnore(T? value, {String? message, Status? status}) {
     _ignores = _ignores.setAt(0, value);
-    _status = status;
-    _successful = false;
-    _message = message;
-    _loading = false;
-    return this;
-  }
-
-  Response<T> withIgnores(List<T>? value, {String? message, Status? status}) {
-    _ignores = value;
     _status = status;
     _successful = false;
     _message = message;
@@ -436,7 +432,7 @@ class Response<T> {
   }
 
   Response<T> withProgress(double progress, {String? message}) {
-    _status = Status.running;
+    _status = Status.loading;
     _progress = progress;
     _message = message;
     return this;
@@ -513,16 +509,16 @@ class Response<T> {
         "Successful : $_successful\n"
         "Timeout : $_timeout\n"
         "Valid : $_valid\n"
-        "Progress : $_progress\n"
-        "Status : $_status\n"
-        "Exception : $_exception\n"
-        "Message : $_message\n"
+        "Progress : $progress\n"
+        "Status : $status\n"
+        "Exception : $exception\n"
+        "Message : $message\n"
         "Feedback : $feedback\n"
         "Snapshot : $snapshot\n"
-        "Data : $_data\n"
-        "Result : $_result\n"
-        "Backups : $_backups\n"
-        "Ignores : $_ignores";
+        "Data : $data\n"
+        "Result : $result\n"
+        "Backups : $backups\n"
+        "Ignores : $ignores";
   }
 }
 
@@ -552,7 +548,7 @@ enum Status {
   paused(10050, ResponseMessages.processPaused),
   notFound(10060, ResponseMessages.notFound),
   stopped(10070, ResponseMessages.processStopped),
-  running(10090, ""),
+  loading(10090, ResponseMessages.loading),
   timeOut(10080, ResponseMessages.tryAgain),
   ok(10100, ResponseMessages.successful),
   invalid(10110, ResponseMessages.invalidData),
@@ -563,15 +559,21 @@ enum Status {
   error(10100, ResponseMessages.errorFound);
 
   final int code;
-  final String message;
+  final String _message;
 
-  const Status(this.code, this.message);
+  const Status(this.code, this._message);
 }
 
 extension ResponseStatusExtension on Status {
   bool get isCanceled => this == Status.canceled;
 
+  bool get isError => this == Status.error;
+
   bool get isFailure => this == Status.failure;
+
+  bool get isInvalid => this == Status.invalid;
+
+  bool get isLoading => this == Status.loading;
 
   bool get isNetworkError => this == Status.networkError;
 
@@ -583,19 +585,35 @@ extension ResponseStatusExtension on Status {
 
   bool get isStopped => this == Status.stopped;
 
-  bool get isRunning => this == Status.running;
-
-  bool get isTimeout => this == Status.timeOut;
-
   bool get isSuccessful => this == Status.ok;
 
-  bool get isInvalid => this == Status.invalid;
+  bool get isTimeout => this == Status.timeOut;
 
   bool get isUndefined => this == Status.undefined;
 
   bool get isUnmodified => this == Status.unmodified;
 
-  bool get isError => this == Status.error;
+  bool get isExceptionMode {
+    return isCanceled ||
+        isError ||
+        isFailure ||
+        isInvalid ||
+        isNetworkError ||
+        isNullable ||
+        isResultNotFound ||
+        isStopped ||
+        isTimeout ||
+        isUndefined ||
+        isUnmodified;
+  }
+
+  bool get isMessageMode {
+    return isPaused || isLoading || isSuccessful;
+  }
+
+  String get exception => isExceptionMode ? _message : "";
+
+  String get message => isMessageMode ? _message : "";
 }
 
 extension _ListExtension<T> on List<T>? {

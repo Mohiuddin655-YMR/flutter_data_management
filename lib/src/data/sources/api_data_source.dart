@@ -25,8 +25,39 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     }
   }
 
-  String currentUrl<R>(String id, OnDataSourceBuilder<R>? source) {
-    return "${currentSource(source)}/$id";
+  String _source<R>(String id, OnDataSourceBuilder<R>? source) {
+    if (api.autoGenerateId) {
+      return currentSource(source);
+    } else {
+      return "${currentSource(source)}/$id";
+    }
+  }
+
+  Future<(bool, T?, String? message, Status status)> isExisted<R>(
+    String id, {
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    if (id.isValid) {
+      try {
+        final I = _source(id, source);
+        final result = await database.get(I);
+        final value = result.data;
+        final code = result.statusCode;
+        if ((code == 200 || code == api.status.ok) && value is Map) {
+          return (true, build(value), "Currently existed", Status.ok);
+        } else {
+          return (false, null, "Data not existed!", Status.notFound);
+        }
+      } on dio.DioException catch (_) {
+        var code = _.response?.statusCode.use;
+        if (code == 404 || code == api.status.notFound) {
+          return (false, null, "Data not existed!", Status.notFound);
+        }
+        return (false, null, _.message, Status.notFound);
+      }
+    } else {
+      return (false, null, "Id isn't valid!", Status.invalid);
+    }
   }
 
   @override
@@ -37,14 +68,21 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      return response.withException(
-        "Currently not initialized!",
-        status: Status.undefined,
-      );
+      if (id.isNotEmpty) {
+        var finder = await isExisted(id);
+        return response.withAvailable(
+          !finder.$1,
+          data: finder.$2,
+          message: finder.$3,
+        );
+      } else {
+        return response.withException(
+          "Undefined ID [$id]",
+          status: Status.invalid,
+        );
+      }
     } else {
-      return response.withStatus(
-        Status.networkError,
-      );
+      return response.withStatus(Status.networkError);
     }
   }
 
@@ -56,21 +94,36 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      if (data.source.isNotEmpty) {
-        final url = data.id.isNotEmpty
-            ? currentUrl(data.id, source)
-            : currentSource(source);
-        final reference = await database.post(url, data: data.source);
-        final code = reference.statusCode;
-        if (code == 200 || code == 201 || code == api.status.created) {
-          final result = reference.data;
-          return response.modify(result: result);
+      var id = "${data.id}";
+      if (id.isValid && data.source.isValid) {
+        final finder = await isExisted(id, source: source);
+        final I = _source(id, source);
+        if (!finder.$1) {
+          try {
+            final result = await database.post(I, data: data.source);
+            final feedback = result.data;
+            final code = result.statusCode;
+            if (code == 200 || code == 201 || code == api.status.created) {
+              if (feedback is Map) {
+                return response.withData(build(feedback));
+              } else if (feedback is List) {
+                return response.withResult(
+                  feedback.map((e) => build(e)).toList(),
+                );
+              } else {
+                return response.withFeedback(
+                  feedback,
+                  status: Status.unmodified,
+                );
+              }
+            } else {
+              return response.withException('Data not inserted!');
+            }
+          } on dio.DioException catch (_) {
+            return response.withException(_.message, status: Status.failure);
+          }
         } else {
-          return response.modify(
-            snapshot: reference,
-            exception: "Data unmodified [${reference.statusCode}]",
-            status: Status.unmodified,
-          );
+          return response.withIgnore(finder.$2, message: 'Already inserted!');
         }
       } else {
         return response.withException(
@@ -93,10 +146,11 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      return response.withException(
-        "Currently not initialized!",
-        status: Status.undefined,
-      );
+      for (var i in data) {
+        var result = await insert(i, isConnected: true, source: source);
+        if (result.ignores.isValid) response.withIgnore(result.ignores[0]);
+      }
+      return response.withResult(data);
     } else {
       return response.withStatus(
         Status.networkError,
@@ -113,28 +167,41 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
-        if (id.isValid && data.isValid) {
-          final url = currentUrl(id, source);
-          final reference = await database.put(url, data: data);
-          final code = reference.statusCode;
-          if (code == 200 || code == 201 || code == api.status.updated) {
-            return response.withStatus(Status.ok);
-          } else {
-            return response.modify(
-              status: Status.unmodified,
-              snapshot: reference,
-              exception: "Data unmodified [${reference.statusCode}]",
-            );
+      if (id.isValid && data.isValid) {
+        final finder = await isExisted(id, source: source);
+        final I = _source(id, source);
+        if (finder.$1) {
+          try {
+            final result = await database.put(I, data: data);
+            final feedback = result.data;
+            final code = result.statusCode;
+            if (code == 200 || code == 201 || code == api.status.updated) {
+              if (feedback is Map) {
+                return response.withData(build(feedback));
+              } else if (feedback is List) {
+                return response.withResult(
+                  feedback.map((e) => build(e)).toList(),
+                );
+              } else {
+                return response.withFeedback(
+                  feedback,
+                  status: Status.unmodified,
+                );
+              }
+            } else {
+              return response.withException('Data not updated!');
+            }
+          } on dio.DioException catch (_) {
+            return response.withException(_.message, status: Status.failure);
           }
         } else {
-          return response.withException(
-            "Undefined data $data",
-            status: Status.undefined,
-          );
+          return response.withIgnore(finder.$2, message: 'Data not found!');
         }
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
+      } else {
+        return response.withException(
+          "Undefined data $data",
+          status: Status.invalid,
+        );
       }
     } else {
       return response.withStatus(
@@ -153,7 +220,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     if (isConnected) {
       try {
         if (id.isNotEmpty) {
-          final url = currentUrl(id, source);
+          final url = _source(id, source);
           final result = await database.delete(url);
           final code = result.statusCode;
           if (code == 200 || code == 201 || code == api.status.deleted) {
@@ -204,7 +271,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     if (isConnected) {
       try {
         if (id.isNotEmpty) {
-          final url = currentUrl(id, source);
+          final url = _source(id, source);
           final result = await database.get(url);
           final data = result.data;
           final code = result.statusCode;
@@ -289,7 +356,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     if (isConnected) {
       try {
         if (id.isNotEmpty) {
-          final url = currentUrl(id, source);
+          final url = _source(id, source);
           Timer.periodic(const Duration(milliseconds: 300), (timer) async {
             final reference = await database.get(url);
             final data = reference.data;
@@ -365,11 +432,13 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
 }
 
 class Api {
+  final bool autoGenerateId;
   final String api;
   final ApiStatus status;
 
   const Api({
     required this.api,
+    this.autoGenerateId = true,
     this.status = const ApiStatus(),
   });
 }
@@ -380,6 +449,7 @@ class ApiStatus {
   final int created;
   final int updated;
   final int deleted;
+  final int notFound;
 
   const ApiStatus({
     this.ok = 200,
@@ -387,6 +457,7 @@ class ApiStatus {
     this.updated = 202,
     this.deleted = 203,
     this.canceled = 204,
+    this.notFound = 404,
   });
 }
 

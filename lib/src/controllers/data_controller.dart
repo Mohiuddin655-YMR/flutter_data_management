@@ -58,12 +58,12 @@ abstract class DataController<T extends Entity> extends Cubit<Response<T>> {
   void request<R>(
     Future<Response<T>> Function() callback,
   ) async {
-    emit(state.copy(loading: true));
+    emit(state.copy(loading: true, status: Status.loading));
     try {
       var result = await callback();
       emit(state.from(result));
     } catch (_) {
-      emit(state.copy(exception: "Something went wrong!"));
+      emit(state.copy(exception: _.toString(), status: Status.failure));
     }
   }
 }

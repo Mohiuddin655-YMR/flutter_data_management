@@ -3,7 +3,7 @@ import 'package:example/di.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'remote_data_test.dart';
+import 'firebase_firestore_data_test.dart';
 
 class LocalDataTest extends StatefulWidget {
   const LocalDataTest({Key? key}) : super(key: key);

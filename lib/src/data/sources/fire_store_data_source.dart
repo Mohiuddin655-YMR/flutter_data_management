@@ -35,7 +35,12 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
       if (id.isNotEmpty) {
         try {
           return _source(source).doc(id).get().then((value) {
-            return response.withAvailable(!value.exists);
+            var available = !value.exists;
+            return response.withAvailable(
+              available,
+              data: available ? null : build(value.data()),
+              message: available ? "Currently available" : "Already inserted!",
+            );
           });
         } catch (_) {
           return response.withException(_, status: Status.failure);
@@ -61,16 +66,13 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
     if (isConnected) {
       if (data.id.isNotEmpty) {
         try {
-          final reference = _source(source).doc(data.id);
-          return await reference.get().then((value) async {
+          final I = _source(source).doc(data.id);
+          return await I.get().then((value) async {
             if (!value.exists) {
-              await reference.set(data.source, SetOptions(merge: true));
+              await I.set(data.source, SetOptions(merge: true));
               return response.withData(data);
             } else {
-              return response.modify(
-                snapshot: value,
-                message: 'Already inserted!',
-              );
+              return response.withIgnore(data, message: 'Already inserted!');
             }
           });
         } catch (_) {
@@ -99,23 +101,13 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
         try {
           final I = _source(source);
           for (var i in data) {
-            await I.doc(i.id).get().then(
-              (value) async {
-                if (!value.exists) {
-                  await I.doc(i.id).set(
-                        i.source,
-                        SetOptions(merge: true),
-                      );
-                } else {
-                  var ignores = response.ignores;
-                  ignores.insert(0, i);
-                  response.withIgnores(
-                    ignores,
-                    message: "Already data added!",
-                  );
-                }
-              },
-            );
+            await I.doc(i.id).get().then((value) async {
+              if (!value.exists) {
+                await I.doc(i.id).set(i.source, SetOptions(merge: true));
+              } else {
+                response.withIgnore(i, message: 'Already inserted!');
+              }
+            });
           }
           return response.withResult(data);
         } catch (_) {
@@ -178,7 +170,7 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
             return response.withBackup(build(value.data()));
           } else {
             return response.withException(
-              'Data not found!',
+              'Data not inserted!',
               status: Status.notFound,
             );
           }
@@ -208,11 +200,6 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
             await I.doc(single.id).delete();
           }
           return response.withBackups(old);
-        }).onError((e, s) {
-          return response.withException(
-            e,
-            status: Status.failure,
-          );
         });
       } catch (_) {
         return response.withException(_, status: Status.failure);
@@ -257,11 +244,13 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
         final result = await _source(source).get();
         if (result.docs.isNotEmpty || result.docChanges.isNotEmpty) {
           if (forUpdates) {
-            var v = result.docChanges.map((e) => build(e.doc.data())).toList();
-            return response.withResult(v);
+            return response.withResult(
+              result.docChanges.map((e) => build(e.doc.data())).toList(),
+            );
           } else {
-            var v = result.docs.map((e) => build(e.data())).toList();
-            return response.withResult(v);
+            return response.withResult(
+              result.docs.map((e) => build(e.data())).toList(),
+            );
           }
         } else {
           return response.withException("Data not found!");
@@ -326,8 +315,9 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
       try {
         _source(source).snapshots().listen((event) {
           if (event.docs.isNotEmpty) {
-            var v = event.docs.map((e) => build(e.data())).toList();
-            controller.add(response.withResult(v));
+            controller.add(response.withResult(
+              event.docs.map((e) => build(e.data())).toList(),
+            ));
           } else {
             controller.add(
               response.withException("Data not found!").withResult([]),

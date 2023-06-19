@@ -41,7 +41,7 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
       final value = await input(data.source);
       if (value.isNotEmpty) {
         final url = data.id.isNotEmpty
-            ? currentUrl(data.id, source)
+            ? _source(data.id, source)
             : currentSource(source);
         final reference = await database.post(url, data: value);
         final code = reference.statusCode;
@@ -93,7 +93,7 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
       if (id.isValid && data.isValid) {
         final value = await input(data);
         if (value.isNotEmpty) {
-          final url = currentUrl(id, source);
+          final url = _source(id, source);
           final reference = await database.put(url, data: value);
           final code = reference.statusCode;
           if (code == 200 || code == encryptor.status.updated) {
@@ -134,7 +134,7 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
       if (id.isNotEmpty && extra != null && extra.isNotEmpty) {
         final value = await input(extra);
         if (value.isNotEmpty) {
-          final url = currentUrl(id, source);
+          final url = _source(id, source);
           final reference = await database.delete(url, data: value);
           final code = reference.statusCode;
           if (code == 200 || code == encryptor.status.deleted) {
@@ -187,7 +187,7 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
       if (id.isNotEmpty && extra != null && extra.isNotEmpty) {
         final value = await input(extra);
         if (value.isNotEmpty) {
-          final url = currentUrl(id, source);
+          final url = _source(id, source);
           final reference = encryptor.type == ApiRequest.get
               ? await database.get(url, data: value)
               : await database.post(url, data: value);
@@ -299,7 +299,7 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
       if (id.isNotEmpty && extra != null && extra.isNotEmpty) {
         final value = await input(extra);
         if (value.isNotEmpty) {
-          final url = currentUrl(id, source);
+          final url = _source(id, source);
           Timer.periodic(const Duration(milliseconds: 3000), (timer) async {
             final reference = encryptor.type == ApiRequest.get
                 ? await database.get(url, data: value)

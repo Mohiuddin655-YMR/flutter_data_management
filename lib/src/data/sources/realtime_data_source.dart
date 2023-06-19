@@ -33,7 +33,12 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
       if (id.isNotEmpty) {
         try {
           return _source(source).child(id).get().then((value) {
-            return response.withAvailable(!value.exists);
+            var available = !value.exists;
+            return response.withAvailable(
+              available,
+              data: available ? null : build(value.value),
+              message: available ? "Currently available" : "Already inserted!",
+            );
           });
         } catch (_) {
           return response.withException(_, status: Status.failure);
@@ -58,16 +63,13 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
     final response = Response<T>();
     if (isConnected) {
       if (data.id.isNotEmpty) {
-        final ref = _source(source).child(data.id);
-        return await ref.get().then((value) async {
+        final I = _source(source).child(data.id);
+        return await I.get().then((value) async {
           if (!value.exists) {
-            await ref.setWithPriority(data.source, data.timeMills);
-            return response.withData(data, message: "Inserted successful!");
+            await I.setWithPriority(data.source, data.timeMills);
+            return response.withData(data);
           } else {
-            return response.withException(
-              'Already inserted!',
-              status: Status.invalid,
-            );
+            return response.withIgnore(data, message: 'Already inserted!');
           }
         });
       } else {
@@ -93,22 +95,13 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
         try {
           final I = _source(source);
           for (var i in data) {
-            await I.child(i.id).get().then(
-              (value) async {
-                if (!value.exists) {
-                  await I
-                      .child(i.id)
-                      .setWithPriority(i.source, i.timeMills);
-                } else {
-                  var ignores = response.ignores;
-                  ignores.insert(0, i);
-                  response.withIgnores(
-                    ignores,
-                    message: "Already data added!",
-                  );
-                }
-              },
-            );
+            await I.child(i.id).get().then((value) async {
+              if (!value.exists) {
+                await I.child(i.id).setWithPriority(i.source, i.timeMills);
+              } else {
+                response.withIgnore(i, message: 'Already inserted!');
+              }
+            });
           }
           return response.withResult(data);
         } catch (_) {
@@ -171,7 +164,7 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
             return response.withBackup(build(value.value));
           } else {
             return response.withException(
-              'Data not found!',
+              'Data not inserted!',
               status: Status.notFound,
             );
           }
@@ -194,9 +187,10 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
       try {
         var I = _source(source);
         return I.get().then((value) async {
-          var old = value.children.map((e) => build(e.value)).toList();
           await I.remove();
-          return response.withBackups(old);
+          return response.withBackups(
+            value.children.map((e) => build(e.value)).toList(),
+          );
         }).onError((e, s) {
           return response.withException(
             e,
@@ -248,8 +242,9 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
       try {
         final result = await _source(source).get();
         if (result.exists) {
-          var list = result.children.map((e) => build(e.value)).toList();
-          return response.withResult(list);
+          return response.withResult(
+            result.children.map((e) => build(e.value)).toList(),
+          );
         } else {
           return response.withException(
             "Data not found!",
@@ -315,8 +310,9 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
       try {
         _source(source).onValue.listen((event) {
           if (event.snapshot.exists) {
-            var v = event.snapshot.children.map((e) => build(e.value)).toList();
-            controller.add(response.withResult(v));
+            controller.add(response.withResult(
+              event.snapshot.children.map((e) => build(e.value)).toList(),
+            ));
           } else {
             controller.add(
               response.withException("Data not found!").withResult([]),
