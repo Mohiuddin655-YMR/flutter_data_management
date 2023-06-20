@@ -80,7 +80,7 @@ class Response<T> {
 
   set isStopped(bool value) => _stopped = value;
 
-  bool get isSuccessful => _successful ?? false;
+  bool get isSuccessful => _successful ?? status.isSuccessful;
 
   set isSuccessful(bool value) => _successful = value;
 
@@ -371,22 +371,34 @@ class Response<T> {
     return this;
   }
 
-  Response<T> withBackup(T? value, {String? message, Status? status}) {
+  Response<T> withBackup(
+    T? value, {
+    dynamic feedback,
+    String? message,
+    Status? status,
+  }) {
+    this.feedback = feedback;
     _backups = _backups.set(value);
     _status = status;
-    _data = null;
-    _successful = false;
     _message = message;
+    _successful = status.isSuccessful;
+    _data = null;
     _loading = false;
     return this;
   }
 
-  Response<T> withBackups(List<T>? value, {String? message, Status? status}) {
+  Response<T> withBackups(
+    List<T>? value, {
+    dynamic feedback,
+    String? message,
+    Status? status,
+  }) {
+    this.feedback = feedback;
     _backups = _backups.attach(value);
     _result = [];
     _status = status;
-    _successful = false;
     _message = message;
+    _successful = status.isSuccessful;
     _loading = false;
     return this;
   }
@@ -448,8 +460,11 @@ class Response<T> {
     return this;
   }
 
-  Response<T> withSnapshot(dynamic snapshot, {String? message}) {
+  Response<T> withSnapshot(dynamic snapshot,
+      {String? message, Status? status}) {
     this.snapshot = snapshot;
+    _status = status;
+    _successful = status.isSuccessful;
     _message = message;
     _complete = true;
     _loading = false;
@@ -541,6 +556,7 @@ enum ResponseCode {
 
 enum Status {
   none(10000, ""),
+  alreadyFound(10001, ResponseMessages.alreadyFound),
   canceled(10010, ResponseMessages.processCanceled),
   failure(10020, ResponseMessages.processFailed),
   networkError(10030, ResponseMessages.internetDisconnected),
@@ -552,11 +568,12 @@ enum Status {
   timeOut(10080, ResponseMessages.tryAgain),
   ok(10100, ResponseMessages.successful),
   invalid(10110, ResponseMessages.invalidData),
+  invalidId(10111, ResponseMessages.invalidId),
   undefined(10120, ResponseMessages.undefined),
   unmodified(10130, ResponseMessages.unmodified),
   undetected(10140, ResponseMessages.unmodified),
-  notSupported(10100, ResponseMessages.errorFound),
-  error(10100, ResponseMessages.errorFound);
+  notSupported(10100, ResponseMessages.notSupported),
+  error(10100, ResponseMessages.tryAgain);
 
   final int code;
   final String _message;
@@ -564,34 +581,38 @@ enum Status {
   const Status(this.code, this._message);
 }
 
-extension ResponseStatusExtension on Status {
-  bool get isCanceled => this == Status.canceled;
+extension ResponseStatusExtension on Status? {
+  Status get use => this ?? Status.none;
 
-  bool get isError => this == Status.error;
+  bool get isCanceled => use == Status.canceled;
 
-  bool get isFailure => this == Status.failure;
+  bool get isError => use == Status.error;
 
-  bool get isInvalid => this == Status.invalid;
+  bool get isFailure => use == Status.failure;
 
-  bool get isLoading => this == Status.loading;
+  bool get isInvalid => use == Status.invalid;
 
-  bool get isNetworkError => this == Status.networkError;
+  bool get isInvalidId => use == Status.invalidId;
 
-  bool get isNullable => this == Status.nullable;
+  bool get isLoading => use == Status.loading;
 
-  bool get isPaused => this == Status.paused;
+  bool get isNetworkError => use == Status.networkError;
 
-  bool get isResultNotFound => this == Status.notFound;
+  bool get isNullable => use == Status.nullable;
 
-  bool get isStopped => this == Status.stopped;
+  bool get isPaused => use == Status.paused;
 
-  bool get isSuccessful => this == Status.ok;
+  bool get isResultNotFound => use == Status.notFound;
 
-  bool get isTimeout => this == Status.timeOut;
+  bool get isStopped => use == Status.stopped;
 
-  bool get isUndefined => this == Status.undefined;
+  bool get isSuccessful => use == Status.ok;
 
-  bool get isUnmodified => this == Status.unmodified;
+  bool get isTimeout => use == Status.timeOut;
+
+  bool get isUndefined => use == Status.undefined;
+
+  bool get isUnmodified => use == Status.unmodified;
 
   bool get isExceptionMode {
     return isCanceled ||
@@ -611,9 +632,9 @@ extension ResponseStatusExtension on Status {
     return isPaused || isLoading || isSuccessful;
   }
 
-  String get exception => isExceptionMode ? _message : "";
+  String get exception => isExceptionMode ? use._message : "";
 
-  String get message => isMessageMode ? _message : "";
+  String get message => isMessageMode ? use._message : "";
 }
 
 extension _ListExtension<T> on List<T>? {
@@ -639,11 +660,12 @@ extension _ListExtension<T> on List<T>? {
 class ResponseMessages {
   static const String internetDisconnected =
       "Your internet service has disconnected. Please confirm your internet connection.";
+  static const String alreadyFound = "Data already existed!";
   static const String processCanceled = "Process has canceled!";
   static const String processFailed = "Process has failed, please try again!";
   static const String processPaused = "Process has paused!";
   static const String processStopped = "Process has stopped!";
-  static const String notFound = "Result not found!";
+  static const String notFound = "Data not existed!";
   static const String resultNotValid = "Result not valid!";
   static const String tryAgain = "Something went wrong, please try again?";
   static const String postingUnsuccessful =
@@ -654,6 +676,7 @@ class ResponseMessages {
   static const String loaded = "Your process completed";
   static const String loading =
       "Please wait a second. Because process is running...";
+  static const String invalidId = "Invalid id!";
   static const String invalidData = "Invalid data!";
   static const String undefined = "Undefined data!";
   static const String unmodified = "Unmodified data!";

@@ -15,12 +15,12 @@ class _ApiDataTestState extends State<ApiDataTest> {
   @override
   Widget build(BuildContext context) {
     var p1 = Post(
-      id: "1000",
+      id: "1",
       title: "This is a title 1",
       body: "This is a body 1",
     );
     var p2 = Post(
-      id: "2",
+      id: "2000",
       userId: 1,
       title: "This is a title 2",
       body: "This is a body 2",
@@ -54,13 +54,13 @@ class _ApiDataTestState extends State<ApiDataTest> {
                   child: const Text("Update"),
                   onPressed: () {
                     controller.update(
-                      id: p1.id.toString(),
+                      id: "1",
                       data: p1.copyWith(title: "Title updated!").source,
                     );
                   },
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.delete("1"),
+                  onPressed: () => controller.delete("1000"),
                   child: const Text("Delete"),
                 ),
                 ElevatedButton(
@@ -68,7 +68,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
                   child: const Text("Clear"),
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.get("1"),
+                  onPressed: () => controller.get("1000"),
                   child: const Text("Get"),
                 ),
                 ElevatedButton(
@@ -119,39 +119,39 @@ class _ApiDataTestState extends State<ApiDataTest> {
                 }
               },
             ),
-            // Container(
-            //   width: double.infinity,
-            //   padding: const EdgeInsets.all(24),
-            //   alignment: Alignment.center,
-            //   color: Colors.grey.withAlpha(50),
-            //   margin: const EdgeInsets.symmetric(vertical: 24),
-            //   child: StreamBuilder(
-            //       stream: controller.live("1"),
-            //       builder: (context, snapshot) {
-            //         var value = snapshot.data ?? Response();
-            //         return Text(
-            //           value.data.toString(),
-            //           textAlign: TextAlign.center,
-            //         );
-            //       }),
-            // ),
-            // Container(
-            //   width: double.infinity,
-            //   padding: const EdgeInsets.all(24),
-            //   alignment: Alignment.center,
-            //   color: Colors.grey.withAlpha(50),
-            //   margin: const EdgeInsets.symmetric(vertical: 24),
-            //   child: StreamBuilder(
-            //     stream: controller.lives(),
-            //     builder: (context, snapshot) {
-            //       var value = snapshot.data ?? Response();
-            //       return Text(
-            //         value.result.toString(),
-            //         textAlign: TextAlign.center,
-            //       );
-            //     },
-            //   ),
-            // ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              alignment: Alignment.center,
+              color: Colors.grey.withAlpha(50),
+              margin: const EdgeInsets.symmetric(vertical: 24),
+              child: StreamBuilder(
+                  stream: controller.live("1"),
+                  builder: (context, snapshot) {
+                    var value = snapshot.data ?? Response();
+                    return Text(
+                      value.data.toString(),
+                      textAlign: TextAlign.center,
+                    );
+                  }),
+            ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              alignment: Alignment.center,
+              color: Colors.grey.withAlpha(50),
+              margin: const EdgeInsets.symmetric(vertical: 24),
+              child: StreamBuilder(
+                stream: controller.lives(),
+                builder: (context, snapshot) {
+                  var value = snapshot.data ?? Response();
+                  return Text(
+                    value.result.toString(),
+                    textAlign: TextAlign.center,
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -234,10 +234,14 @@ class Post extends Entity {
     this.body,
   });
 
-  factory Post.from(dynamic source) {
+  factory Post.from(Object? source) {
     return Post(
-      id: Entity.value<String>("id", source),
-      userId: Entity.value<int>("userId", source),
+      id: source.entityId,
+      // Entity.autoId(source);
+      timeMills: source.entityTimeMills,
+      // Entity.autoTimeMills(source);
+      userId: source.entityValue("userId"),
+      // Entity.value<Type>(key, source)
       title: Entity.value<String>("title", source),
       body: Entity.value<String>("body", source),
     );
@@ -260,8 +264,8 @@ class Post extends Entity {
   @override
   Map<String, dynamic> get source {
     return super.source.attach({
-      "id": id.toString(),
-      "userId": id,
+      "id": idInt,
+      "userId": idInt,
       "title": title ?? "Title",
       "body": body,
     });

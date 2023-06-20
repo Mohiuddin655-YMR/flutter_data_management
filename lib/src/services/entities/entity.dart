@@ -1,10 +1,14 @@
 part of 'entities.dart';
 
+typedef EntityBuilder<T> = T Function(dynamic value);
+
 class Entity {
   String? _id;
   int? _timeMills;
 
   String get id => _id ?? key;
+
+  int get idInt => int.tryParse(id).use;
 
   int get timeMills => _timeMills ?? ms;
 
@@ -20,8 +24,8 @@ class Entity {
 
   factory Entity.from(dynamic source) {
     return Entity(
-      id: Entity.value(EntityKeys.id, source),
-      timeMills: Entity.value(EntityKeys.timeMills, source),
+      id: Entity.autoId(source),
+      timeMills: Entity.autoTimeMills(source),
     );
   }
 
@@ -43,6 +47,26 @@ class Entity {
       return source.get(key);
     } else if (source is DataSnapshot) {
       return source.child(key);
+    } else {
+      return null;
+    }
+  }
+
+  static String? autoId(dynamic source) {
+    final data = _v(EntityKeys.id, source);
+    if (data is int || data is String) {
+      return "$data";
+    } else {
+      return null;
+    }
+  }
+
+  static int? autoTimeMills(dynamic source) {
+    final data = _v(EntityKeys.timeMills, source);
+    if (data is int) {
+      return data;
+    } else if (data is String) {
+      return int.tryParse(data);
     } else {
       return null;
     }
@@ -75,7 +99,7 @@ class Entity {
   static T? type<T>(
     String key,
     dynamic source,
-    T Function(dynamic value) builder,
+    EntityBuilder<T> builder,
   ) {
     final data = _v(key, source);
     if (data is String) {
@@ -88,7 +112,7 @@ class Entity {
   static T? object<T>(
     String key,
     dynamic source,
-    T Function(dynamic value) builder,
+    EntityBuilder<T> builder,
   ) {
     final data = _v(key, source);
     if (data is Map) {
@@ -101,7 +125,7 @@ class Entity {
   static List<T>? objects<T>(
     String key,
     dynamic source,
-    T Function(dynamic value) builder,
+    EntityBuilder<T> builder,
   ) {
     final data = _v(key, source);
     if (data is List<Map<String, dynamic>>) {
@@ -144,6 +168,41 @@ extension EntityObjectHelper on Object? {
   bool get isValid => this != null;
 
   bool get isNotValid => !isValid;
+
+  bool get isEntity => this is Map<String, dynamic>;
+
+  String? get entityId => isEntity ? Entity.autoId(this) : null;
+
+  int? get entityTimeMills => isEntity ? Entity.autoTimeMills(this) : null;
+
+  T? entityObject<T>(
+    String key,
+    EntityBuilder<T> builder,
+  ) {
+    return isEntity ? Entity.object(key, this, builder) : null;
+  }
+
+  List<T>? entityObjects<T>(
+    String key,
+    EntityBuilder<T> builder,
+  ) {
+    return isEntity ? Entity.objects(key, this, builder) : null;
+  }
+
+  T? entityType<T>(
+    String key,
+    EntityBuilder<T> builder,
+  ) {
+    return isEntity ? Entity.type(key, this, builder) : null;
+  }
+
+  T? entityValue<T>(String key) {
+    return isEntity ? Entity.value(key, this) : null;
+  }
+
+  List<T>? entityValues<T>(String key) {
+    return isEntity ? Entity.values(key, this) : null;
+  }
 
   bool equals(dynamic compareValue) {
     return this == compareValue;
