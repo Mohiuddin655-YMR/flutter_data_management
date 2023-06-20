@@ -2,19 +2,53 @@ part of 'sources.dart';
 
 abstract class EncryptApiDataSourceImpl<T extends Entity>
     extends ApiDataSourceImpl<T> {
-  final EncryptedApi encryptor;
+  final EncryptedApi encryptedApi;
 
   EncryptApiDataSourceImpl({
     required super.path,
-    required this.encryptor,
-  }) : super(api: encryptor);
+    required this.encryptedApi,
+  }) : super(api: encryptedApi);
 
   Future<Map<String, dynamic>> input(Map<String, dynamic>? data) async {
-    return encryptor.input(data ?? {});
+    return encryptedApi.input(data ?? {});
   }
 
   Future<Map<String, dynamic>> output(String data) async {
-    return encryptor.output(data);
+    return encryptedApi.output(data);
+  }
+
+  Future<(bool, T?, String? message, Status status)> isExisted<R>(
+    String id, {
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    if (id.isValid) {
+      var data = await input(id.toMappableId);
+      if (data.isValid) {
+        try {
+          final I = _source(id, source);
+          final result = encryptedApi.type.isPost
+              ? await database.post(I, data: data)
+              : await database.get(I, data: data);
+          final value = result.data;
+          final code = result.statusCode;
+          if ((code == 200 || code == api.status.ok) && value is Map) {
+            return (true, build(value), "Currently existed", Status.ok);
+          } else {
+            return (false, null, "Data not existed!", Status.notFound);
+          }
+        } on dio.DioException catch (_) {
+          var code = _.response?.statusCode.use;
+          if (code == 404 || code == api.status.notFound) {
+            return (false, null, "Data not existed!", Status.notFound);
+          }
+          return (false, null, _.message, Status.notFound);
+        }
+      } else {
+        return (false, null, "Encryption failed!", Status.invalid);
+      }
+    } else {
+      return (false, null, "Id isn't valid!", Status.invalidId);
+    }
   }
 
   @override
@@ -24,10 +58,20 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     OnDataSourceBuilder<R>? source,
   }) async {
     final response = Response<T>();
-    return response.withException(
-      "Currently not initialized!",
-      status: Status.undefined,
-    );
+    if (isConnected) {
+      if (id.isValid) {
+        var finder = await isExisted(id, source: source);
+        return response.withAvailable(
+          !finder.$1,
+          data: finder.$2,
+          message: finder.$3,
+        );
+      } else {
+        return response.withStatus(Status.invalidId);
+      }
+    } else {
+      return response.withStatus(Status.networkError);
+    }
   }
 
   @override
@@ -37,34 +81,46 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     OnDataSourceBuilder<R>? source,
   }) async {
     final response = Response<T>();
-    if (data.source.isNotEmpty) {
-      final value = await input(data.source);
-      if (value.isNotEmpty) {
-        final url = data.id.isNotEmpty
-            ? _source(data.id, source)
-            : currentSource(source);
-        final reference = await database.post(url, data: value);
-        final code = reference.statusCode;
-        if (code == 200 || code == 201 || code == encryptor.status.created) {
-          return response.withFeedback(reference.data);
+    if (isConnected) {
+      if (data.id.isValid && data.source.isValid) {
+        final encryptor = await input(data.source);
+        if (encryptor.isValid) {
+          final finder = await isExisted(data.id, source: source);
+          final I = _source(data.id, source, api.autoGenerateId);
+          if (!finder.$1) {
+            try {
+              final result = encryptedApi.type.isGet
+                  ? await database.get(I, data: encryptor)
+                  : await database.post(I, data: encryptor);
+              final feedback = result.data;
+              final code = result.statusCode;
+              if (code == 200 || code == 201 || code == api.status.created) {
+                if (feedback is Map) {
+                  return response.withData(build(feedback));
+                } else if (feedback is List) {
+                  return response.withResult(
+                    feedback.map((e) => build(e)).toList(),
+                  );
+                } else {
+                  return response.withFeedback(feedback, status: Status.ok);
+                }
+              } else {
+                return response.withStatus(Status.error);
+              }
+            } on dio.DioException catch (_) {
+              return response.withException(_.message, status: Status.failure);
+            }
+          } else {
+            return response.withIgnore(finder.$2, status: Status.alreadyFound);
+          }
         } else {
-          return response.modify(
-            snapshot: reference,
-            exception: "Data unmodified [${reference.statusCode}]",
-            status: Status.unmodified,
-          );
+          return response.withStatus(Status.invalid);
         }
       } else {
-        return response.withException(
-          "Unacceptable request!",
-          status: Status.invalid,
-        );
+        return response.withStatus(Status.invalid);
       }
     } else {
-      return response.withException(
-        "Undefined data!",
-        status: Status.unmodified,
-      );
+      return response.withStatus(Status.networkError);
     }
   }
 
@@ -75,10 +131,19 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     OnDataSourceBuilder<R>? source,
   }) async {
     final response = Response<T>();
-    return response.withException(
-      "Currently not initialized!",
-      status: Status.undefined,
-    );
+    if (isConnected) {
+      if (data.isValid) {
+        for (var i in data) {
+          var result = await insert(i, isConnected: true, source: source);
+          if (result.ignores.isValid) response.withIgnore(result.ignores[0]);
+        }
+        return response.withResult(data);
+      } else {
+        return response.withException(Status.invalid);
+      }
+    } else {
+      return response.withStatus(Status.networkError);
+    }
   }
 
   @override
@@ -89,36 +154,40 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     OnDataSourceBuilder<R>? source,
   }) async {
     final response = Response<T>();
-    try {
+    if (isConnected) {
       if (id.isValid && data.isValid) {
-        final value = await input(data);
-        if (value.isNotEmpty) {
-          final url = _source(id, source);
-          final reference = await database.put(url, data: value);
-          final code = reference.statusCode;
-          if (code == 200 || code == encryptor.status.updated) {
-            return response.withFeedback(reference.data);
+        final encryptor = await input(data.attach(id.toMappableId));
+        if (encryptor.isValid) {
+          final finder = await isExisted(id, source: source);
+          final I = _source(id, source);
+          if (finder.$1) {
+            try {
+              final result = await database.put(I, data: encryptor);
+              final feedback = result.data;
+              final code = result.statusCode;
+              if (code == 200 || code == 201 || code == api.status.updated) {
+                return response.withBackup(
+                  finder.$2,
+                  feedback: feedback,
+                  status: Status.ok,
+                );
+              } else {
+                return response.withStatus(Status.error);
+              }
+            } on dio.DioException catch (_) {
+              return response.withException(_.message, status: Status.failure);
+            }
           } else {
-            return response.modify(
-              snapshot: reference,
-              exception: "Data unmodified [${reference.statusCode}]",
-              status: Status.unmodified,
-            );
+            return response.withIgnore(finder.$2, status: Status.notFound);
           }
         } else {
-          return response.withException(
-            "Unacceptable request!",
-            status: Status.invalid,
-          );
+          return response.withStatus(Status.invalid);
         }
       } else {
-        return response.withException(
-          "Undefined data!",
-          status: Status.undefined,
-        );
+        return response.withStatus(Status.invalid);
       }
-    } catch (_) {
-      return response.withException(_, status: Status.failure);
+    } else {
+      return response.withStatus(Status.networkError);
     }
   }
 
@@ -130,36 +199,40 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     Map<String, dynamic>? extra,
   }) async {
     final response = Response<T>();
-    try {
-      if (id.isNotEmpty && extra != null && extra.isNotEmpty) {
-        final value = await input(extra);
-        if (value.isNotEmpty) {
-          final url = _source(id, source);
-          final reference = await database.delete(url, data: value);
-          final code = reference.statusCode;
-          if (code == 200 || code == encryptor.status.deleted) {
-            return response.withFeedback(reference.data);
+    if (isConnected) {
+      if (id.isValid) {
+        var encryptor = await input(extra.attach(id.toMappableId));
+        if (encryptor.isValid) {
+          final finder = await isExisted(id, source: source);
+          final I = _source(id, source);
+          if (finder.$1) {
+            try {
+              final result = await database.delete(I, data: encryptor);
+              final feedback = result.data;
+              final code = result.statusCode;
+              if (code == 200 || code == 201 || code == api.status.deleted) {
+                return response.withBackup(
+                  finder.$2,
+                  feedback: feedback,
+                  status: Status.ok,
+                );
+              } else {
+                return response.withStatus(Status.error);
+              }
+            } on dio.DioException catch (_) {
+              return response.withException(_.message, status: Status.failure);
+            }
           } else {
-            return response.modify(
-              snapshot: reference,
-              exception: "Data unmodified [${reference.statusCode}]",
-              status: Status.unmodified,
-            );
+            return response.withIgnore(finder.$2, status: Status.notFound);
           }
         } else {
-          return response.withException(
-            "Unacceptable request!",
-            status: Status.invalid,
-          );
+          return response.withStatus(Status.invalid);
         }
       } else {
-        return response.withException(
-          "Undefined request!",
-          status: Status.error,
-        );
+        return response.withStatus(Status.invalidId);
       }
-    } catch (_) {
-      return response.withException(_, status: Status.failure);
+    } else {
+      return response.withStatus(Status.networkError);
     }
   }
 
@@ -169,10 +242,19 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     OnDataSourceBuilder<R>? source,
   }) async {
     final response = Response<T>();
-    return response.withException(
-      "Currently not initialized!",
-      status: Status.undefined,
-    );
+    if (isConnected) {
+      var I = await gets(isConnected: true, source: source);
+      if (I.isSuccessful && I.result.isValid) {
+        for (var i in I.result) {
+          await delete(i.id, source: source, isConnected: true);
+        }
+        return response.withBackups(I.result, status: Status.ok);
+      } else {
+        return response.withStatus(Status.notFound);
+      }
+    } else {
+      return response.withStatus(Status.networkError);
+    }
   }
 
   @override
@@ -183,40 +265,40 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     Map<String, dynamic>? extra,
   }) async {
     final response = Response<T>();
-    try {
-      if (id.isNotEmpty && extra != null && extra.isNotEmpty) {
-        final value = await input(extra);
-        if (value.isNotEmpty) {
-          final url = _source(id, source);
-          final reference = encryptor.type == ApiRequest.get
-              ? await database.get(url, data: value)
-              : await database.post(url, data: value);
-          final data = reference.data;
-          final code = reference.statusCode;
-          if ((code == 200 || code == encryptor.status.ok) &&
-              data is Map<String, dynamic>) {
-            return response.withData(build(data));
-          } else {
-            return response.modify(
-              snapshot: reference,
-              exception: "Data unmodified [${reference.statusCode}]",
-              status: Status.unmodified,
-            );
+    if (isConnected) {
+      if (id.isValid) {
+        final encryptor = await input(extra.attach(id.toMappableId));
+        if (encryptor.isValid) {
+          try {
+            final I = _source(id, source);
+            final result = encryptedApi.type.isPost
+                ? await database.post(I, data: encryptor)
+                : await database.get(I, data: encryptor);
+            if (result.statusCode == api.status.ok) {
+              final value = await encryptedApi.output(result.data);
+              if (value is Map<String, dynamic>) {
+                return response.withData(build(value));
+              } else {
+                return response.withSnapshot(value, status: Status.unmodified);
+              }
+            } else {
+              return response.withStatus(Status.notFound);
+            }
+          } on dio.DioException catch (_) {
+            var code = _.response?.statusCode.use;
+            if (code == api.status.notFound) {
+              return response.withStatus(Status.notFound);
+            }
+            return response.withException(_, status: Status.failure);
           }
         } else {
-          return response.withException(
-            "Unacceptable request.",
-            status: Status.invalid,
-          );
+          return response.withStatus(Status.invalid);
         }
       } else {
-        return response.withException(
-          "Undefined request.",
-          status: Status.undefined,
-        );
+        return response.withStatus(Status.invalidId);
       }
-    } catch (_) {
-      return response.withException(_, status: Status.failure);
+    } else {
+      return response.withStatus(Status.networkError);
     }
   }
 
@@ -228,47 +310,34 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     Map<String, dynamic>? extra,
   }) async {
     final response = Response<T>();
-    try {
-      final value = await input(extra);
-      if (value.isNotEmpty) {
-        final url = currentSource(source);
-        final reference = encryptor.type == ApiRequest.get
-            ? await database.get(url, data: value)
-            : await database.post(url, data: value);
-        final code = reference.statusCode;
-        if (code == 200 || code == encryptor.status.ok) {
-          final data = await encryptor.output(reference.data);
-          if (data is Map<String, dynamic> || data is List<dynamic>) {
-            List<T> result = [];
-            if (data is Map) {
-              result = [build(data)];
-            } else {
-              result = data.map((item) {
-                return build(item);
-              }).toList();
-            }
-            return response.withResult(result);
-          } else {
-            return response.modify(
-              snapshot: data,
-              exception: "Data unmodified!",
-              status: Status.unmodified,
+    if (isConnected) {
+      try {
+        final I = currentSource(source);
+        final encryptor = extra.isValid ? await input(extra): null;
+        final result = encryptedApi.type.isPost
+            ? await database.post(I, data: encryptor)
+            : await database.get(I, data: encryptor);
+        if (result.statusCode == api.status.ok) {
+          final value = await encryptedApi.output(result.data);
+          if (value is List<dynamic>) {
+            return response.withResult(
+              value.map((_) => build(_)).toList(),
             );
+          } else {
+            return response.withSnapshot(value, status: Status.unmodified);
           }
         } else {
-          return response.withException(
-            "Unacceptable response [${reference.statusCode}]",
-            status: Status.invalid,
-          );
+          return response.withStatus(Status.notFound);
         }
-      } else {
-        return response.withException(
-          "Unacceptable request!",
-          status: Status.invalid,
-        );
+      } on dio.DioException catch (_) {
+        var code = _.response?.statusCode.use;
+        if (code == 404 || code == api.status.notFound) {
+          return response.withStatus(Status.notFound);
+        }
+        return response.withException(_, status: Status.failure);
       }
-    } catch (_) {
-      return response.withException(_, status: Status.failure);
+    } else {
+      return response.withStatus(Status.networkError);
     }
   }
 
@@ -292,56 +361,26 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
     Map<String, dynamic>? extra,
-  }) async* {
+  }) {
     final controller = StreamController<Response<T>>();
     final response = Response<T>();
-    try {
-      if (id.isNotEmpty && extra != null && extra.isNotEmpty) {
-        final value = await input(extra);
-        if (value.isNotEmpty) {
-          final url = _source(id, source);
-          Timer.periodic(const Duration(milliseconds: 3000), (timer) async {
-            final reference = encryptor.type == ApiRequest.get
-                ? await database.get(url, data: value)
-                : await database.post(url, data: value);
-            final data = reference.data;
-            final code = reference.statusCode;
-            if ((code == 200 || code == encryptor.status.ok) &&
-                data is Map<String, dynamic>) {
-              controller.add(
-                response.withData(build(data)),
-              );
-            } else {
-              controller.add(
-                response.modify(
-                  data: null,
-                  snapshot: reference,
-                  exception: "Data unmodified [${reference.statusCode}]",
-                  status: Status.unmodified,
-                ),
-              );
-            }
-          });
-        } else {
-          controller.add(
-            response.withException(
-              "Unacceptable request!",
-              status: Status.invalid,
-            ),
-          );
-        }
+    if (isConnected) {
+      if (id.isValid) {
+        Timer.periodic(const Duration(milliseconds: 300), (timer) async {
+          controller.add(response.from(await get(
+            id,
+            source: source,
+            isConnected: true,
+            extra: extra,
+          )));
+        });
       } else {
-        controller.add(
-          response.withException(
-            "Undefined request!",
-            status: Status.undefined,
-          ),
-        );
+        controller.add(response.withStatus(Status.invalidId));
       }
-    } catch (_) {
-      controller.add(response.withException(_, status: Status.failure));
+    } else {
+      controller.add(response.withStatus(Status.networkError));
     }
-    controller.stream;
+    return controller.stream;
   }
 
   @override
@@ -349,59 +388,21 @@ abstract class EncryptApiDataSourceImpl<T extends Entity>
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
     Map<String, dynamic>? extra,
-  }) async* {
+  }) {
     final controller = StreamController<Response<T>>();
     final response = Response<T>();
-    try {
-      if (extra != null && extra.isNotEmpty) {
-        final value = await input(extra);
-        if (value.isNotEmpty) {
-          final url = currentSource(source);
-          Timer.periodic(const Duration(milliseconds: 3000), (timer) async {
-            final reference = encryptor.type == ApiRequest.get
-                ? await database.get(url, data: value)
-                : await database.post(url, data: value);
-            final data = reference.data;
-            final code = reference.statusCode;
-            if ((code == 200 || code == encryptor.status.ok) &&
-                data is List<dynamic>) {
-              List<T> result = data.map((item) {
-                return build(item);
-              }).toList();
-              controller.add(
-                response.withResult(result),
-              );
-            } else {
-              controller.add(
-                response.modify(
-                  result: [],
-                  exception: "Unacceptable request!",
-                  status: Status.invalid,
-                ),
-              );
-            }
-          });
-        } else {
-          controller.add(
-            response.withException(
-              "Unacceptable request!",
-              status: Status.invalid,
-            ),
-          );
-        }
-      } else {
-        controller.add(
-          response.withException(
-            "Undefined request!",
-            status: Status.undefined,
-          ),
-        );
-      }
-    } catch (_) {
-      controller.add(response.withException(_, status: Status.failure));
+    if (isConnected) {
+      Timer.periodic(const Duration(milliseconds: 300), (timer) async {
+        controller.add(response.from(await gets(
+          source: source,
+          extra: extra,
+          isConnected: true,
+        )));
+      });
+    } else {
+      controller.add(response.withStatus(Status.networkError));
     }
-
-    controller.stream;
+    return controller.stream;
   }
 }
 
@@ -452,4 +453,8 @@ class EncryptedApi extends Api {
     final data = _en.decrypt(encrypted, iv: _iv);
     return jsonDecode(data);
   }
+}
+
+extension _StringExtension on String {
+  Map<String, dynamic> get toMappableId => {EntityKeys.id: this};
 }
