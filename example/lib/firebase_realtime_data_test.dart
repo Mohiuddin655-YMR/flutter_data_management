@@ -6,7 +6,8 @@ class FirebaseRealtimeDataTest extends StatefulWidget {
   const FirebaseRealtimeDataTest({Key? key}) : super(key: key);
 
   @override
-  State<FirebaseRealtimeDataTest> createState() => _FirebaseRealtimeDataTestState();
+  State<FirebaseRealtimeDataTest> createState() =>
+      _FirebaseRealtimeDataTestState();
 }
 
 class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {

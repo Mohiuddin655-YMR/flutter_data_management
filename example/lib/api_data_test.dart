@@ -15,12 +15,12 @@ class _ApiDataTestState extends State<ApiDataTest> {
   @override
   Widget build(BuildContext context) {
     var p1 = Post(
-      id: 1000,
+      id: "1000",
       title: "This is a title 1",
       body: "This is a body 1",
     );
     var p2 = Post(
-      id: 2,
+      id: "2",
       userId: 1,
       title: "This is a title 2",
       body: "This is a body 2",
@@ -221,7 +221,7 @@ class LocalPostDataSource extends LocalDataSourceImpl<Post> {
 
 /// Step - 1
 /// Use for local or remote data model
-class Post extends Entity<int> {
+class Post extends Entity {
   final int? userId;
   final String? title;
   final String? body;
@@ -236,7 +236,7 @@ class Post extends Entity<int> {
 
   factory Post.from(dynamic source) {
     return Post(
-      id: Entity.value<int>("id", source),
+      id: Entity.value<String>("id", source),
       userId: Entity.value<int>("userId", source),
       title: Entity.value<String>("title", source),
       body: Entity.value<String>("body", source),
@@ -244,7 +244,7 @@ class Post extends Entity<int> {
   }
 
   Post copyWith({
-    int? id,
+    String? id,
     int? userId,
     String? title,
     String? body,
