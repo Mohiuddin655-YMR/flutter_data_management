@@ -4,7 +4,10 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
     extends RemoteDataSource<T> {
   final String path;
 
-  RealtimeDataSourceImpl({required this.path});
+  RealtimeDataSourceImpl({
+    required this.path,
+    super.encryptor,
+  });
 
   FirebaseDatabase? _db;
 
@@ -23,6 +26,33 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   }
 
   @override
+  Future<(bool, T?, String?, Status)> isExisted<R>(
+    String id, {
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    if (id.isValid) {
+      try {
+        return await _source(source).child(id).get().then((_) async {
+          if (_.exists) {
+            var v = _.value;
+            if (isEncryptor && v is String) {
+              return (true, build(await output(v)), null, Status.alreadyFound);
+            } else {
+              return (true, build(v), null, Status.alreadyFound);
+            }
+          } else {
+            return (false, null, null, Status.notFound);
+          }
+        });
+      } on FirebaseException catch (_) {
+        return (false, null, _.message, Status.notFound);
+      }
+    } else {
+      return (false, null, null, Status.invalidId);
+    }
+  }
+
+  @override
   Future<Response<T>> isAvailable<R>(
     String id, {
     bool isConnected = false,
@@ -30,24 +60,16 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      if (id.isNotEmpty) {
-        try {
-          return _source(source).child(id).get().then((value) {
-            var available = !value.exists;
-            return response.withAvailable(
-              available,
-              data: available ? null : build(value.value),
-              message: available ? "Currently available" : "Already inserted!",
-            );
-          });
-        } catch (_) {
-          return response.withException(_, status: Status.failure);
-        }
-      } else {
-        return response.withException(
-          "Id isn't valid!",
-          status: Status.invalid,
+      if (id.isValid) {
+        var finder = await isExisted(id, source: source);
+        return response.withAvailable(
+          !finder.$1,
+          data: finder.$2,
+          message: finder.$3,
+          status: finder.$4,
         );
+      } else {
+        return response.withStatus(Status.invalidId);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -62,21 +84,23 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      if (data.id.isNotEmpty) {
-        final I = _source(source).child(data.id);
-        return await I.get().then((value) async {
-          if (!value.exists) {
-            await I.setWithPriority(data.source, data.timeMills);
-            return response.withData(data);
-          } else {
-            return response.withIgnore(data, message: 'Already inserted!');
-          }
-        });
+      if (data.id.isValid) {
+        final finder = await isExisted(data.id, source: source);
+        if (!finder.$1) {
+          final I = _source(source).child(data.id);
+          await (isEncryptor
+              ? I.setWithPriority(await input(data.source), data.timeMills)
+              : I.setWithPriority(data.source, data.timeMills));
+          return response.withData(data);
+        } else {
+          return response.withIgnore(
+            finder.$2,
+            message: finder.$3,
+            status: finder.$4,
+          );
+        }
       } else {
-        return response.withException(
-          "ID isn't valid!",
-          status: Status.invalid,
-        );
+        return response.withStatus(Status.invalidId);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -91,27 +115,14 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      if (data.isNotEmpty) {
-        try {
-          final I = _source(source);
-          for (var i in data) {
-            await I.child(i.id).get().then((value) async {
-              if (!value.exists) {
-                await I.child(i.id).setWithPriority(i.source, i.timeMills);
-              } else {
-                response.withIgnore(i, message: 'Already inserted!');
-              }
-            });
-          }
-          return response.withResult(data);
-        } catch (_) {
-          return response.withException(_, status: Status.failure);
+      if (data.isValid) {
+        for (var i in data) {
+          var result = await insert(i, isConnected: true, source: source);
+          if (result.ignores.isValid) response.withIgnore(result.ignores[0]);
         }
+        return response.withResult(data);
       } else {
-        return response.withException(
-          "Id isn't valid!",
-          status: Status.invalid,
-        );
+        return response.withStatus(Status.invalidId);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -129,15 +140,18 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
     if (isConnected) {
       try {
         final I = _source(source).child(id);
-        return await I.get().then((value) async {
-          if (value.exists) {
-            await I.update(data);
-            return response.withBackup(build(value.value));
+        return await I.get().then((_) async {
+          if (_.exists) {
+            var v = _.value;
+            if (isEncryptor) {
+              var e = v is String ? await output(v) : <String, dynamic>{};
+              await I.update(await input(e.attach(data)));
+            } else {
+              await I.update(data);
+            }
+            return response.withBackup(build(v));
           } else {
-            return response.withException(
-              'Data not found!',
-              status: Status.notFound,
-            );
+            return response.withStatus(Status.notFound);
           }
         });
       } catch (_) {
@@ -163,10 +177,7 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
             await I.remove();
             return response.withBackup(build(value.value));
           } else {
-            return response.withException(
-              'Data not inserted!',
-              status: Status.notFound,
-            );
+            return response.withStatus(Status.notFound);
           }
         });
       } catch (_) {
@@ -191,11 +202,6 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
           return response.withBackups(
             value.children.map((e) => build(e.value)).toList(),
           );
-        }).onError((e, s) {
-          return response.withException(
-            e,
-            status: Status.failure,
-          );
         });
       } catch (_) {
         return response.withException(_, status: Status.failure);
@@ -218,10 +224,7 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
         if (result.exists && result.value != null) {
           return response.withData(build(result.value));
         } else {
-          return response.withException(
-            "Data not found!",
-            status: Status.error,
-          );
+          return response.withStatus(Status.error);
         }
       } catch (_) {
         return response.withException(_, status: Status.failure);
@@ -246,10 +249,7 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
             result.children.map((e) => build(e.value)).toList(),
           );
         } else {
-          return response.withException(
-            "Data not found!",
-            status: Status.error,
-          );
+          return response.withStatus(Status.error);
         }
       } catch (_) {
         return response.withException(_, status: Status.failure);

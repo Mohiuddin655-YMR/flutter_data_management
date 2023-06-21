@@ -6,6 +6,7 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
 
   FireStoreDataSourceImpl({
     required this.path,
+    super.encryptor,
   });
 
   FirebaseFirestore? _db;
@@ -25,6 +26,33 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   }
 
   @override
+  Future<(bool, T?, String?, Status)> isExisted<R>(
+    String id, {
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    if (id.isValid) {
+      try {
+        return await _source(source).doc(id).get().then((_) async {
+          if (_.exists) {
+            var v = _.data();
+            if (isEncryptor && v is String) {
+              return (true, build(await output(v)), null, Status.alreadyFound);
+            } else {
+              return (true, build(v), null, Status.alreadyFound);
+            }
+          } else {
+            return (false, null, null, Status.notFound);
+          }
+        });
+      } on FirebaseException catch (_) {
+        return (false, null, _.message, Status.notFound);
+      }
+    } else {
+      return (false, null, null, Status.invalidId);
+    }
+  }
+
+  @override
   Future<Response<T>> isAvailable<R>(
     String id, {
     bool isConnected = false,
@@ -32,24 +60,16 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      if (id.isNotEmpty) {
-        try {
-          return _source(source).doc(id).get().then((value) {
-            var available = !value.exists;
-            return response.withAvailable(
-              available,
-              data: available ? null : build(value.data()),
-              message: available ? "Currently available" : "Already inserted!",
-            );
-          });
-        } catch (_) {
-          return response.withException(_, status: Status.failure);
-        }
-      } else {
-        return response.withException(
-          "Id isn't valid!",
-          status: Status.invalid,
+      if (id.isValid) {
+        var finder = await isExisted(id, source: source);
+        return response.withAvailable(
+          !finder.$1,
+          data: finder.$2,
+          message: finder.$3,
+          status: finder.$4,
         );
+      } else {
+        return response.withStatus(Status.invalidId);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -64,25 +84,23 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      if (data.id.isNotEmpty) {
-        try {
+      if (data.id.isValid) {
+        final finder = await isExisted(data.id, source: source);
+        if (!finder.$1) {
           final I = _source(source).doc(data.id);
-          return await I.get().then((value) async {
-            if (!value.exists) {
-              await I.set(data.source, SetOptions(merge: true));
-              return response.withData(data);
-            } else {
-              return response.withIgnore(data, message: 'Already inserted!');
-            }
-          });
-        } catch (_) {
-          return response.withException(_, status: Status.failure);
+          await (isEncryptor
+              ? I.set(await input(data.source))
+              : I.set(data.source));
+          return response.withData(data);
+        } else {
+          return response.withIgnore(
+            finder.$2,
+            message: finder.$3,
+            status: finder.$4,
+          );
         }
       } else {
-        return response.withException(
-          "Id isn't valid!",
-          status: Status.invalid,
-        );
+        return response.withStatus(Status.invalidId);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -97,27 +115,14 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      if (data.isNotEmpty) {
-        try {
-          final I = _source(source);
-          for (var i in data) {
-            await I.doc(i.id).get().then((value) async {
-              if (!value.exists) {
-                await I.doc(i.id).set(i.source, SetOptions(merge: true));
-              } else {
-                response.withIgnore(i, message: 'Already inserted!');
-              }
-            });
-          }
-          return response.withResult(data);
-        } catch (_) {
-          return response.withException(_, status: Status.failure);
+      if (data.isValid) {
+        for (var i in data) {
+          var result = await insert(i, isConnected: true, source: source);
+          if (result.ignores.isValid) response.withIgnore(result.ignores[0]);
         }
+        return response.withResult(data);
       } else {
-        return response.withException(
-          "Id isn't valid!",
-          status: Status.invalid,
-        );
+        return response.withStatus(Status.invalid);
       }
     } else {
       return response.withStatus(Status.networkError);

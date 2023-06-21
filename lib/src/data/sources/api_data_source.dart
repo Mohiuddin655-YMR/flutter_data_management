@@ -7,6 +7,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   ApiDataSourceImpl({
     required this.api,
     required this.path,
+    super.encryptor,
   });
 
   dio.Dio? _db;
@@ -37,7 +38,8 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     }
   }
 
-  Future<(bool, T?, String? message, Status status)> isADExisted<R>(
+  @override
+  Future<(bool, T?, String? message, Status status)> isExisted<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) async {
@@ -73,7 +75,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        var finder = await isADExisted(id);
+        var finder = await isExisted(id);
         return response.withAvailable(
           !finder.$1,
           data: finder.$2,
@@ -96,7 +98,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     final response = Response<T>();
     if (isConnected) {
       if (data.id.isValid && data.source.isValid) {
-        final finder = await isADExisted(data.id, source: source);
+        final finder = await isExisted(data.id, source: source);
         final I = _source(data.id, source, api.autoGenerateId);
         if (!finder.$1) {
           try {
@@ -162,7 +164,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid && data.isValid) {
-        final finder = await isADExisted(id, source: source);
+        final finder = await isExisted(id, source: source);
         final I = _source(id, source);
         if (finder.$1) {
           try {
@@ -201,7 +203,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        final finder = await isADExisted(id, source: source);
+        final finder = await isExisted(id, source: source);
         final I = _source(id, source);
         if (finder.$1) {
           try {

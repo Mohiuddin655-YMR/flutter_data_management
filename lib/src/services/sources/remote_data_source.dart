@@ -1,23 +1,16 @@
 part of 'sources.dart';
 
 abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
-  @override
-  Future<Response<T>> clear<R>({
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+  final Encryptor? encryptor;
+
+  bool get isEncryptor => encryptor.isValid;
+
+  const RemoteDataSource({
+    this.encryptor,
   });
 
-  @override
-  Future<Response<T>> delete<R>(
+  Future<(bool, T?, String?, Status)> isExisted<R>(
     String id, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-  });
-
-  @override
-  Future<Response<T>> get<R>(
-    String id, {
-    bool isConnected = false,
     OnDataSourceBuilder<R>? source,
   });
 
@@ -28,7 +21,8 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   });
 
   @override
-  Future<Response<T>> gets<R>({
+  Future<Response<T>> isAvailable<R>(
+    String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
   });
@@ -48,8 +42,35 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   });
 
   @override
-  Future<Response<T>> isAvailable<R>(
+  Future<Response<T>> update<R>(
+    String id,
+    Map<String, dynamic> data, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  });
+
+  @override
+  Future<Response<T>> delete<R>(
     String id, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  });
+
+  @override
+  Future<Response<T>> clear<R>({
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  });
+
+  @override
+  Future<Response<T>> get<R>(
+    String id, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? source,
+  });
+
+  @override
+  Future<Response<T>> gets<R>({
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
   });
@@ -67,11 +88,25 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
     OnDataSourceBuilder<R>? source,
   });
 
-  @override
-  Future<Response<T>> update<R>(
-    String id,
-    Map<String, dynamic> data, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
-  });
+  Future<Map<String, dynamic>> input(Map<String, dynamic>? data) async {
+    return encryptor.input(data ?? {});
+  }
+
+  Future<Map<String, dynamic>> output(String data) async {
+    return encryptor.output(data);
+  }
+}
+
+extension EncryptorExtension on Encryptor? {
+  bool get isValid => this != null;
+
+  Encryptor get use => this ?? Encryptor.none();
+
+  Future<Map<String, dynamic>> input(Map<String, dynamic>? data) async {
+    return isValid ? await use.input(data ?? {}) : {};
+  }
+
+  Future<Map<String, dynamic>> output(String data) async {
+    return isValid ? await use.output(data) : {};
+  }
 }

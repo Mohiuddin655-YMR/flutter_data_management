@@ -1,3 +1,6 @@
+## 0.0.3
+* Add data encryption in database services
+
 ## 0.0.2
 * Add Firebase Realtime service
 * Add Firebase Firestore service

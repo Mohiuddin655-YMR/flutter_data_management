@@ -306,8 +306,14 @@ class Response<T> {
     return this;
   }
 
-  Response<T> withAvailable(bool available, {String? message, T? data}) {
+  Response<T> withAvailable(
+    bool available, {
+    T? data,
+    Status? status,
+    String? message,
+  }) {
     _available = available;
+    _status = status;
     _data = data;
     _message = message;
     _loading = false;
