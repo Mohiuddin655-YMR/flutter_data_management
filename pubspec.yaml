@@ -4,7 +4,7 @@ version: 0.0.3
 homepage: https://github.com/P-YMR/flutter_data_management.git
 
 environment:
-  sdk: '>=3.0.2 <4.0.0'
+  sdk: '>=3.0.1 <4.0.0'
   flutter: ">=1.17.0"
 
 dependencies:

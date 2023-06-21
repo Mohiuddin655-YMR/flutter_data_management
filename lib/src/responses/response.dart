@@ -334,8 +334,8 @@ class Response<T> {
     return this;
   }
 
-  Response<T> withData(T? data, {String? message}) {
-    _status = Status.ok;
+  Response<T> withData(T? data, {String? message, Status? status}) {
+    _status = status ?? Status.ok;
     _data = data;
     _message = message;
     _successful = true;
@@ -456,8 +456,8 @@ class Response<T> {
     return this;
   }
 
-  Response<T> withResult(List<T>? result, {String? message}) {
-    _status = Status.ok;
+  Response<T> withResult(List<T>? result, {String? message, Status? status}) {
+    _status = status ?? Status.ok;
     _result = result;
     _message = message;
     _successful = true;

@@ -26,20 +26,50 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   }
 
   @override
-  Future<(bool, T?, String?, Status)> isExisted<R>(
+  Future<(bool, List<T>, String?, Status)> findBy<R>({
+    OnDataSourceBuilder<R>? source,
+    bool onlyUpdates = false,
+  }) async {
+    List<T> result = [];
+    try {
+      return await _source(source).get().then((_) async {
+        if (_.docs.isNotEmpty || _.docChanges.isNotEmpty) {
+          if (onlyUpdates) {
+            for (var i in _.docChanges) {
+              if (i.doc.exists && i.doc.data() is Map<String, dynamic>) {
+                var v = isEncryptor ? await output(i.doc.data()) : i.doc.data();
+                result.add(build(v));
+              }
+            }
+          } else {
+            for (var i in _.docs) {
+              if (i.exists && i.data() is Map<String, dynamic>) {
+                var v = isEncryptor ? await output(i.data()) : i.data();
+                result.add(build(v));
+              }
+            }
+          }
+          return (true, result, null, Status.alreadyFound);
+        } else {
+          return (false, result, null, Status.notFound);
+        }
+      });
+    } on FirebaseException catch (_) {
+      return (false, result, _.message, Status.notFound);
+    }
+  }
+
+  @override
+  Future<(bool, T?, String?, Status)> findById<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) async {
     if (id.isValid) {
       try {
         return await _source(source).doc(id).get().then((_) async {
-          if (_.exists) {
-            var v = _.data();
-            if (isEncryptor && v is String) {
-              return (true, build(await output(v)), null, Status.alreadyFound);
-            } else {
-              return (true, build(v), null, Status.alreadyFound);
-            }
+          if (_.exists && _.data() is Map<String, dynamic>) {
+            var v = isEncryptor ? await output(_.data()) : _.data();
+            return (true, build(v), null, Status.alreadyFound);
           } else {
             return (false, null, null, Status.notFound);
           }
@@ -61,7 +91,7 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        var finder = await isExisted(id, source: source);
+        var finder = await findById(id, source: source);
         return response.withAvailable(
           !finder.$1,
           data: finder.$2,
@@ -85,13 +115,21 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
     final response = Response<T>();
     if (isConnected) {
       if (data.id.isValid) {
-        final finder = await isExisted(data.id, source: source);
+        final finder = await findById(data.id, source: source);
         if (!finder.$1) {
           final I = _source(source).doc(data.id);
-          await (isEncryptor
-              ? I.set(await input(data.source))
-              : I.set(data.source));
-          return response.withData(data);
+          if (isEncryptor) {
+            var raw = await input(data.source);
+            if (raw.isValid) {
+              await I.set(raw, SetOptions(merge: true));
+              return response.withData(data);
+            } else {
+              return response.withStatus(Status.invalid);
+            }
+          } else {
+            await I.set(data.source, SetOptions(merge: true));
+            return response.withData(data);
+          }
         } else {
           return response.withIgnore(
             finder.$2,
@@ -138,21 +176,24 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
+      if (id.isValid && data.isValid) {
+        final finder = await findById(id, source: source);
         final I = _source(source).doc(id);
-        return await I.get().then((value) async {
-          if (value.exists) {
-            await I.update(data);
-            return response.withBackup(build(value.data()));
-          } else {
-            return response.withException(
-              'Data not found!',
-              status: Status.notFound,
-            );
+        if (finder.$1) {
+          try {
+            var v = isEncryptor
+                ? await input(finder.$2?.source.attach(data))
+                : data;
+            await I.update(v);
+            return response.withBackup(finder.$2);
+          } on FirebaseException catch (_) {
+            return response.withException(_.message, status: Status.failure);
           }
-        });
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
+        } else {
+          return response.withIgnore(finder.$2, status: Status.notFound);
+        }
+      } else {
+        return response.withStatus(Status.invalid);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -167,21 +208,21 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
+      if (id.isValid) {
+        final finder = await findById(id, source: source);
         final I = _source(source).doc(id);
-        return await I.get().then((value) async {
-          if (value.exists) {
+        if (finder.$1) {
+          try {
             await I.delete();
-            return response.withBackup(build(value.data()));
-          } else {
-            return response.withException(
-              'Data not inserted!',
-              status: Status.notFound,
-            );
+            return response.withBackup(finder.$2, status: Status.ok);
+          } on FirebaseException catch (_) {
+            return response.withException(_.message, status: Status.failure);
           }
-        });
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
+        } else {
+          return response.withIgnore(finder.$2, status: Status.notFound);
+        }
+      } else {
+        return response.withStatus(Status.invalidId);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -195,19 +236,14 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
-        var I = _source(source);
-        List<T> old = [];
-        return I.get().then((value) async {
-          for (var i in value.docs) {
-            var single = build(i.data());
-            old.add(single);
-            await I.doc(single.id).delete();
-          }
-          return response.withBackups(old);
-        });
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
+      var I = await gets(isConnected: true, source: source);
+      if (I.isSuccessful && I.result.isValid) {
+        for (var i in I.result) {
+          await delete(i.id, source: source, isConnected: true);
+        }
+        return response.withBackups(I.result, status: Status.ok);
+      } else {
+        return response.withStatus(Status.notFound);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -222,15 +258,11 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
-        final result = await _source(source).doc(id).get();
-        if (result.exists && result.data() != null) {
-          return response.withData(build(result.data()));
-        } else {
-          return response.withException("Data not found!");
-        }
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
+      final finder = await findById(id, source: source);
+      if (finder.$1) {
+        return response.withData(finder.$2);
+      } else {
+        return response.withException(finder.$3, status: finder.$4);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -245,23 +277,11 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
-        final result = await _source(source).get();
-        if (result.docs.isNotEmpty || result.docChanges.isNotEmpty) {
-          if (forUpdates) {
-            return response.withResult(
-              result.docChanges.map((e) => build(e.doc.data())).toList(),
-            );
-          } else {
-            return response.withResult(
-              result.docs.map((e) => build(e.data())).toList(),
-            );
-          }
-        } else {
-          return response.withException("Data not found!");
-        }
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
+      final finder = await findBy(source: source, onlyUpdates: forUpdates);
+      if (finder.$1) {
+        return response.withResult(finder.$2);
+      } else {
+        return response.withException(finder.$3, status: finder.$4);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -290,17 +310,22 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
     final response = Response<T>();
     if (isConnected) {
       try {
-        _source(source).doc(id).snapshots().listen((event) {
-          if (event.exists || event.data() != null) {
-            controller.add(response.withData(build(event.data())));
+        _source(source).doc(id).snapshots().listen((event) async {
+          var value = event.data();
+          if (event.exists || value != null) {
+            var v = isEncryptor ? await output(value) : value;
+            controller.add(response.withData(build(v)));
           } else {
             controller.add(
-              response.withException("Data not found!").withData(null),
+              response.withData(null, status: Status.notFound),
             );
           }
         });
-      } catch (_) {
-        controller.add(response.withException(_, status: Status.failure));
+      } on FirebaseException catch (_) {
+        controller.add(response.withException(
+          _.message,
+          status: Status.failure,
+        ));
       }
     } else {
       controller.add(response.withStatus(Status.networkError));
@@ -318,19 +343,25 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
     final response = Response<T>();
     if (isConnected) {
       try {
-        _source(source).snapshots().listen((event) {
+        _source(source).snapshots().listen((event) async {
           if (event.docs.isNotEmpty) {
-            controller.add(response.withResult(
-              event.docs.map((e) => build(e.data())).toList(),
-            ));
+            List<T> result = [];
+            for (var i in event.docs) {
+              var v = isEncryptor ? await output(i.data()) : i.data();
+              result.add(build(v));
+            }
+            controller.add(response.withResult(result));
           } else {
             controller.add(
-              response.withException("Data not found!").withResult([]),
+              response.withResult([], status: Status.notFound),
             );
           }
         });
-      } catch (_) {
-        controller.add(response.withException(_, status: Status.failure));
+      } on FirebaseException catch (_) {
+        controller.add(response.withException(
+          _.message,
+          status: Status.failure,
+        ));
       }
     } else {
       controller.add(response.withStatus(Status.networkError));

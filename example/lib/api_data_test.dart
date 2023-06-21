@@ -44,7 +44,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
                 ),
                 ElevatedButton(
                   child: const Text("Insert"),
-                  onPressed: () => controller.create(p1),
+                  onPressed: () => controller.create(p2),
                 ),
                 ElevatedButton(
                   child: const Text("Inserts"),
@@ -55,12 +55,17 @@ class _ApiDataTestState extends State<ApiDataTest> {
                   onPressed: () {
                     controller.update(
                       id: "1",
-                      data: p1.copyWith(title: "Title updated!").source,
+                      data: p1
+                          .copyWith(
+                            title: "Title updated!",
+                            body: "Body updated!",
+                          )
+                          .source,
                     );
                   },
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.delete("1000"),
+                  onPressed: () => controller.delete("1"),
                   child: const Text("Delete"),
                 ),
                 ElevatedButton(
@@ -68,7 +73,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
                   child: const Text("Clear"),
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.get("1000"),
+                  onPressed: () => controller.get("1"),
                   child: const Text("Get"),
                 ),
                 ElevatedButton(
@@ -119,39 +124,39 @@ class _ApiDataTestState extends State<ApiDataTest> {
                 }
               },
             ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              alignment: Alignment.center,
-              color: Colors.grey.withAlpha(50),
-              margin: const EdgeInsets.symmetric(vertical: 24),
-              child: StreamBuilder(
-                  stream: controller.live("1"),
-                  builder: (context, snapshot) {
-                    var value = snapshot.data ?? Response();
-                    return Text(
-                      value.data.toString(),
-                      textAlign: TextAlign.center,
-                    );
-                  }),
-            ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              alignment: Alignment.center,
-              color: Colors.grey.withAlpha(50),
-              margin: const EdgeInsets.symmetric(vertical: 24),
-              child: StreamBuilder(
-                stream: controller.lives(),
-                builder: (context, snapshot) {
-                  var value = snapshot.data ?? Response();
-                  return Text(
-                    value.result.toString(),
-                    textAlign: TextAlign.center,
-                  );
-                },
-              ),
-            ),
+            // Container(
+            //   width: double.infinity,
+            //   padding: const EdgeInsets.all(24),
+            //   alignment: Alignment.center,
+            //   color: Colors.grey.withAlpha(50),
+            //   margin: const EdgeInsets.symmetric(vertical: 24),
+            //   child: StreamBuilder(
+            //       stream: controller.live("1"),
+            //       builder: (context, snapshot) {
+            //         var value = snapshot.data ?? Response();
+            //         return Text(
+            //           value.data.toString(),
+            //           textAlign: TextAlign.center,
+            //         );
+            //       }),
+            // ),
+            // Container(
+            //   width: double.infinity,
+            //   padding: const EdgeInsets.all(24),
+            //   alignment: Alignment.center,
+            //   color: Colors.grey.withAlpha(50),
+            //   margin: const EdgeInsets.symmetric(vertical: 24),
+            //   child: StreamBuilder(
+            //     stream: controller.lives(),
+            //     builder: (context, snapshot) {
+            //       var value = snapshot.data ?? Response();
+            //       return Text(
+            //         value.result.toString(),
+            //         textAlign: TextAlign.center,
+            //       );
+            //     },
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -191,6 +196,7 @@ class PostRepository extends RemoteDataRepositoryImpl<Post> {
 class RemotePostDataSource extends ApiDataSourceImpl<Post> {
   RemotePostDataSource({
     super.path = "posts",
+    //super.encryptor = const Encryptor(),
     super.api = const Api(
       api: "https://jsonplaceholder.typicode.com",
       status: ApiStatus(ok: 200),

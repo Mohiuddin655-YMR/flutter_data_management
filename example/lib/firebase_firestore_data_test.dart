@@ -57,7 +57,12 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
                   onPressed: () {
                     controller.update(
                       id: p1.id,
-                      data: p1.copyWith(price: 20500).source,
+                      data: p1
+                          .copyWith(
+                            price: 20500,
+                            name: "Oppo F17 Pro (Updated)",
+                          )
+                          .source,
                     );
                   },
                 ),
@@ -193,6 +198,7 @@ class ProductRepository extends RemoteDataRepositoryImpl<Product> {
 class RemoteProductDataSource extends FireStoreDataSourceImpl<Product> {
   RemoteProductDataSource({
     super.path = "products",
+    super.encryptor = const Encryptor(),
   });
 
   @override

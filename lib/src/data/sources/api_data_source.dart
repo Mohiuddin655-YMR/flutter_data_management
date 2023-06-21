@@ -39,7 +39,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   }
 
   @override
-  Future<(bool, T?, String? message, Status status)> isExisted<R>(
+  Future<(bool, T?, String? message, Status status)> findById<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) async {
@@ -49,20 +49,52 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
         final result = await database.get(I);
         final value = result.data;
         final code = result.statusCode;
-        if ((code == 200 || code == api.status.ok) && value is Map) {
-          return (true, build(value), "Currently existed", Status.ok);
+        if (code == api.status.ok && value is Map<String, dynamic>) {
+          var v = isEncryptor ? await output(value) : value;
+          return (true, build(v), null, Status.alreadyFound);
         } else {
-          return (false, null, "Data not existed!", Status.notFound);
+          return (false, null, null, Status.notFound);
         }
       } on dio.DioException catch (_) {
-        var code = _.response?.statusCode.use;
-        if (code == 404 || code == api.status.notFound) {
-          return (false, null, "Data not existed!", Status.notFound);
+        if (_.response?.statusCode.use == api.status.notFound) {
+          return (false, null, null, Status.notFound);
+        } else {
+          return (false, null, _.message, Status.failure);
         }
-        return (false, null, _.message, Status.notFound);
       }
     } else {
-      return (false, null, "Id isn't valid!", Status.invalidId);
+      return (false, null, null, Status.invalidId);
+    }
+  }
+
+  @override
+  Future<(bool, List<T>, String?, Status)> findBy<R>({
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    List<T> result = [];
+    try {
+      final I = currentSource(source);
+      return await database.get(I).then((_) async {
+        if (_.statusCode == api.status.ok) {
+          if (_.data is List) {
+            for (var i in _.data) {
+              if (i != null && i is Map<String, dynamic>) {
+                var v = isEncryptor ? await output(i) : i;
+                result.add(build(v));
+              }
+            }
+          }
+          return (true, result, null, Status.alreadyFound);
+        } else {
+          return (false, result, null, Status.notFound);
+        }
+      });
+    } on dio.DioException catch (_) {
+      if (_.response?.statusCode.use == api.status.notFound) {
+        return (false, result, null, Status.notFound);
+      } else {
+        return (false, result, _.message, Status.failure);
+      }
     }
   }
 
@@ -75,7 +107,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        var finder = await isExisted(id);
+        var finder = await findById(id);
         return response.withAvailable(
           !finder.$1,
           data: finder.$2,
@@ -98,14 +130,15 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     final response = Response<T>();
     if (isConnected) {
       if (data.id.isValid && data.source.isValid) {
-        final finder = await isExisted(data.id, source: source);
+        final finder = await findById(data.id, source: source);
         final I = _source(data.id, source, api.autoGenerateId);
         if (!finder.$1) {
           try {
             final result = await database.post(I, data: data.source);
-            final feedback = result.data;
             final code = result.statusCode;
-            if (code == 200 || code == 201 || code == api.status.created) {
+            if (code == api.status.created || code == api.status.ok) {
+              var feedback =
+                  isEncryptor ? await output(result.data) : result.data;
               if (feedback is Map) {
                 return response.withData(build(feedback));
               } else if (feedback is List) {
@@ -119,7 +152,11 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
               return response.withStatus(Status.error);
             }
           } on dio.DioException catch (_) {
-            return response.withException(_.message, status: Status.failure);
+            if (_.response?.statusCode.use == api.status.notFound) {
+              return response.withStatus(Status.notFound);
+            } else {
+              return response.withException(_.message, status: Status.failure);
+            }
           }
         } else {
           return response.withIgnore(finder.$2, status: Status.alreadyFound);
@@ -164,14 +201,16 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid && data.isValid) {
-        final finder = await isExisted(id, source: source);
+        final finder = await findById(id, source: source);
         final I = _source(id, source);
         if (finder.$1) {
           try {
-            final result = await database.put(I, data: data);
-            final feedback = result.data;
-            final code = result.statusCode;
-            if (code == 200 || code == 201 || code == api.status.updated) {
+            var v = isEncryptor
+                ? await input(finder.$2?.source.attach(data))
+                : data;
+            var feedback = await database.put(I, data: v);
+            var code = feedback.statusCode;
+            if (code == api.status.ok || code == api.status.updated) {
               return response.withBackup(
                 finder.$2,
                 feedback: feedback,
@@ -180,8 +219,12 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
             } else {
               return response.withStatus(Status.error);
             }
-          } on dio.DioException catch (_) {
-            return response.withException(_.message, status: Status.failure);
+          }  on dio.DioException catch (_) {
+            if (_.response?.statusCode.use == api.status.notFound) {
+              return response.withStatus(Status.notFound);
+            } else {
+              return response.withException(_.message, status: Status.failure);
+            }
           }
         } else {
           return response.withIgnore(finder.$2, status: Status.notFound);
@@ -203,24 +246,27 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        final finder = await isExisted(id, source: source);
+        final finder = await findById(id, source: source);
         final I = _source(id, source);
         if (finder.$1) {
           try {
-            final result = await database.delete(I);
-            final feedback = result.data;
-            final code = result.statusCode;
-            if (code == 200 || code == 201 || code == api.status.deleted) {
+            var feedback = await database.delete(I);
+            var code = feedback.statusCode;
+            if (code == api.status.ok || code == api.status.deleted) {
               return response.withBackup(
                 finder.$2,
-                feedback: feedback,
+                feedback: feedback.data,
                 status: Status.ok,
               );
             } else {
               return response.withStatus(Status.error);
             }
           } on dio.DioException catch (_) {
-            return response.withException(_.message, status: Status.failure);
+            if (_.response?.statusCode.use == api.status.notFound) {
+              return response.withStatus(Status.notFound);
+            } else {
+              return response.withException(_.message, status: Status.failure);
+            }
           }
         } else {
           return response.withIgnore(finder.$2, status: Status.notFound);
@@ -262,30 +308,11 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      if (id.isValid) {
-        try {
-          final I = _source(id, source);
-          final result = await database.get(I);
-          final value = result.data;
-          final code = result.statusCode;
-          if (code == 200 || code == api.status.ok) {
-            if (value is Map<String, dynamic>) {
-              return response.withData(build(value));
-            } else {
-              return response.withSnapshot(value, status: Status.unmodified);
-            }
-          } else {
-            return response.withStatus(Status.notFound);
-          }
-        } on dio.DioException catch (_) {
-          var code = _.response?.statusCode.use;
-          if (code == 404 || code == api.status.notFound) {
-            return response.withStatus(Status.notFound);
-          }
-          return response.withException(_, status: Status.failure);
-        }
+      final finder = await findById(id, source: source);
+      if (finder.$1) {
+        return response.withData(finder.$2);
       } else {
-        return response.withStatus(Status.invalidId);
+        return response.withException(finder.$3, status: finder.$4);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -296,32 +323,14 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> gets<R>({
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
-    bool forUpdates = false,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
-        final I = currentSource(source);
-        final result = await database.get(I);
-        final value = result.data;
-        final code = result.statusCode;
-        if (code == 200 || code == api.status.ok) {
-          if (value is List<dynamic>) {
-            return response.withResult(
-              value.map((_) => build(_)).toList(),
-            );
-          } else {
-            return response.withSnapshot(value, status: Status.unmodified);
-          }
-        } else {
-          return response.withStatus(Status.notFound);
-        }
-      } on dio.DioException catch (_) {
-        var code = _.response?.statusCode.use;
-        if (code == 404 || code == api.status.notFound) {
-          return response.withStatus(Status.notFound);
-        }
-        return response.withException(_, status: Status.failure);
+      final finder = await findBy(source: source);
+      if (finder.$1) {
+        return response.withResult(finder.$2);
+      } else {
+        return response.withException(finder.$3, status: finder.$4);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -334,7 +343,6 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     OnDataSourceBuilder<R>? source,
   }) {
     return gets(
-      forUpdates: true,
       isConnected: isConnected,
       source: source,
     );

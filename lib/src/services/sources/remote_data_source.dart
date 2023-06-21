@@ -9,7 +9,11 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
     this.encryptor,
   });
 
-  Future<(bool, T?, String?, Status)> isExisted<R>(
+  Future<(bool, List<T>, String?, Status)> findBy<R>({
+    OnDataSourceBuilder<R>? source,
+  });
+
+  Future<(bool, T?, String?, Status)> findById<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   });
@@ -88,25 +92,21 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
     OnDataSourceBuilder<R>? source,
   });
 
-  Future<Map<String, dynamic>> input(Map<String, dynamic>? data) async {
-    return encryptor.input(data ?? {});
-  }
+  Future<Map<String, dynamic>> input(dynamic data) => encryptor.input(data);
 
-  Future<Map<String, dynamic>> output(String data) async {
-    return encryptor.output(data);
-  }
+  Future<Map<String, dynamic>> output(dynamic data) => encryptor.output(data);
 }
 
 extension EncryptorExtension on Encryptor? {
   bool get isValid => this != null;
 
-  Encryptor get use => this ?? Encryptor.none();
+  Encryptor get use => this ?? const Encryptor();
 
-  Future<Map<String, dynamic>> input(Map<String, dynamic>? data) async {
-    return isValid ? await use.input(data ?? {}) : {};
+  Future<Map<String, dynamic>> input(dynamic data) async {
+    return isValid ? await use.input(data) : {};
   }
 
-  Future<Map<String, dynamic>> output(String data) async {
+  Future<Map<String, dynamic>> output(dynamic data) async {
     return isValid ? await use.output(data) : {};
   }
 }

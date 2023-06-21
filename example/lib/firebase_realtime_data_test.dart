@@ -18,14 +18,12 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
     var p1 = User(
       id: "1",
       timeMills: Entity.ms,
-      name: "Oppo F17 Pro",
-      price: 23500,
+      name: "Mr. X",
     );
     var p2 = User(
       id: "2",
       timeMills: Entity.ms,
-      name: "Oppo A5s",
-      price: 14000,
+      name: "Mr. Y",
     );
     return SizedBox(
       width: double.infinity,
@@ -57,7 +55,7 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
                   onPressed: () {
                     controller.update(
                       id: p1.id,
-                      data: p1.copyWith(price: 20500).source,
+                      data: p1.copyWith(name: "Mr. X (Updated)").source,
                     );
                   },
                 ),
@@ -192,7 +190,8 @@ class UserRepository extends RemoteDataRepositoryImpl<User> {
 /// Use for remote data => insert, update, delete, get, gets, live, lives, clear
 class RemoteUserDataSource extends RealtimeDataSourceImpl<User> {
   RemoteUserDataSource({
-    super.path = "products",
+    super.path = "users",
+    super.encryptor = const Encryptor(),
   });
 
   @override
@@ -207,7 +206,7 @@ class RemoteUserDataSource extends RealtimeDataSourceImpl<User> {
 class LocalUserDataSource extends LocalDataSourceImpl<User> {
   LocalUserDataSource({
     required super.preferences,
-    super.path = "products",
+    super.path = "users",
   });
 
   @override
@@ -220,13 +219,11 @@ class LocalUserDataSource extends LocalDataSourceImpl<User> {
 /// Use for local or remote data model
 class User extends Entity {
   final String? name;
-  final double? price;
 
   User({
     super.id,
     super.timeMills,
     this.name,
-    this.price,
   });
 
   factory User.from(dynamic source) {
@@ -234,7 +231,6 @@ class User extends Entity {
       id: Entity.value<String>("id", source),
       timeMills: Entity.value<int>("time_mills", source),
       name: Entity.value<String>("name", source),
-      price: Entity.value<double>("price", source),
     );
   }
 
@@ -242,13 +238,11 @@ class User extends Entity {
     String? id,
     int? timeMills,
     String? name,
-    double? price,
   }) {
     return User(
       id: id ?? this.id,
       timeMills: timeMills ?? this.timeMills,
       name: name ?? this.name,
-      price: price ?? this.price,
     );
   }
 
@@ -256,18 +250,6 @@ class User extends Entity {
   Map<String, dynamic> get source {
     return super.source.attach({
       "name": name ?? "Name",
-      "price": price,
-    });
-  }
-
-  static List<User> get carts {
-    return List.generate(5, (index) {
-      return User(
-        id: "ID${index + 1}",
-        timeMills: Entity.ms,
-        name: "Product - ${index + 1}",
-        price: 45 + (index * 5),
-      );
     });
   }
 }

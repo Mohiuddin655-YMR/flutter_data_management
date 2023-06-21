@@ -26,20 +26,40 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   }
 
   @override
-  Future<(bool, T?, String?, Status)> isExisted<R>(
+  Future<(bool, List<T>, String?, Status)> findBy<R>({
+    OnDataSourceBuilder<R>? source,
+  }) async {
+    List<T> result = [];
+    try {
+      return await _source(source).get().then((_) async {
+        if (_.exists) {
+          for (var i in _.children) {
+            if (i.value != null && i.value is Map<String, dynamic>) {
+              var v = isEncryptor ? await output(i.value) : i.value;
+              result.add(build(v));
+            }
+          }
+          return (true, result, null, Status.alreadyFound);
+        } else {
+          return (false, result, null, Status.notFound);
+        }
+      });
+    } on FirebaseException catch (_) {
+      return (false, result, _.message, Status.notFound);
+    }
+  }
+
+  @override
+  Future<(bool, T?, String?, Status)> findById<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) async {
     if (id.isValid) {
       try {
         return await _source(source).child(id).get().then((_) async {
-          if (_.exists) {
-            var v = _.value;
-            if (isEncryptor && v is String) {
-              return (true, build(await output(v)), null, Status.alreadyFound);
-            } else {
-              return (true, build(v), null, Status.alreadyFound);
-            }
+          if (_.exists && _.value is Map<String, dynamic>) {
+            var v = isEncryptor ? await output(_.value) : _.value;
+            return (true, build(v), null, Status.alreadyFound);
           } else {
             return (false, null, null, Status.notFound);
           }
@@ -61,7 +81,7 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        var finder = await isExisted(id, source: source);
+        var finder = await findById(id, source: source);
         return response.withAvailable(
           !finder.$1,
           data: finder.$2,
@@ -85,13 +105,21 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
     final response = Response<T>();
     if (isConnected) {
       if (data.id.isValid) {
-        final finder = await isExisted(data.id, source: source);
+        final finder = await findById(data.id, source: source);
         if (!finder.$1) {
           final I = _source(source).child(data.id);
-          await (isEncryptor
-              ? I.setWithPriority(await input(data.source), data.timeMills)
-              : I.setWithPriority(data.source, data.timeMills));
-          return response.withData(data);
+          if (isEncryptor) {
+            var raw = await input(data.source);
+            if (raw.isValid) {
+              await I.setWithPriority(raw, data.timeMills);
+              return response.withData(data);
+            } else {
+              return response.withStatus(Status.invalid);
+            }
+          } else {
+            await I.setWithPriority(data.source, data.timeMills);
+            return response.withData(data);
+          }
         } else {
           return response.withIgnore(
             finder.$2,
@@ -138,24 +166,24 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
+      if (id.isValid && data.isValid) {
+        final finder = await findById(id, source: source);
         final I = _source(source).child(id);
-        return await I.get().then((_) async {
-          if (_.exists) {
-            var v = _.value;
-            if (isEncryptor) {
-              var e = v is String ? await output(v) : <String, dynamic>{};
-              await I.update(await input(e.attach(data)));
-            } else {
-              await I.update(data);
-            }
-            return response.withBackup(build(v));
-          } else {
-            return response.withStatus(Status.notFound);
+        if (finder.$1) {
+          try {
+            var v = isEncryptor
+                ? await input(finder.$2?.source.attach(data))
+                : data;
+            await I.update(v);
+            return response.withBackup(finder.$2, status: Status.ok);
+          } on FirebaseException catch (_) {
+            return response.withException(_.message, status: Status.failure);
           }
-        });
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
+        } else {
+          return response.withIgnore(finder.$2, status: Status.notFound);
+        }
+      } else {
+        return response.withStatus(Status.invalid);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -170,18 +198,21 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
+      if (id.isValid) {
+        final finder = await findById(id, source: source);
         final I = _source(source).child(id);
-        return await I.get().then((value) async {
-          if (value.exists) {
+        if (finder.$1) {
+          try {
             await I.remove();
-            return response.withBackup(build(value.value));
-          } else {
-            return response.withStatus(Status.notFound);
+            return response.withBackup(finder.$2, status: Status.ok);
+          } on FirebaseException catch (_) {
+            return response.withException(_.message, status: Status.failure);
           }
-        });
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
+        } else {
+          return response.withIgnore(finder.$2, status: Status.notFound);
+        }
+      } else {
+        return response.withStatus(Status.invalidId);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -195,16 +226,14 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
-        var I = _source(source);
-        return I.get().then((value) async {
-          await I.remove();
-          return response.withBackups(
-            value.children.map((e) => build(e.value)).toList(),
-          );
-        });
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
+      var I = await gets(isConnected: true, source: source);
+      if (I.isSuccessful && I.result.isValid) {
+        for (var i in I.result) {
+          await delete(i.id, source: source, isConnected: true);
+        }
+        return response.withBackups(I.result, status: Status.ok);
+      } else {
+        return response.withStatus(Status.notFound);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -219,15 +248,11 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
-        final result = await _source(source).child(id).get();
-        if (result.exists && result.value != null) {
-          return response.withData(build(result.value));
-        } else {
-          return response.withStatus(Status.error);
-        }
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
+      final finder = await findById(id, source: source);
+      if (finder.$1) {
+        return response.withData(finder.$2);
+      } else {
+        return response.withException(finder.$3, status: finder.$4);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -238,21 +263,14 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   Future<Response<T>> gets<R>({
     bool isConnected = false,
     OnDataSourceBuilder<R>? source,
-    bool forUpdates = false,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      try {
-        final result = await _source(source).get();
-        if (result.exists) {
-          return response.withResult(
-            result.children.map((e) => build(e.value)).toList(),
-          );
-        } else {
-          return response.withStatus(Status.error);
-        }
-      } catch (_) {
-        return response.withException(_, status: Status.failure);
+      final finder = await findBy(source: source);
+      if (finder.$1) {
+        return response.withResult(finder.$2);
+      } else {
+        return response.withException(finder.$3, status: finder.$4);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -266,7 +284,6 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   }) {
     return gets(
       isConnected: isConnected,
-      forUpdates: true,
       source: source,
     );
   }
@@ -281,17 +298,22 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
     final response = Response<T>();
     if (isConnected) {
       try {
-        _source(source).child(id).onValue.listen((event) {
-          if (event.snapshot.exists || event.snapshot.value != null) {
-            controller.add(response.withData(build(event.snapshot.value)));
+        _source(source).child(id).onValue.listen((event) async {
+          var value = event.snapshot.value;
+          if (event.snapshot.exists || value != null) {
+            var v = isEncryptor ? await output(value) : value;
+            controller.add(response.withData(build(v)));
           } else {
             controller.add(
-              response.withException("Data not found!").withData(null),
+              response.withData(null, status: Status.notFound),
             );
           }
         });
-      } catch (_) {
-        controller.add(response.withException(_, status: Status.failure));
+      } on FirebaseException catch (_) {
+        controller.add(response.withException(
+          _.message,
+          status: Status.failure,
+        ));
       }
     } else {
       controller.add(response.withStatus(Status.networkError));
@@ -308,19 +330,25 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
     final response = Response<T>();
     if (isConnected) {
       try {
-        _source(source).onValue.listen((event) {
+        _source(source).onValue.listen((event) async {
           if (event.snapshot.exists) {
-            controller.add(response.withResult(
-              event.snapshot.children.map((e) => build(e.value)).toList(),
-            ));
+            List<T> result = [];
+            for (var i in event.snapshot.children) {
+              var v = isEncryptor ? await output(i.value) : i.value;
+              result.add(build(v));
+            }
+            controller.add(response.withResult(result));
           } else {
             controller.add(
-              response.withException("Data not found!").withResult([]),
+              response.withResult([], status: Status.notFound),
             );
           }
         });
-      } catch (_) {
-        controller.add(response.withException(_, status: Status.failure));
+      } on FirebaseException catch (_) {
+        controller.add(response.withException(
+          _.message,
+          status: Status.failure,
+        ));
       }
     } else {
       controller.add(response.withStatus(Status.networkError));
