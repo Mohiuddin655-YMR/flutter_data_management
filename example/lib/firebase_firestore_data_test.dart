@@ -126,39 +126,39 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
                 }
               },
             ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              alignment: Alignment.center,
-              color: Colors.grey.withAlpha(50),
-              margin: const EdgeInsets.symmetric(vertical: 24),
-              child: StreamBuilder(
-                  stream: controller.live("1"),
-                  builder: (context, snapshot) {
-                    var value = snapshot.data ?? Response();
-                    return Text(
-                      value.data.toString(),
-                      textAlign: TextAlign.center,
-                    );
-                  }),
-            ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              alignment: Alignment.center,
-              color: Colors.grey.withAlpha(50),
-              margin: const EdgeInsets.symmetric(vertical: 24),
-              child: StreamBuilder(
-                stream: controller.lives(),
-                builder: (context, snapshot) {
-                  var value = snapshot.data ?? Response();
-                  return Text(
-                    value.result.toString(),
-                    textAlign: TextAlign.center,
-                  );
-                },
-              ),
-            ),
+            // Container(
+            //   width: double.infinity,
+            //   padding: const EdgeInsets.all(24),
+            //   alignment: Alignment.center,
+            //   color: Colors.grey.withAlpha(50),
+            //   margin: const EdgeInsets.symmetric(vertical: 24),
+            //   child: StreamBuilder(
+            //       stream: controller.live("1"),
+            //       builder: (context, snapshot) {
+            //         var value = snapshot.data ?? Response();
+            //         return Text(
+            //           value.data.toString(),
+            //           textAlign: TextAlign.center,
+            //         );
+            //       }),
+            // ),
+            // Container(
+            //   width: double.infinity,
+            //   padding: const EdgeInsets.all(24),
+            //   alignment: Alignment.center,
+            //   color: Colors.grey.withAlpha(50),
+            //   margin: const EdgeInsets.symmetric(vertical: 24),
+            //   child: StreamBuilder(
+            //     stream: controller.lives(),
+            //     builder: (context, snapshot) {
+            //       var value = snapshot.data ?? Response();
+            //       return Text(
+            //         value.result.toString(),
+            //         textAlign: TextAlign.center,
+            //       );
+            //     },
+            //   ),
+            // ),
           ],
         ),
       ),

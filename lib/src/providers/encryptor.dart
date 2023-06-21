@@ -42,21 +42,33 @@ class Encryptor {
   Future<Map<String, dynamic>> output(dynamic data) => compute(_decoder, data);
 
   Future<Map<String, dynamic>> _encoder(dynamic data) async {
-    if (data is Map<String, dynamic>) {
-      final encrypted = _en.encrypt(jsonEncode(data), iv: _iv);
-      return request.call(encrypted.base64, passcode);
-    } else {
+    try {
+      if (data is Map<String, dynamic>) {
+        final encrypted = _en.encrypt(jsonEncode(data), iv: _iv);
+        return request.call(encrypted.base64, passcode);
+      } else {
+        return {};
+      }
+    } catch (_) {
       return {};
     }
   }
 
   Future<Map<String, dynamic>> _decoder(dynamic source) async {
-    if (source is Map<String, dynamic>) {
-      final value = await response.call(source);
-      final encrypted = crypto.Encrypted.fromBase64(value);
-      final data = _en.decrypt(encrypted, iv: _iv);
-      return jsonDecode(data);
-    } else {
+    try {
+      if (source is Map<String, dynamic>) {
+        final value = await response.call(source);
+        if (value != null) {
+          final encrypted = crypto.Encrypted.fromBase64(value);
+          final data = _en.decrypt(encrypted, iv: _iv);
+          return jsonDecode(data);
+        } else {
+          return {};
+        }
+      } else {
+        return {};
+      }
+    } catch (_) {
       return {};
     }
   }

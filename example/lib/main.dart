@@ -61,7 +61,7 @@ class Application extends StatelessWidget {
                   create: (context) => locator<UserController>(),
                 ),
               ],
-              child: const ApiDataTest(),
+              child: const FirebaseFireStoreDataTest(),
             ),
           ),
         ),

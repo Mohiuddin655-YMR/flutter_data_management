@@ -238,9 +238,11 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
     if (isConnected) {
       var I = await gets(isConnected: true, source: source);
       if (I.isSuccessful && I.result.isValid) {
-        for (var i in I.result) {
-          await delete(i.id, source: source, isConnected: true);
-        }
+        await _source(source).get().then((value) async {
+          for (var i in value.docs) {
+            await delete(i.id, source: source, isConnected: true);
+          }
+        });
         return response.withBackups(I.result, status: Status.ok);
       } else {
         return response.withStatus(Status.notFound);
