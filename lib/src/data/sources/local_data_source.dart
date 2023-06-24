@@ -30,11 +30,11 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> isAvailable<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     try {
-      var I = await gets(source: source);
+      var I = await gets(builder: builder);
       var result = I.result.where((_) => _.id == id).isEmpty;
       return response.withAvailable(result);
     } catch (_) {
@@ -45,16 +45,16 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> insert<R>(
     T data, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     try {
-      var I = await gets(source: source);
+      var I = await gets(builder: builder);
       final request = I.result;
       final isInsertable = !isExisted(data.id, request);
       if (isInsertable) {
         request.add(data);
-        return database.input(_source(source), request._).then((value) {
+        return database.input(_source(builder), request._).then((value) {
           if (value) {
             return response.withResult(request);
           } else {
@@ -77,17 +77,17 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> inserts<R>(
     List<T> data, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     try {
-      var I = await gets(source: source);
+      var I = await gets(builder: builder);
       final request = I.result;
       for (var item in data) {
         final isInsertable = !isExisted(item.id, request);
         if (isInsertable) {
           request.add(item);
-          await database.input(_source(source), request._).then((value) {
+          await database.input(_source(builder), request._).then((value) {
             if (value) {
               response.withResult(request);
             } else {
@@ -113,14 +113,14 @@ abstract class LocalDataSourceImpl<T extends Entity>
   Future<Response<T>> update<R>(
     String id,
     Map<String, dynamic> data, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     try {
-      final I = await gets(source: source);
+      final I = await gets(builder: builder);
       var finder = I.result.findToUpdate(data.withId(id), build);
       if (finder.$3) {
-        return database.input(_source(source), finder.$2._).then((value) {
+        return database.input(_source(builder), finder.$2._).then((value) {
           if (value) {
             return response.withResult(finder.$2).withBackup(finder.$1);
           } else {
@@ -146,13 +146,13 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> delete<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     try {
-      var I = await gets(source: source);
+      var I = await gets(builder: builder);
       var finder = I.result.findById(id);
-      return database.input(_source(source), finder.$2._).then((value) {
+      return database.input(_source(builder), finder.$2._).then((value) {
         if (value) {
           return response.withResult(finder.$2).withBackup(finder.$1);
         } else {
@@ -171,12 +171,12 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   @override
   Future<Response<T>> clear<R>({
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     try {
-      var I = await gets(source: source);
-      return database.input(_source(source), null).then((value) {
+      var I = await gets(builder: builder);
+      return database.input(_source(builder), null).then((value) {
         if (value) {
           return response.withBackups(I.result);
         } else {
@@ -196,11 +196,11 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> get<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     try {
-      var I = await gets(source: source);
+      var I = await gets(builder: builder);
       final result = I.result.where((E) => E.id.equals(id));
       if (result.isNotEmpty) {
         return response.withData(result.first);
@@ -214,12 +214,12 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   @override
   Future<Response<T>> gets<R>({
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
     bool forUpdates = false,
   }) async {
     final response = Response<T>();
     try {
-      return database.output<T>(_source(source), build).then((value) {
+      return database.output<T>(_source(builder), build).then((value) {
         return response.withResult(value);
       }).onError((e, s) {
         return response.withException(e, status: Status.failure);
@@ -231,22 +231,22 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   @override
   Future<Response<T>> getUpdates<R>({
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return gets(source: source, forUpdates: true);
+    return gets(builder: builder, forUpdates: true);
   }
 
   @override
   Stream<Response<T>> live<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
     final controller = StreamController<Response<T>>();
     final response = Response<T>();
     try {
       if (id.isNotEmpty) {
         Timer.periodic(const Duration(milliseconds: 500), (timer) async {
-          final I = await get(id, source: source);
+          final I = await get(id, builder: builder);
           var result = I.data;
           if (result.isValid) {
             controller.add(response.withData(result));
@@ -270,13 +270,13 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   @override
   Stream<Response<T>> lives<R>({
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
     final controller = StreamController<Response<T>>();
     final response = Response<T>();
     try {
       Timer.periodic(const Duration(milliseconds: 500), (timer) async {
-        final I = await gets(source: source);
+        final I = await gets(builder: builder);
         var result = I.result;
         if (result.isValid) {
           controller.add(response.withResult(result));

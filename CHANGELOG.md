@@ -1,3 +1,6 @@
+## 0.0.4
+* Initialization is made for short operation
+
 ## 0.0.3
 * Add data encryption in database services
 

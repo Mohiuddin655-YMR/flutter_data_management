@@ -21,28 +21,28 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<Response<T>> getUpdates<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   });
 
   @override
   Future<Response<T>> isAvailable<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   });
 
   @override
   Future<Response<T>> insert<R>(
     T data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   });
 
   @override
   Future<Response<T>> inserts<R>(
     List<T> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   });
 
   @override
@@ -50,46 +50,46 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   });
 
   @override
   Future<Response<T>> delete<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   });
 
   @override
   Future<Response<T>> clear<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   });
 
   @override
   Future<Response<T>> get<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   });
 
   @override
   Future<Response<T>> gets<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   });
 
   @override
   Stream<Response<T>> live<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   });
 
   @override
   Stream<Response<T>> lives<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   });
 
   Future<Map<String, dynamic>> input(dynamic data) => encryptor.input(data);

@@ -102,7 +102,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> isAvailable<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
@@ -125,13 +125,13 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> insert<R>(
     T data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (data.id.isValid && data.source.isValid) {
-        final finder = await findById(data.id, source: source);
-        final I = _source(data.id, source, api.autoGenerateId);
+        final finder = await findById(data.id, source: builder);
+        final I = _source(data.id, builder, api.autoGenerateId);
         if (!finder.$1) {
           try {
             final result = await database.post(I, data: data.source);
@@ -173,13 +173,13 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> inserts<R>(
     List<T> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (data.isValid) {
         for (var i in data) {
-          var result = await insert(i, isConnected: true, source: source);
+          var result = await insert(i, isConnected: true, builder: builder);
           if (result.ignores.isValid) response.withIgnore(result.ignores[0]);
         }
         return response.withResult(data);
@@ -196,13 +196,13 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid && data.isValid) {
-        final finder = await findById(id, source: source);
-        final I = _source(id, source);
+        final finder = await findById(id, source: builder);
+        final I = _source(id, builder);
         if (finder.$1) {
           try {
             var v = isEncryptor
@@ -241,13 +241,13 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> delete<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        final finder = await findById(id, source: source);
-        final I = _source(id, source);
+        final finder = await findById(id, source: builder);
+        final I = _source(id, builder);
         if (finder.$1) {
           try {
             var feedback = await database.delete(I);
@@ -282,14 +282,14 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> clear<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      var I = await gets(isConnected: true, source: source);
+      var I = await gets(isConnected: true, builder: builder);
       if (I.isSuccessful && I.result.isValid) {
         for (var i in I.result) {
-          await delete(i.id, source: source, isConnected: true);
+          await delete(i.id, builder: builder, isConnected: true);
         }
         return response.withBackups(I.result, status: Status.ok);
       } else {
@@ -304,11 +304,11 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> get<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findById(id, source: source);
+      final finder = await findById(id, source: builder);
       if (finder.$1) {
         return response.withData(finder.$2);
       } else {
@@ -322,11 +322,11 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> gets<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findBy(source: source);
+      final finder = await findBy(source: builder);
       if (finder.$1) {
         return response.withResult(finder.$2);
       } else {
@@ -340,11 +340,11 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> getUpdates<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
     return gets(
       isConnected: isConnected,
-      source: source,
+      builder: builder,
     );
   }
 
@@ -352,7 +352,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   Stream<Response<T>> live<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
     final controller = StreamController<Response<T>>();
     final response = Response<T>();
@@ -361,7 +361,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
         Timer.periodic(const Duration(milliseconds: 300), (timer) async {
           controller.add(response.from(await get(
             id,
-            source: source,
+            builder: builder,
             isConnected: true,
           )));
         });
@@ -377,7 +377,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
   @override
   Stream<Response<T>> lives<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
     final controller = StreamController<Response<T>>();
     final response = Response<T>();
@@ -385,7 +385,7 @@ abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
     if (isConnected) {
       Timer.periodic(const Duration(milliseconds: 300), (timer) async {
         controller.add(response.from(await gets(
-          source: source,
+          builder: builder,
           isConnected: true,
         )));
       });

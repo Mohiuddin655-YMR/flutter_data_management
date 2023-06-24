@@ -2,93 +2,91 @@ part of 'repositories.dart';
 
 class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
   LocalDataRepositoryImpl({
-    required super.local,
+    required super.source,
   });
 
   @override
   Future<Response<T>> isAvailable<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return local.isAvailable(id, source: source);
+    return source.isAvailable(id, builder: builder);
   }
 
   @override
   Future<Response<T>> insert<R>(
     T data, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return local.insert(data, source: source);
+    return source.insert(data, builder: builder);
   }
 
   @override
   Future<Response<T>> inserts<R>(
     List<T> data, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return local.inserts(data, source: source);
+    return source.inserts(data, builder: builder);
   }
 
   @override
   Future<Response<T>> update<R>(
     String id,
     Map<String, dynamic> data, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return local.update(id, data, source: source);
+    return source.update(id, data, builder: builder);
   }
 
   @override
   Future<Response<T>> delete<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return local.delete(id, source: source);
+    return source.delete(id, builder: builder);
   }
 
   @override
   Future<Response<T>> clear<R>({
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return local.clear(source: source);
+    return source.clear(builder: builder);
   }
 
   @override
   Future<Response<T>> get<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return local.get(id, source: source);
+    return source.get(id, builder: builder);
   }
 
   @override
   Future<Response<T>> gets<R>({
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return local.gets(
-      source: source,
-    );
+    return source.gets(builder: builder);
   }
 
   @override
   Future<Response<T>> getUpdates<R>({
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return local.getUpdates(source: source);
+    return source.getUpdates(builder: builder);
   }
 
   @override
   Stream<Response<T>> live<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return local.live(id, source: source);
+    return source.live(id, builder: builder);
   }
 
   @override
   Stream<Response<T>> lives<R>({
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return local.lives(source: source);
+    return source.lives(builder: builder);
   }
 }

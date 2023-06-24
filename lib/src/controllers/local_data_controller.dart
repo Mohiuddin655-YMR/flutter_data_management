@@ -3,16 +3,26 @@ part of 'controllers.dart';
 class LocalDataController<T extends Entity> extends DataController<T> {
   final LocalDataHandler<T> handler;
 
-  LocalDataController({
-    required this.handler,
-  });
+  LocalDataController._(this.handler);
+
+  factory LocalDataController.fromHandler(
+    LocalDataHandler<T> handler,
+  ) {
+    return LocalDataController._(handler);
+  }
+
+  factory LocalDataController.fromSource({
+    required LocalDataSource<T> source,
+  }) {
+    return LocalDataController._(LocalDataHandlerImpl<T>.fromSource(source));
+  }
 
   @override
   void isAvailable<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.isAvailable(id, source: source));
+    request(() => handler.isAvailable(id, builder: source));
   }
 
   @override
@@ -20,7 +30,7 @@ class LocalDataController<T extends Entity> extends DataController<T> {
     T data, {
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.insert(data, source: source));
+    request(() => handler.insert(data, builder: source));
   }
 
   @override
@@ -28,7 +38,7 @@ class LocalDataController<T extends Entity> extends DataController<T> {
     List<T> data, {
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.inserts(data, source: source));
+    request(() => handler.inserts(data, builder: source));
   }
 
   @override
@@ -37,7 +47,7 @@ class LocalDataController<T extends Entity> extends DataController<T> {
     required Map<String, dynamic> data,
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.update(id, data, source: source));
+    request(() => handler.update(id, data, builder: source));
   }
 
   @override
@@ -45,14 +55,14 @@ class LocalDataController<T extends Entity> extends DataController<T> {
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.delete(id, source: source));
+    request(() => handler.delete(id, builder: source));
   }
 
   @override
   void clear<R>({
     OnDataSourceBuilder<R>? source,
   }) async {
-    request(() => handler.clear(source: source));
+    request(() => handler.clear(builder: source));
   }
 
   @override
@@ -60,21 +70,21 @@ class LocalDataController<T extends Entity> extends DataController<T> {
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.get(id, source: source));
+    request(() => handler.get(id, builder: source));
   }
 
   @override
   void gets<R>({
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.gets(source: source));
+    request(() => handler.gets(builder: source));
   }
 
   @override
   void getUpdates<R>({
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.getUpdates(source: source));
+    request(() => handler.getUpdates(builder: source));
   }
 
   @override
@@ -82,13 +92,13 @@ class LocalDataController<T extends Entity> extends DataController<T> {
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    return handler.live(id, source: source);
+    return handler.live(id, builder: source);
   }
 
   @override
   Stream<Response<T>> lives<R>({
     OnDataSourceBuilder<R>? source,
   }) {
-    return handler.lives(source: source);
+    return handler.lives(builder: source);
   }
 }

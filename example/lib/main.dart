@@ -1,3 +1,4 @@
+import 'package:data_management/core.dart';
 import 'package:example/di.dart';
 import 'package:example/firebase_realtime_data_test.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -14,20 +15,7 @@ late SharedPreferences preferences;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: !kIsWeb
-        ? null
-        : const FirebaseOptions(
-            apiKey: "AIzaSyAnDJmmToo0dPGEeAV9J-7bsghSaiByFjU",
-            authDomain: "flutter-ui-kits.firebaseapp.com",
-            databaseURL: "https://flutter-ui-kits-default-rtdb.firebaseio.com",
-            projectId: "flutter-ui-kits",
-            storageBucket: "flutter-ui-kits.appspot.com",
-            messagingSenderId: "807732577100",
-            appId: "1:807732577100:web:c6e2766be76043102945e9",
-            measurementId: "G-SW8PH1RQ0B",
-          ),
-  );
+  await Firebase.initializeApp();
   await diInit();
   runApp(const Application());
 }
@@ -49,19 +37,19 @@ class Application extends StatelessWidget {
             child: MultiBlocProvider(
               providers: [
                 BlocProvider(
-                  create: (context) => locator<CartController>(),
+                  create: (context) => locator<LocalDataController<Cart>>(),
                 ),
                 BlocProvider(
-                  create: (context) => locator<PostController>(),
+                  create: (context) => locator<RemoteDataController<Post>>(),
                 ),
                 BlocProvider(
-                  create: (context) => locator<ProductController>(),
+                  create: (context) => locator<RemoteDataController<Product>>(),
                 ),
                 BlocProvider(
-                  create: (context) => locator<UserController>(),
+                  create: (context) => locator<RemoteDataController<User>>(),
                 ),
               ],
-              child: const FirebaseFireStoreDataTest(),
+              child: const ApiDataTest(),
             ),
           ),
         ),

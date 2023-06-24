@@ -75,7 +75,7 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
           }
         });
       } on FirebaseException catch (_) {
-        return (false, null, _.message, Status.notFound);
+        return (false, null, _.message, Status.failure);
       }
     } else {
       return (false, null, null, Status.invalidId);
@@ -86,12 +86,12 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   Future<Response<T>> isAvailable<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        var finder = await findById(id, source: source);
+        var finder = await findById(id, source: builder);
         return response.withAvailable(
           !finder.$1,
           data: finder.$2,
@@ -110,14 +110,14 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   Future<Response<T>> insert<R>(
     T data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (data.id.isValid) {
-        final finder = await findById(data.id, source: source);
+        final finder = await findById(data.id, source: builder);
         if (!finder.$1) {
-          final I = _source(source).doc(data.id);
+          final I = _source(builder).doc(data.id);
           if (isEncryptor) {
             var raw = await input(data.source);
             if (raw.isValid) {
@@ -149,13 +149,13 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   Future<Response<T>> inserts<R>(
     List<T> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (data.isValid) {
         for (var i in data) {
-          var result = await insert(i, isConnected: true, source: source);
+          var result = await insert(i, isConnected: true, builder: builder);
           if (result.ignores.isValid) response.withIgnore(result.ignores[0]);
         }
         return response.withResult(data);
@@ -172,13 +172,13 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid && data.isValid) {
-        final finder = await findById(id, source: source);
-        final I = _source(source).doc(id);
+        final finder = await findById(id, source: builder);
+        final I = _source(builder).doc(id);
         if (finder.$1) {
           try {
             var v = isEncryptor
@@ -204,13 +204,13 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   Future<Response<T>> delete<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        final finder = await findById(id, source: source);
-        final I = _source(source).doc(id);
+        final finder = await findById(id, source: builder);
+        final I = _source(builder).doc(id);
         if (finder.$1) {
           try {
             await I.delete();
@@ -232,15 +232,15 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> clear<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      var I = await gets(isConnected: true, source: source);
+      var I = await gets(isConnected: true, builder: builder);
       if (I.isSuccessful && I.result.isValid) {
-        await _source(source).get().then((value) async {
+        await _source(builder).get().then((value) async {
           for (var i in value.docs) {
-            await delete(i.id, source: source, isConnected: true);
+            await delete(i.id, builder: builder, isConnected: true);
           }
         });
         return response.withBackups(I.result, status: Status.ok);
@@ -256,11 +256,11 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   Future<Response<T>> get<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findById(id, source: source);
+      final finder = await findById(id, source: builder);
       if (finder.$1) {
         return response.withData(finder.$2);
       } else {
@@ -274,12 +274,12 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> gets<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
     bool forUpdates = false,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findBy(source: source, onlyUpdates: forUpdates);
+      final finder = await findBy(source: builder, onlyUpdates: forUpdates);
       if (finder.$1) {
         return response.withResult(finder.$2);
       } else {
@@ -293,12 +293,12 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> getUpdates<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
     return gets(
       isConnected: isConnected,
       forUpdates: true,
-      source: source,
+      builder: builder,
     );
   }
 
@@ -306,13 +306,13 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   Stream<Response<T>> live<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
     final controller = StreamController<Response<T>>();
     final response = Response<T>();
     if (isConnected) {
       try {
-        _source(source).doc(id).snapshots().listen((event) async {
+        _source(builder).doc(id).snapshots().listen((event) async {
           var value = event.data();
           if (event.exists || value != null) {
             var v = isEncryptor ? await output(value) : value;
@@ -338,14 +338,14 @@ abstract class FireStoreDataSourceImpl<T extends Entity>
   @override
   Stream<Response<T>> lives<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
     bool forUpdates = false,
   }) {
     final controller = StreamController<Response<T>>();
     final response = Response<T>();
     if (isConnected) {
       try {
-        _source(source).snapshots().listen((event) async {
+        _source(builder).snapshots().listen((event) async {
           if (event.docs.isNotEmpty) {
             List<T> result = [];
             for (var i in event.docs) {

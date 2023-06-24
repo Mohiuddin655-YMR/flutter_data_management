@@ -10,7 +10,7 @@ class ApiDataTest extends StatefulWidget {
 }
 
 class _ApiDataTestState extends State<ApiDataTest> {
-  late PostController controller = context.read<PostController>();
+  late RemoteDataController<Post> controller = context.read();
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +82,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
                 ),
               ],
             ),
-            BlocConsumer<PostController, Response<Post>>(
+            BlocConsumer<RemoteDataController<Post>, Response<Post>>(
               builder: (context, state) {
                 return Container(
                   width: double.infinity,
@@ -164,32 +164,6 @@ class _ApiDataTestState extends State<ApiDataTest> {
   }
 }
 
-/// Step-5
-/// Create a data controller for access all place
-class PostController extends RemoteDataController<Post> {
-  PostController({
-    required super.handler,
-  });
-}
-
-/// Step-4
-/// When you complete the repository to use User model for locally or remotely
-class PostHandler extends RemoteDataHandlerImpl<Post> {
-  PostHandler({
-    required super.repository,
-  });
-}
-
-/// Step-3
-/// When you use to auto detected to use remote or local data
-class PostRepository extends RemoteDataRepositoryImpl<Post> {
-  PostRepository({
-    super.local,
-    super.isCacheMode = true,
-    required super.remote,
-  });
-}
-
 /// Step - 2
 /// When you use remote database (ex. Firebase Firestore, Firebase Realtime, Api, Encrypted Api data)
 /// Use for remote data => insert, update, delete, get, gets, live, lives, clear
@@ -215,7 +189,7 @@ class RemotePostDataSource extends ApiDataSourceImpl<Post> {
 /// Use for local data => insert, update, delete, get, gets, live, lives, clear
 class LocalPostDataSource extends LocalDataSourceImpl<Post> {
   LocalPostDataSource({
-    required super.preferences,
+    super.preferences,
     super.path = "products",
   });
 

@@ -41,10 +41,10 @@ class _LocalDataTestState extends State<LocalDataTest> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => locator<CartController>(),
-      child: BlocBuilder<CartController, Response<Cart>>(
+      create: (context) => locator<LocalDataController<Cart>>(),
+      child: BlocBuilder<LocalDataController<Cart>, Response<Cart>>(
         builder: (context, state) {
-          CartController controller = context.read<CartController>();
+          LocalDataController<Cart> controller = context.read();
           return SizedBox(
             width: double.infinity,
             child: SingleChildScrollView(
@@ -155,30 +155,6 @@ class _LocalDataTestState extends State<LocalDataTest> {
       ),
     );
   }
-}
-
-/// Step-5
-/// Create a data controller for access all place
-class CartController extends LocalDataController<Cart> {
-  CartController({
-    required super.handler,
-  });
-}
-
-/// Step-4
-/// When you complete the repository to use User model for locally or remotely
-class CartHandler extends LocalDataHandlerImpl<Cart> {
-  CartHandler({
-    required super.repository,
-  });
-}
-
-/// Step-3
-/// When you use to auto detected to use remote or local data
-class CartRepository extends LocalDataRepositoryImpl<Cart> {
-  CartRepository({
-    required super.local,
-  });
 }
 
 /// Step - 2

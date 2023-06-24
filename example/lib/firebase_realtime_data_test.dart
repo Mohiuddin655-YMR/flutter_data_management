@@ -11,7 +11,7 @@ class FirebaseRealtimeDataTest extends StatefulWidget {
 }
 
 class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
-  late UserController controller = context.read<UserController>();
+  late RemoteDataController<User> controller = context.read();
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +77,7 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
                 ),
               ],
             ),
-            BlocConsumer<UserController, Response<User>>(
+            BlocConsumer<RemoteDataController<User>, Response<User>>(
               builder: (context, state) {
                 return Container(
                   width: double.infinity,
@@ -159,32 +159,6 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
   }
 }
 
-/// Step-5
-/// Create a data controller for access all place
-class UserController extends RemoteDataController<User> {
-  UserController({
-    required super.handler,
-  });
-}
-
-/// Step-4
-/// When you complete the repository to use User model for locally or remotely
-class UserHandler extends RemoteDataHandlerImpl<User> {
-  UserHandler({
-    required super.repository,
-  });
-}
-
-/// Step-3
-/// When you use to auto detected to use remote or local data
-class UserRepository extends RemoteDataRepositoryImpl<User> {
-  UserRepository({
-    super.local,
-    super.isCacheMode = true,
-    required super.remote,
-  });
-}
-
 /// Step - 2
 /// When you use remote database (ex. Firebase Firestore, Firebase Realtime, Api, Encrypted Api data)
 /// Use for remote data => insert, update, delete, get, gets, live, lives, clear
@@ -205,7 +179,7 @@ class RemoteUserDataSource extends RealtimeDataSourceImpl<User> {
 /// Use for local data => insert, update, delete, get, gets, live, lives, clear
 class LocalUserDataSource extends LocalDataSourceImpl<User> {
   LocalUserDataSource({
-    required super.preferences,
+    super.preferences,
     super.path = "users",
   });
 

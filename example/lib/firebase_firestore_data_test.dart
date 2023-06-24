@@ -11,7 +11,7 @@ class FirebaseFireStoreDataTest extends StatefulWidget {
 }
 
 class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
-  late ProductController controller = context.read<ProductController>();
+  late RemoteDataController<Product> controller = context.read();
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +84,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
                 ),
               ],
             ),
-            BlocConsumer<ProductController, Response<Product>>(
+            BlocConsumer<RemoteDataController<Product>, Response<Product>>(
               builder: (context, state) {
                 return Container(
                   width: double.infinity,
@@ -126,70 +126,44 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
                 }
               },
             ),
-            // Container(
-            //   width: double.infinity,
-            //   padding: const EdgeInsets.all(24),
-            //   alignment: Alignment.center,
-            //   color: Colors.grey.withAlpha(50),
-            //   margin: const EdgeInsets.symmetric(vertical: 24),
-            //   child: StreamBuilder(
-            //       stream: controller.live("1"),
-            //       builder: (context, snapshot) {
-            //         var value = snapshot.data ?? Response();
-            //         return Text(
-            //           value.data.toString(),
-            //           textAlign: TextAlign.center,
-            //         );
-            //       }),
-            // ),
-            // Container(
-            //   width: double.infinity,
-            //   padding: const EdgeInsets.all(24),
-            //   alignment: Alignment.center,
-            //   color: Colors.grey.withAlpha(50),
-            //   margin: const EdgeInsets.symmetric(vertical: 24),
-            //   child: StreamBuilder(
-            //     stream: controller.lives(),
-            //     builder: (context, snapshot) {
-            //       var value = snapshot.data ?? Response();
-            //       return Text(
-            //         value.result.toString(),
-            //         textAlign: TextAlign.center,
-            //       );
-            //     },
-            //   ),
-            // ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              alignment: Alignment.center,
+              color: Colors.grey.withAlpha(50),
+              margin: const EdgeInsets.symmetric(vertical: 24),
+              child: StreamBuilder(
+                  stream: controller.live("1"),
+                  builder: (context, snapshot) {
+                    var value = snapshot.data ?? Response();
+                    return Text(
+                      value.data.toString(),
+                      textAlign: TextAlign.center,
+                    );
+                  }),
+            ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              alignment: Alignment.center,
+              color: Colors.grey.withAlpha(50),
+              margin: const EdgeInsets.symmetric(vertical: 24),
+              child: StreamBuilder(
+                stream: controller.lives(),
+                builder: (context, snapshot) {
+                  var value = snapshot.data ?? Response();
+                  return Text(
+                    value.result.toString(),
+                    textAlign: TextAlign.center,
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
     );
   }
-}
-
-/// Step-5
-/// Create a data controller for access all place
-class ProductController extends RemoteDataController<Product> {
-  ProductController({
-    required super.handler,
-  });
-}
-
-/// Step-4
-/// When you complete the repository to use User model for locally or remotely
-class ProductHandler extends RemoteDataHandlerImpl<Product> {
-  ProductHandler({
-    required super.repository,
-  });
-}
-
-/// Step-3
-/// When you use to auto detected to use remote or local data
-class ProductRepository extends RemoteDataRepositoryImpl<Product> {
-  ProductRepository({
-    super.local,
-    super.isCacheMode = true,
-    required super.remote,
-  });
 }
 
 /// Step - 2
@@ -212,7 +186,7 @@ class RemoteProductDataSource extends FireStoreDataSourceImpl<Product> {
 /// Use for local data => insert, update, delete, get, gets, live, lives, clear
 class LocalProductDataSource extends LocalDataSourceImpl<Product> {
   LocalProductDataSource({
-    required super.preferences,
+    super.preferences,
     super.path = "products",
   });
 
@@ -263,17 +237,6 @@ class Product extends Entity {
     return super.source.attach({
       "name": name ?? "Name",
       "price": price,
-    });
-  }
-
-  static List<Product> get carts {
-    return List.generate(5, (index) {
-      return Product(
-        id: "ID${index + 1}",
-        timeMills: Entity.ms,
-        name: "Product - ${index + 1}",
-        price: 45 + (index * 5),
-      );
     });
   }
 }

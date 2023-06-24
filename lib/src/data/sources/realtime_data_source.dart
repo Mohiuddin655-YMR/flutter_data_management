@@ -65,7 +65,7 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
           }
         });
       } on FirebaseException catch (_) {
-        return (false, null, _.message, Status.notFound);
+        return (false, null, _.message, Status.failure);
       }
     } else {
       return (false, null, null, Status.invalidId);
@@ -76,12 +76,12 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   Future<Response<T>> isAvailable<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        var finder = await findById(id, source: source);
+        var finder = await findById(id, source: builder);
         return response.withAvailable(
           !finder.$1,
           data: finder.$2,
@@ -100,14 +100,14 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   Future<Response<T>> insert<R>(
     T data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (data.id.isValid) {
-        final finder = await findById(data.id, source: source);
+        final finder = await findById(data.id, source: builder);
         if (!finder.$1) {
-          final I = _source(source).child(data.id);
+          final I = _source(builder).child(data.id);
           if (isEncryptor) {
             var raw = await input(data.source);
             if (raw.isValid) {
@@ -139,13 +139,13 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   Future<Response<T>> inserts<R>(
     List<T> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (data.isValid) {
         for (var i in data) {
-          var result = await insert(i, isConnected: true, source: source);
+          var result = await insert(i, isConnected: true, builder: builder);
           if (result.ignores.isValid) response.withIgnore(result.ignores[0]);
         }
         return response.withResult(data);
@@ -162,13 +162,13 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid && data.isValid) {
-        final finder = await findById(id, source: source);
-        final I = _source(source).child(id);
+        final finder = await findById(id, source: builder);
+        final I = _source(builder).child(id);
         if (finder.$1) {
           try {
             var v = isEncryptor
@@ -194,13 +194,13 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   Future<Response<T>> delete<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        final finder = await findById(id, source: source);
-        final I = _source(source).child(id);
+        final finder = await findById(id, source: builder);
+        final I = _source(builder).child(id);
         if (finder.$1) {
           try {
             await I.remove();
@@ -222,13 +222,13 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> clear<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      var I = await gets(isConnected: true, source: source);
+      var I = await gets(isConnected: true, builder: builder);
       if (I.isSuccessful && I.result.isValid) {
-        await _source(source).remove();
+        await _source(builder).remove();
         return response.withBackups(I.result, status: Status.ok);
       } else {
         return response.withStatus(Status.notFound);
@@ -242,11 +242,11 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   Future<Response<T>> get<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findById(id, source: source);
+      final finder = await findById(id, source: builder);
       if (finder.$1) {
         return response.withData(finder.$2);
       } else {
@@ -260,11 +260,11 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> gets<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findBy(source: source);
+      final finder = await findBy(source: builder);
       if (finder.$1) {
         return response.withResult(finder.$2);
       } else {
@@ -278,11 +278,11 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> getUpdates<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
     return gets(
       isConnected: isConnected,
-      source: source,
+      builder: builder,
     );
   }
 
@@ -290,13 +290,13 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   Stream<Response<T>> live<R>(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
     final controller = StreamController<Response<T>>();
     final response = Response<T>();
     if (isConnected) {
       try {
-        _source(source).child(id).onValue.listen((event) async {
+        _source(builder).child(id).onValue.listen((event) async {
           var value = event.snapshot.value;
           if (event.snapshot.exists || value != null) {
             var v = isEncryptor ? await output(value) : value;
@@ -322,13 +322,13 @@ abstract class RealtimeDataSourceImpl<T extends Entity>
   @override
   Stream<Response<T>> lives<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
     final controller = StreamController<Response<T>>();
     final response = Response<T>();
     if (isConnected) {
       try {
-        _source(source).onValue.listen((event) async {
+        _source(builder).onValue.listen((event) async {
           if (event.snapshot.exists) {
             List<T> result = [];
             for (var i in event.snapshot.children) {
