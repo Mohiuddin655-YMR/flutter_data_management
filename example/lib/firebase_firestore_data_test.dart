@@ -17,13 +17,13 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
   Widget build(BuildContext context) {
     var p1 = Product(
       id: "1",
-      timeMills: Entity.ms,
+      timeMills: Data.ms,
       name: "Oppo F17 Pro",
       price: 23500,
     );
     var p2 = Product(
       id: "2",
-      timeMills: Entity.ms,
+      timeMills: Data.ms,
       name: "Oppo A5s",
       price: 14000,
     );
@@ -84,7 +84,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
                 ),
               ],
             ),
-            BlocConsumer<RemoteDataController<Product>, Response<Product>>(
+            BlocConsumer<RemoteDataController<Product>, DataResponse<Product>>(
               builder: (context, state) {
                 return Container(
                   width: double.infinity,
@@ -135,7 +135,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
               child: StreamBuilder(
                   stream: controller.live("1"),
                   builder: (context, snapshot) {
-                    var value = snapshot.data ?? Response();
+                    var value = snapshot.data ?? DataResponse();
                     return Text(
                       value.data.toString(),
                       textAlign: TextAlign.center,
@@ -151,7 +151,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
               child: StreamBuilder(
                 stream: controller.lives(),
                 builder: (context, snapshot) {
-                  var value = snapshot.data ?? Response();
+                  var value = snapshot.data ?? DataResponse();
                   return Text(
                     value.result.toString(),
                     textAlign: TextAlign.center,
@@ -172,7 +172,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
 class RemoteProductDataSource extends FireStoreDataSourceImpl<Product> {
   RemoteProductDataSource({
     super.path = "products",
-    super.encryptor = const Encryptor(),
+    super.encryptor = const DataEncryptor(),
   });
 
   @override
@@ -198,7 +198,7 @@ class LocalProductDataSource extends LocalDataSourceImpl<Product> {
 
 /// Step - 1
 /// Use for local or remote data model
-class Product extends Entity {
+class Product extends Data {
   final String? name;
   final double? price;
 
@@ -211,10 +211,10 @@ class Product extends Entity {
 
   factory Product.from(dynamic source) {
     return Product(
-      id: Entity.value<String>("id", source),
-      timeMills: Entity.value<int>("time_mills", source),
-      name: Entity.value<String>("name", source),
-      price: Entity.value<double>("price", source),
+      id: Data.value<String>("id", source),
+      timeMills: Data.value<int>("time_mills", source),
+      name: Data.value<String>("name", source),
+      price: Data.value<double>("price", source),
     );
   }
 
@@ -234,7 +234,7 @@ class Product extends Entity {
 
   @override
   Map<String, dynamic> get source {
-    return super.source.attach({
+    return super.source.generate({
       "name": name ?? "Name",
       "price": price,
     });

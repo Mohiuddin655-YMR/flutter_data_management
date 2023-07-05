@@ -82,7 +82,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
                 ),
               ],
             ),
-            BlocConsumer<RemoteDataController<Post>, Response<Post>>(
+            BlocConsumer<RemoteDataController<Post>, DataResponse<Post>>(
               builder: (context, state) {
                 return Container(
                   width: double.infinity,
@@ -201,7 +201,7 @@ class LocalPostDataSource extends LocalDataSourceImpl<Post> {
 
 /// Step - 1
 /// Use for local or remote data model
-class Post extends Entity {
+class Post extends Data {
   final int? userId;
   final String? title;
   final String? body;
@@ -216,14 +216,11 @@ class Post extends Entity {
 
   factory Post.from(Object? source) {
     return Post(
-      id: source.entityId,
-      // Entity.autoId(source);
-      timeMills: source.entityTimeMills,
-      // Entity.autoTimeMills(source);
-      userId: source.entityValue("userId"),
-      // Entity.value<Type>(key, source)
-      title: Entity.value<String>("title", source),
-      body: Entity.value<String>("body", source),
+      id: Data.autoId(source),
+      timeMills: Data.autoTimeMills(source),
+      userId: Data.value<int>("userId", source),
+      title: Data.value<String>("title", source),
+      body: Data.value<String>("body", source),
     );
   }
 
@@ -243,7 +240,7 @@ class Post extends Entity {
 
   @override
   Map<String, dynamic> get source {
-    return super.source.attach({
+    return super.source.generate({
       "id": idInt,
       "userId": idInt,
       "title": title ?? "Title",

@@ -15,25 +15,25 @@ class LocalDataTest extends StatefulWidget {
 class _LocalDataTestState extends State<LocalDataTest> {
   late Product p1 = Product(
     id: "1",
-    timeMills: Entity.ms,
+    timeMills: Data.ms,
     name: "Oppo F17 Pro",
     price: 23500,
   );
   late Product p2 = Product(
     id: "2",
-    timeMills: Entity.ms,
+    timeMills: Data.ms,
     name: "Oppo A5s",
     price: 14000,
   );
   late Cart c1 = Cart(
     id: "1",
-    timeMills: Entity.ms,
+    timeMills: Data.ms,
     quantity: 3,
     product: p1,
   );
   late Cart c2 = Cart(
     id: "2",
-    timeMills: Entity.ms,
+    timeMills: Data.ms,
     quantity: 2,
     product: p2,
   );
@@ -42,7 +42,7 @@ class _LocalDataTestState extends State<LocalDataTest> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => locator<LocalDataController<Cart>>(),
-      child: BlocBuilder<LocalDataController<Cart>, Response<Cart>>(
+      child: BlocBuilder<LocalDataController<Cart>, DataResponse<Cart>>(
         builder: (context, state) {
           LocalDataController<Cart> controller = context.read();
           return SizedBox(
@@ -123,7 +123,7 @@ class _LocalDataTestState extends State<LocalDataTest> {
                     child: StreamBuilder(
                         stream: controller.live("1"),
                         builder: (context, snapshot) {
-                          var value = snapshot.data ?? Response();
+                          var value = snapshot.data ?? DataResponse();
                           return Text(
                             value.data.toString(),
                             textAlign: TextAlign.center,
@@ -139,7 +139,7 @@ class _LocalDataTestState extends State<LocalDataTest> {
                     child: StreamBuilder(
                       stream: controller.lives(),
                       builder: (context, snapshot) {
-                        var value = snapshot.data ?? Response<Cart>();
+                        var value = snapshot.data ?? DataResponse<Cart>();
                         return Text(
                           value.result.toString(),
                           textAlign: TextAlign.center,
@@ -174,7 +174,7 @@ class CartDataSource extends LocalDataSourceImpl<Cart> {
 
 /// Step - 1
 /// Use for local or remote data model
-class Cart extends Entity {
+class Cart extends Data {
   final int? quantity;
   final Product? product;
 
@@ -187,16 +187,16 @@ class Cart extends Entity {
 
   factory Cart.from(dynamic source) {
     return Cart(
-      id: Entity.value<String>("id", source),
-      timeMills: Entity.value<int>("time_mills", source),
-      quantity: Entity.value<int>("quantity", source),
-      product: Entity.object("product", source, (value) => Product.from(value)),
+      id: Data.value<String>("id", source),
+      timeMills: Data.value<int>("time_mills", source),
+      quantity: Data.value<int>("quantity", source),
+      product: Data.object("product", source, (value) => Product.from(value)),
     );
   }
 
   @override
   Map<String, dynamic> get source {
-    return super.source.attach({
+    return super.source.generate({
       "quantity": quantity,
       "product": product?.source,
     });

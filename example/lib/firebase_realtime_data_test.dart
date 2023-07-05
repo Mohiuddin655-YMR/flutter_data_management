@@ -17,12 +17,12 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
   Widget build(BuildContext context) {
     var p1 = User(
       id: "1",
-      timeMills: Entity.ms,
+      timeMills: Data.ms,
       name: "Mr. X",
     );
     var p2 = User(
       id: "2",
-      timeMills: Entity.ms,
+      timeMills: Data.ms,
       name: "Mr. Y",
     );
     return SizedBox(
@@ -77,7 +77,7 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
                 ),
               ],
             ),
-            BlocConsumer<RemoteDataController<User>, Response<User>>(
+            BlocConsumer<RemoteDataController<User>, DataResponse<User>>(
               builder: (context, state) {
                 return Container(
                   width: double.infinity,
@@ -128,7 +128,7 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
               child: StreamBuilder(
                   stream: controller.live("1"),
                   builder: (context, snapshot) {
-                    var value = snapshot.data ?? Response();
+                    var value = snapshot.data ?? DataResponse();
                     return Text(
                       value.data.toString(),
                       textAlign: TextAlign.center,
@@ -144,7 +144,7 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
               child: StreamBuilder(
                 stream: controller.lives(),
                 builder: (context, snapshot) {
-                  var value = snapshot.data ?? Response();
+                  var value = snapshot.data ?? DataResponse();
                   return Text(
                     value.result.toString(),
                     textAlign: TextAlign.center,
@@ -165,7 +165,7 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
 class RemoteUserDataSource extends RealtimeDataSourceImpl<User> {
   RemoteUserDataSource({
     super.path = "users",
-    super.encryptor = const Encryptor(),
+    super.encryptor = const DataEncryptor(),
   });
 
   @override
@@ -191,7 +191,7 @@ class LocalUserDataSource extends LocalDataSourceImpl<User> {
 
 /// Step - 1
 /// Use for local or remote data model
-class User extends Entity {
+class User extends Data {
   final String? name;
 
   User({
@@ -202,9 +202,9 @@ class User extends Entity {
 
   factory User.from(dynamic source) {
     return User(
-      id: Entity.value<String>("id", source),
-      timeMills: Entity.value<int>("time_mills", source),
-      name: Entity.value<String>("name", source),
+      id: Data.value<String>("id", source),
+      timeMills: Data.value<int>("time_mills", source),
+      name: Data.value<String>("name", source),
     );
   }
 
@@ -222,7 +222,7 @@ class User extends Entity {
 
   @override
   Map<String, dynamic> get source {
-    return super.source.attach({
+    return super.source.generate({
       "name": name ?? "Name",
     });
   }
