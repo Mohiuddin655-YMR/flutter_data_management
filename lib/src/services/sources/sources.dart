@@ -1,8 +1,7 @@
 library sources;
 
+import 'package:flutter_andomie/core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../../core.dart';
 
 part 'data_source.dart';
 

@@ -1,5 +1,7 @@
 library repositories;
 
+import 'package:flutter_andomie/core.dart';
+
 import '../../../core.dart';
 
 part 'data_repository.dart';
