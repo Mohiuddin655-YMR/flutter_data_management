@@ -1,6 +1,6 @@
 part of 'sources.dart';
 
-abstract class ApiDataSourceImpl<T extends Entity> extends RemoteDataSource<T> {
+abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
   final Api api;
   final String path;
 

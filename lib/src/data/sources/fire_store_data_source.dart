@@ -1,6 +1,6 @@
 part of 'sources.dart';
 
-abstract class FireStoreDataSourceImpl<T extends Entity>
+abstract class FireStoreDataSourceImpl<T extends Data>
     extends RemoteDataSource<T> {
   final String path;
 

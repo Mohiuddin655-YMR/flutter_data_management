@@ -1,6 +1,6 @@
 part of 'handlers.dart';
 
-class RemoteDataHandlerImpl<T extends Entity> extends RemoteDataHandler<T> {
+class RemoteDataHandlerImpl<T extends Data> extends RemoteDataHandler<T> {
   RemoteDataHandlerImpl._({
     required super.repository,
   });

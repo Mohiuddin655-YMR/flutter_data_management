@@ -1,6 +1,6 @@
 part of 'repositories.dart';
 
-class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
+class LocalDataRepositoryImpl<T extends Data> extends LocalDataRepository<T> {
   LocalDataRepositoryImpl({
     required super.source,
   });

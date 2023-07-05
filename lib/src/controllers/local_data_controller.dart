@@ -1,6 +1,6 @@
 part of 'controllers.dart';
 
-class LocalDataController<T extends Entity> extends DataController<T> {
+class LocalDataController<T extends Data> extends DataController<T> {
   final LocalDataHandler<T> handler;
 
   LocalDataController._(this.handler);

@@ -1,6 +1,6 @@
 part of 'repositories.dart';
 
-class RemoteDataRepositoryImpl<T extends Entity>
+class RemoteDataRepositoryImpl<T extends Data>
     extends RemoteDataRepository<T> {
   RemoteDataRepositoryImpl({
     required super.source,

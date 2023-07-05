@@ -1,6 +1,6 @@
 part of 'controllers.dart';
 
-class RemoteDataController<T extends Entity> extends DataController<T> {
+class RemoteDataController<T extends Data> extends DataController<T> {
   final RemoteDataHandler<T> handler;
 
   RemoteDataController._(this.handler);

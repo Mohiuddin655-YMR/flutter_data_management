@@ -1,3 +1,6 @@
+## 0.0.5
+* Stable version
+
 ## 0.0.4
 * Initialization is made for short operation
 

@@ -1,6 +1,6 @@
 part of 'sources.dart';
 
-abstract class RealtimeDataSourceImpl<T extends Entity>
+abstract class RealtimeDataSourceImpl<T extends Data>
     extends RemoteDataSource<T> {
   final String path;
 

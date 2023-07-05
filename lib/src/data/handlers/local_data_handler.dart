@@ -1,6 +1,6 @@
 part of 'handlers.dart';
 
-class LocalDataHandlerImpl<T extends Entity> extends LocalDataHandler<T> {
+class LocalDataHandlerImpl<T extends Data> extends LocalDataHandler<T> {
   LocalDataHandlerImpl._({
     required super.repository,
   });
