@@ -112,4 +112,246 @@ class DataResponse<T> extends Response<T> {
       valid: response.isValid,
     );
   }
+
+  @override
+  DataResponse<T> modify({
+    bool? available,
+    bool? cancel,
+    bool? complete,
+    bool? error,
+    bool? failed,
+    bool? internetError,
+    bool? loading,
+    bool? nullable,
+    bool? paused,
+    bool? stopped,
+    bool? successful,
+    bool? timeout,
+    bool? valid,
+    T? data,
+    List<T>? backups,
+    List<T>? ignores,
+    List<T>? result,
+    double? progress,
+    Status? status,
+    String? exception,
+    String? message,
+    dynamic feedback,
+    dynamic snapshot,
+  }) {
+    super.modify(
+      available: available,
+      cancel: cancel,
+      complete: complete,
+      error: error,
+      failed: failed,
+      internetError: internetError,
+      loading: loading,
+      nullable: nullable,
+      paused: paused,
+      stopped: stopped,
+      successful: successful,
+      timeout: timeout,
+      valid: valid,
+      data: data,
+      backups: backups,
+      ignores: ignores,
+      result: result,
+      progress: progress,
+      status: status,
+      exception: exception,
+      message: message,
+      feedback: feedback,
+      snapshot: snapshot,
+    );
+    return this;
+  }
+
+  @override
+  DataResponse<T> withAvailable(
+    bool available, {
+    T? data,
+    Status? status,
+    String? message,
+  }) {
+    super.withAvailable(
+      available,
+      data: data,
+      status: status,
+      message: message,
+    );
+    return this;
+  }
+
+  @override
+  DataResponse<T> withCancel(bool cancel, {String? message}) {
+    super.withCancel(cancel, message: message);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withComplete(bool complete, {String? message}) {
+    super.withComplete(complete, message: message);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withData(T? data, {String? message, Status? status}) {
+    super.withData(data, message: message, status: status);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withException(dynamic exception, {Status? status}) {
+    super.withException(exception, status: status);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withFailed(bool failed) {
+    super.withFailed(failed);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withFeedback(
+    dynamic feedback, {
+    String? message,
+    String? exception,
+    Status status = Status.ok,
+    bool loaded = true,
+  }) {
+    super.withFeedback(
+      feedback,
+      message: message,
+      exception: exception,
+      status: status,
+      loaded: loaded,
+    );
+    return this;
+  }
+
+  @override
+  DataResponse<T> withBackup(
+    T? value, {
+    dynamic feedback,
+    String? message,
+    Status? status,
+  }) {
+    super.withBackup(
+      value,
+      feedback: feedback,
+      message: message,
+      status: status,
+    );
+    return this;
+  }
+
+  @override
+  DataResponse<T> withBackups(
+    List<T>? value, {
+    dynamic feedback,
+    String? message,
+    Status? status,
+  }) {
+    super.withBackups(
+      value,
+      feedback: feedback,
+      message: message,
+      status: status,
+    );
+    return this;
+  }
+
+  @override
+  DataResponse<T> withIgnore(T? value, {String? message, Status? status}) {
+    super.withIgnore(value, message: message, status: status);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withInternetError(String message) {
+    super.withInternetError(message);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withLoaded(bool loaded) {
+    super.withLoaded(loaded);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withMessage(String? message, {Status status = Status.ok}) {
+    super.withMessage(message, status: status);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withNullable(bool nullable) {
+    super.withNullable(nullable);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withPaused(bool paused) {
+    super.withPaused(paused);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withProgress(double progress, {String? message}) {
+    super.withProgress(progress, message: message);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withResult(
+    List<T>? result, {
+    String? message,
+    Status? status,
+  }) {
+    super.withResult(result, message: message, status: status);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withSnapshot(
+    dynamic snapshot, {
+    String? message,
+    Status? status,
+  }) {
+    super.withSnapshot(snapshot, message: message, status: status);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withStatus(Status status, {String? message}) {
+    super.withStatus(status, message: message);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withStopped(bool stopped) {
+    super.withStopped(stopped);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withSuccessful(bool successful, {String? message}) {
+    super.withSuccessful(successful, message: message);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withTimeout(bool timeout) {
+    super.withTimeout(timeout);
+    return this;
+  }
+
+  @override
+  DataResponse<T> withValid(bool valid) {
+    super.withValid(valid);
+    return this;
+  }
 }
