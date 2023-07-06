@@ -1,6 +1,7 @@
 part of 'repositories.dart';
 
-abstract class RemoteDataRepository<T extends Entity> extends DataRepository<T> {
+abstract class RemoteDataRepository<T extends Entity>
+    extends DataRepository<T> {
   final bool isCacheMode;
   final RemoteDataSource<T> source;
   final LocalDataSource<T>? backup;

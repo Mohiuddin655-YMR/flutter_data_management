@@ -1,5 +1,8 @@
+## 0.0.6
+* Clear unnecessary library
+
 ## 0.0.5
-* Stable version
+* Stable version**
 
 ## 0.0.4
 * Initialization is made for short operation

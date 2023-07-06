@@ -1,7 +1,6 @@
 part of 'sources.dart';
 
-abstract class LocalDataSourceImpl<T extends Data>
-    extends LocalDataSource<T> {
+abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
   LocalDataSourceImpl({
     required super.path,
     super.preferences,

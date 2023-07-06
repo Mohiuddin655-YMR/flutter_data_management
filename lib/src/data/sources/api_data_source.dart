@@ -219,7 +219,7 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
             } else {
               return response.withStatus(Status.error);
             }
-          }  on dio.DioException catch (_) {
+          } on dio.DioException catch (_) {
             if (_.response?.statusCode.use == api.status.notFound) {
               return response.withStatus(Status.notFound);
             } else {

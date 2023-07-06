@@ -62,7 +62,7 @@ class Application extends StatelessWidget {
                   create: (context) => locator<RemoteDataController<User>>(),
                 ),
               ],
-              child: const ApiDataTest(),
+              child: const FirebaseRealtimeDataTest(),
             ),
           ),
         ),

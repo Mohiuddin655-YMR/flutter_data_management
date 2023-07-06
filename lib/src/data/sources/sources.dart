@@ -13,9 +13,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core.dart';
 
 part 'api_data_source.dart';
-
 part 'fire_store_data_source.dart';
-
 part 'local_data_source.dart';
-
 part 'realtime_data_source.dart';

@@ -135,7 +135,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.0.5"
+    version: "0.0.6"
   dbus:
     dependency: transitive
     description:
@@ -184,30 +184,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.4"
-  firebase_auth:
-    dependency: transitive
-    description:
-      name: firebase_auth
-      sha256: f693c0aa998b1101453878951b171b69f0db5199003df1c943b33493a1de7917
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.6.3"
-  firebase_auth_platform_interface:
-    dependency: transitive
-    description:
-      name: firebase_auth_platform_interface
-      sha256: "689ae048b78ad088ba31acdec45f5badb56201e749ed8b534947a7303ddb32aa"
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.15.3"
-  firebase_auth_web:
-    dependency: transitive
-    description:
-      name: firebase_auth_web
-      sha256: f35d637a1707afd51f30090bb5234b381d5071ccbfef09b8c393bc7c65e440cd
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.5.3"
   firebase_core:
     dependency: "direct main"
     description:
@@ -265,10 +241,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_andomie
-      sha256: dc8c9e13c4f9fb13f47eefbe0b9cab3b95fe9c62ad1a85fb3e10b969be254da5
+      sha256: "75da1ec76489d18cd4e00ca55978de09cc7e21707a411d2e250d0ff6d4b3dcc9"
       url: "https://pub.dev"
     source: hosted
-    version: "0.4.2"
+    version: "0.4.3"
   flutter_bloc:
     dependency: "direct main"
     description:
