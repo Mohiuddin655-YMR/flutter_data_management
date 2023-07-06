@@ -5,11 +5,11 @@ abstract class LocalDataSource<T extends Entity> extends DataSource<T> {
 
   LocalDataSource({
     required this.path,
-    SharedPreferences? preferences,
-  }) : _db = preferences;
+    LocalDatabase? preferences,
+  }) : _proxy = preferences;
 
-  SharedPreferences? _db;
+  LocalDatabase? _proxy;
 
-  Future<SharedPreferences> get database async =>
-      _db ??= await SharedPreferences.getInstance();
+  Future<LocalDatabase> get database async =>
+      _proxy ??= await LocalDatabase.instance;
 }

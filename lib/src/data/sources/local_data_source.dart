@@ -53,7 +53,7 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
       final isInsertable = !isExisted(data.id, request);
       if (isInsertable) {
         request.add(data);
-        return database.input(_source(builder), request._).then((value) {
+        return database.input(_source(builder), request).then((value) {
           if (value) {
             return response.withResult(request);
           } else {
@@ -86,7 +86,7 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
         final isInsertable = !isExisted(item.id, request);
         if (isInsertable) {
           request.add(item);
-          await database.input(_source(builder), request._).then((value) {
+          await database.input(_source(builder), request).then((value) {
             if (value) {
               response.withResult(request);
             } else {
@@ -119,7 +119,7 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
       final I = await gets(builder: builder);
       var finder = I.result.findToUpdate(data.withId(id), build);
       if (finder.$3) {
-        return database.input(_source(builder), finder.$2._).then((value) {
+        return database.input(_source(builder), finder.$2).then((value) {
           if (value) {
             return response.withResult(finder.$2).withBackup(finder.$1);
           } else {
@@ -151,7 +151,7 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
     try {
       var I = await gets(builder: builder);
       var finder = I.result.findById(id);
-      return database.input(_source(builder), finder.$2._).then((value) {
+      return database.input(_source(builder), finder.$2).then((value) {
         if (value) {
           return response.withResult(finder.$2).withBackup(finder.$1);
         } else {
@@ -292,45 +292,31 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
   }
 }
 
-extension _LocalExtension on Future<SharedPreferences> {
-  Future<bool> input(
+extension _LocalExtension on Future<LocalDatabase> {
+  Future<bool> input<T extends Entity>(
     String key,
-    String? value,
+    List<T>? data,
   ) async {
-    try {
-      final db = await this;
-      if (value.isValid) {
-        return db.setString(key, value.use);
-      } else {
-        return db.remove(key);
-      }
-    } catch (_) {
-      return Future.error(_);
-    }
+    var db = await this;
+    return db.input(key, data);
   }
 
   Future<List<T>> output<T extends Entity>(
     String key,
     OnDataBuilder<T> builder,
   ) async {
-    try {
-      final db = await this;
-      return db.getString(key)._.map((E) => builder(E)).toList();
-    } catch (_) {
-      return Future.error(_);
-    }
+    var db = await this;
+    return db.output(key, builder);
   }
 }
 
-extension _LocalListExtension<T extends Entity> on List<T> {
-  String get _ => jsonEncode(map((_) => _.source).toList());
-
+extension _LocalListExtension<T extends Entity> on List<T>? {
   (T?, List<T>, bool) findToUpdate(
     Map<String, dynamic> data,
     OnDataBuilder<T> builder,
   ) {
     T? B;
-    var i = indexWhere((E) {
+    var i = use.indexWhere((E) {
       if (data.id.equals(E.id)) {
         B = E;
         return true;
@@ -339,17 +325,17 @@ extension _LocalListExtension<T extends Entity> on List<T> {
       }
     });
     if (i > -1) {
-      removeAt(i);
-      insert(i, builder(data));
-      return (B, this, true);
+      use.removeAt(i);
+      use.insert(i, builder(data));
+      return (B, use, true);
     } else {
-      return (null, this, false);
+      return (null, use, false);
     }
   }
 
   (T?, List<T>) findById(String id) {
     T? B;
-    var I = where((E) {
+    var I = use.where((E) {
       if (id.equals(E.id)) {
         B = E;
         return false;
@@ -365,8 +351,4 @@ extension _LocalMapExtension on Map<String, dynamic> {
   String get id => this["id"];
 
   Map<String, dynamic> withId(String id) => attach({"id": id});
-}
-
-extension _LocalStringExtension on String? {
-  List get _ => isValid ? jsonDecode(this ?? "[]") : [];
 }

@@ -1,3 +1,6 @@
+## 0.0.7
+* Clear unnecessary library
+
 ## 0.0.6
 * Clear unnecessary library
 
