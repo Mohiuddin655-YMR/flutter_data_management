@@ -1,3 +1,6 @@
+## 0.0.8-alpha1
+* Alpha version
+
 ## 0.0.7
 * Clear unnecessary library
 

@@ -84,7 +84,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
                 ),
               ],
             ),
-            BlocConsumer<RemoteDataController<Product>, DataResponse<Product>>(
+            BlocBuilder<RemoteDataController<Product>, DataResponse<Product>>(
               builder: (context, state) {
                 return Container(
                   width: double.infinity,
@@ -97,33 +97,6 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
                     textAlign: TextAlign.center,
                   ),
                 );
-              },
-              listener: (context, state) {
-                if (state.isLoading) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(state.message),
-                  ));
-                } else if (state.isMessage) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(state.message),
-                  ));
-                } else if (state.isException) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(state.exception),
-                  ));
-                } else if (state.isValid) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Valid Data"),
-                  ));
-                } else if (state.isSuccessful) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Successful"),
-                  ));
-                } else if (state.isCancel) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Cancel"),
-                  ));
-                }
               },
             ),
             Container(
@@ -172,7 +145,6 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
 class RemoteProductDataSource extends FireStoreDataSourceImpl<Product> {
   RemoteProductDataSource({
     super.path = "products",
-    super.encryptor = const DataEncryptor(),
   });
 
   @override

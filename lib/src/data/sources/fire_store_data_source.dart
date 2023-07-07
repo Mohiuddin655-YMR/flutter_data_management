@@ -1,5 +1,518 @@
 part of 'sources.dart';
 
+extension FireStoreDataFinder on CollectionReference {
+  Future<FindByFinder<T>> findBy<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+  }) async {
+    try {
+      return getAll<T>(
+        builder: builder,
+        encryptor: encryptor,
+        onlyUpdates: onlyUpdates,
+      ).then((value) {
+        if (value.isNotEmpty) {
+          return (true, value, null, Status.alreadyFound);
+        } else {
+          return (false, null, null, Status.notFound);
+        }
+      });
+    } catch (_) {
+      return (false, null, "$_", Status.failure);
+    }
+  }
+
+  Future<FindByIdFinder<T>> findById<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required String id,
+  }) async {
+    if (id.isValid) {
+      try {
+        return getAt<T>(
+          builder: builder,
+          encryptor: encryptor,
+          id: id,
+        ).then((value) {
+          if (value != null) {
+            return (true, value, null, null, Status.alreadyFound);
+          } else {
+            return (false, null, null, null, Status.notFound);
+          }
+        });
+      } catch (_) {
+        return (false, null, null, "$_", Status.failure);
+      }
+    } else {
+      return (false, null, null, null, Status.invalidId);
+    }
+  }
+
+  Future<FindByFinder<T>> getBy<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+  }) {
+    return findBy(
+      builder: builder,
+      encryptor: encryptor,
+      onlyUpdates: onlyUpdates,
+    );
+  }
+
+  Future<FindByIdFinder<T>> getById<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required String id,
+  }) {
+    return findById(builder: builder, encryptor: encryptor, id: id);
+  }
+
+  Future<FindByFinder<T>> getByIds<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required List<String> ids,
+  }) async {
+    try {
+      return getAts<T>(
+        builder: builder,
+        encryptor: encryptor,
+        ids: ids,
+      ).then((value) {
+        if (value.isNotEmpty) {
+          return (true, value, null, Status.alreadyFound);
+        } else {
+          return (false, null, null, Status.notFound);
+        }
+      });
+    } catch (_) {
+      return (false, null, "$_", Status.failure);
+    }
+  }
+
+  Stream<FindByIdFinder<T>> liveById<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required String id,
+  }) {
+    final controller = StreamController<FindByIdFinder<T>>();
+    if (id.isValid) {
+      try {
+        liveAt<T>(
+          builder: builder,
+          encryptor: encryptor,
+          id: id,
+        ).listen((value) {
+          if (value != null) {
+            controller.add((true, value, null, null, Status.alreadyFound));
+          } else {
+            controller.add((false, null, null, null, Status.notFound));
+          }
+        });
+      } catch (_) {
+        controller.add((false, null, null, "$_", Status.failure));
+      }
+    } else {
+      controller.add((false, null, null, null, Status.invalidId));
+    }
+    return controller.stream;
+  }
+
+  Stream<FindByFinder<T>> liveBy<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+  }) {
+    final controller = StreamController<FindByFinder<T>>();
+    try {
+      livesAll<T>(
+        builder: builder,
+        encryptor: encryptor,
+        onlyUpdates: onlyUpdates,
+      ).listen((value) {
+        if (value.isNotEmpty) {
+          controller.add((true, value, null, Status.alreadyFound));
+        } else {
+          controller.add((false, null, null, Status.notFound));
+        }
+      });
+    } catch (_) {
+      controller.add((false, null, "$_", Status.failure));
+    }
+    return controller.stream;
+  }
+
+  Future<SetByDataFinder<T>> setByOnce<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required T data,
+  }) async {
+    if (data.id.isValid) {
+      try {
+        return getAt<T>(
+          builder: builder,
+          encryptor: encryptor,
+          id: data.id,
+        ).then((value) {
+          if (value == null) {
+            return setAt(data).then((successful) {
+              if (successful) {
+                return (true, null, null, null, Status.ok);
+              } else {
+                return (false, null, null, "Database error!", Status.error);
+              }
+            }).onError((e, s) {
+              return (false, null, null, "$e", Status.error);
+            });
+          } else {
+            return (false, data, null, null, Status.alreadyFound);
+          }
+        });
+      } catch (_) {
+        return (false, null, null, "$_", Status.failure);
+      }
+    } else {
+      return (false, null, null, null, Status.invalidId);
+    }
+  }
+
+  Future<SetByListFinder<T>> setByMultiple<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required List<T> data,
+  }) async {
+    if (data.isValid) {
+      try {
+        return getAll<T>(
+          builder: builder,
+          encryptor: encryptor,
+        ).then((value) {
+          List<T> current = [];
+          List<T> ignores = [];
+          for (var i in data) {
+            final insertable = value.where((E) => E.id == i.id).isEmpty;
+            if (insertable) {
+              current.add(i);
+            } else {
+              ignores.add(i);
+            }
+          }
+          if (data.length != ignores.length) {
+            return setAll(current).then((task) {
+              if (task) {
+                return (true, current, ignores, value, null, Status.ok);
+              } else {
+                return (
+                  false,
+                  null,
+                  null,
+                  null,
+                  "Database error!",
+                  Status.error,
+                );
+              }
+            }).onError((e, s) {
+              return (false, null, null, null, "$e", Status.failure);
+            });
+          } else {
+            return (false, null, ignores, null, null, Status.alreadyFound);
+          }
+        });
+      } catch (_) {
+        return (false, null, null, null, "$_", Status.failure);
+      }
+    } else {
+      return (false, null, null, null, null, Status.invalidId);
+    }
+  }
+
+  Future<UpdateByDataFinder<T>> updateById<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required String id,
+    required Map<String, dynamic> data,
+  }) async {
+    if (id.isValid) {
+      try {
+        return getAt<T>(
+          builder: builder,
+          encryptor: encryptor,
+          id: id,
+        ).then((value) {
+          if (value != null) {
+            return updateAt(data).then((successful) {
+              if (successful) {
+                return (true, value, null, null, Status.ok);
+              } else {
+                return (false, null, null, "Database error!", Status.error);
+              }
+            }).onError((e, s) {
+              return (false, null, null, "$e", Status.failure);
+            });
+          } else {
+            return (false, null, null, null, Status.notFound);
+          }
+        });
+      } catch (_) {
+        return (false, null, null, "$_", Status.failure);
+      }
+    } else {
+      return (false, null, null, null, Status.invalidId);
+    }
+  }
+
+  Future<DeleteByIdFinder<T>> deleteById<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required String id,
+  }) async {
+    if (id.isValid) {
+      try {
+        return getAt<T>(
+          builder: builder,
+          encryptor: encryptor,
+          id: id,
+        ).then((value) {
+          if (value != null) {
+            return deleteAt(value).then((successful) {
+              if (successful) {
+                return (true, value, null, null, Status.ok);
+              } else {
+                return (false, null, null, "Database error!", Status.error);
+              }
+            }).onError((e, s) {
+              return (false, null, null, "$e", Status.failure);
+            });
+          } else {
+            return (false, null, null, null, Status.notFound);
+          }
+        });
+      } catch (_) {
+        return (false, null, null, "$_", Status.failure);
+      }
+    } else {
+      return (false, null, null, null, Status.invalidId);
+    }
+  }
+
+  Future<DeleteByIdFinder<T>> deleteByIds<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required List<String> ids,
+  }) async {
+    if (id.isValid) {
+      try {
+        return getAts<T>(
+          builder: builder,
+          encryptor: encryptor,
+          ids: ids,
+        ).then((value) {
+          if (value.isNotEmpty) {
+            return deleteAll(value).then((successful) {
+              if (successful) {
+                return (true, null, value, null, Status.ok);
+              } else {
+                return (false, null, null, "Database error!", Status.error);
+              }
+            }).onError((e, s) {
+              return (false, null, null, "$e", Status.failure);
+            });
+          } else {
+            return (false, null, null, null, Status.notFound);
+          }
+        });
+      } catch (_) {
+        return (false, null, null, "$_", Status.failure);
+      }
+    } else {
+      return (false, null, null, null, Status.invalidId);
+    }
+  }
+
+  Future<ClearByFinder<T>> clearBy<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+  }) async {
+    try {
+      return getAll<T>(
+        builder: builder,
+        encryptor: encryptor,
+      ).then((value) {
+        if (value.isNotEmpty) {
+          return deleteAll(value).then((successful) {
+            if (successful) {
+              return (true, value, null, Status.ok);
+            } else {
+              return (false, null, "Database error!", Status.error);
+            }
+          }).onError((e, s) {
+            return (false, null, "$e", Status.failure);
+          });
+        } else {
+          return (false, null, null, Status.notFound);
+        }
+      });
+    } catch (_) {
+      return (false, null, "$_", Status.failure);
+    }
+  }
+}
+
+extension _FireStoreExtension on CollectionReference {
+  Future<T?> getAt<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required String id,
+  }) async {
+    var isEncryptor = encryptor != null;
+    return doc(id).get().then((i) async {
+      var data = i.data();
+      if (i.exists && data is Map<String, dynamic>) {
+        var v = isEncryptor ? await encryptor.output(data) : data;
+        return builder(v);
+      }
+      return null;
+    });
+  }
+
+  Future<List<T>> getAts<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required List<String> ids,
+  }) async {
+    List<T> result = [];
+    for (String id in ids) {
+      var data = await getAt(
+        builder: builder,
+        id: id,
+      );
+      if (data != null) result.add(data);
+    }
+    return result;
+  }
+
+  Future<List<T>> getAll<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+  }) async {
+    var isEncryptor = encryptor != null;
+    List<T> result = [];
+    return get().then((_) async {
+      if (_.docs.isNotEmpty || _.docChanges.isNotEmpty) {
+        if (onlyUpdates) {
+          for (var i in _.docChanges) {
+            var data = i.doc.data();
+            if (i.doc.exists && data is Map<String, dynamic>) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
+          }
+        } else {
+          for (var i in _.docs) {
+            var data = i.data();
+            if (i.exists) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
+          }
+        }
+      }
+      return result;
+    });
+  }
+
+  Stream<T?> liveAt<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required String id,
+  }) {
+    final controller = StreamController<T?>();
+    if (id.isValid) {
+      var isEncryptor = encryptor != null;
+      doc(id).snapshots().listen((i) async {
+        var data = i.data();
+        if (i.exists && data is Map<String, dynamic>) {
+          var v = isEncryptor ? await encryptor.output(data) : data;
+          controller.add(builder(v));
+        } else {
+          controller.add(null);
+        }
+      });
+    }
+    return controller.stream;
+  }
+
+  Stream<List<T>> livesAll<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+  }) {
+    final controller = StreamController<List<T>>();
+    var isEncryptor = encryptor != null;
+    List<T> result = [];
+    snapshots().listen((_) async {
+      result.clear();
+      if (_.docs.isNotEmpty || _.docChanges.isNotEmpty) {
+        if (onlyUpdates) {
+          for (var i in _.docChanges) {
+            var data = i.doc.data();
+            if (i.doc.exists && data is Map<String, dynamic>) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
+          }
+        } else {
+          for (var i in _.docs) {
+            var data = i.data();
+            if (i.exists) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
+          }
+        }
+      }
+      controller.add(result);
+    });
+    return controller.stream;
+  }
+
+  Future<bool> setAt<T extends Entity>(T data) {
+    return doc(data.id).set(data.source, SetOptions(merge: true)).then((value) {
+      return true;
+    });
+  }
+
+  Future<bool> setAll<T extends Entity>(List<T> data) async {
+    var counter = 0;
+    for (var i in data) {
+      if (await setAt(i)) counter++;
+    }
+    return data.length == counter;
+  }
+
+  Future<bool> updateAt(Map<String, dynamic> data) {
+    return doc(data.entityId).update(data).then((value) {
+      return true;
+    });
+  }
+
+  Future<bool> deleteAt<T extends Entity>(T data) {
+    return doc(data.id).delete().then((value) {
+      return true;
+    });
+  }
+
+  Future<bool> deleteAll<T extends Entity>(List<T> data) async {
+    var counter = 0;
+    for (var i in data) {
+      if (await deleteAt(i)) counter++;
+    }
+    return data.length == counter;
+  }
+}
+
 abstract class FireStoreDataSourceImpl<T extends Data>
     extends RemoteDataSource<T> {
   final String path;
@@ -26,63 +539,6 @@ abstract class FireStoreDataSourceImpl<T extends Data>
   }
 
   @override
-  Future<(bool, List<T>, String?, Status)> findBy<R>({
-    OnDataSourceBuilder<R>? builder,
-    bool onlyUpdates = false,
-  }) async {
-    List<T> result = [];
-    try {
-      return await _source(builder).get().then((_) async {
-        if (_.docs.isNotEmpty || _.docChanges.isNotEmpty) {
-          if (onlyUpdates) {
-            for (var i in _.docChanges) {
-              if (i.doc.exists && i.doc.data() is Map<String, dynamic>) {
-                var v = isEncryptor ? await output(i.doc.data()) : i.doc.data();
-                result.add(build(v));
-              }
-            }
-          } else {
-            for (var i in _.docs) {
-              if (i.exists && i.data() is Map<String, dynamic>) {
-                var v = isEncryptor ? await output(i.data()) : i.data();
-                result.add(build(v));
-              }
-            }
-          }
-          return (true, result, null, Status.alreadyFound);
-        } else {
-          return (false, result, null, Status.notFound);
-        }
-      });
-    } on FirebaseException catch (_) {
-      return (false, result, _.message, Status.notFound);
-    }
-  }
-
-  @override
-  Future<(bool, T?, String?, Status)> findById<R>(
-    String id, {
-    OnDataSourceBuilder<R>? builder,
-  }) async {
-    if (id.isValid) {
-      try {
-        return await _source(builder).doc(id).get().then((_) async {
-          if (_.exists && _.data() is Map<String, dynamic>) {
-            var v = isEncryptor ? await output(_.data()) : _.data();
-            return (true, build(v), null, Status.alreadyFound);
-          } else {
-            return (false, null, null, Status.notFound);
-          }
-        });
-      } on FirebaseException catch (_) {
-        return (false, null, _.message, Status.failure);
-      }
-    } else {
-      return (false, null, null, Status.invalidId);
-    }
-  }
-
-  @override
   Future<Response<T>> isAvailable<R>(
     String id, {
     bool isConnected = false,
@@ -91,12 +547,16 @@ abstract class FireStoreDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        var finder = await findById(id, builder: builder);
+        var finder = await _source(builder).findById(
+          builder: build,
+          encryptor: encryptor,
+          id: id,
+        );
         return response.withAvailable(
           !finder.$1,
           data: finder.$2,
-          message: finder.$3,
-          status: finder.$4,
+          message: finder.$4,
+          status: finder.$5,
         );
       } else {
         return response.withStatus(Status.invalidId);
@@ -115,28 +575,19 @@ abstract class FireStoreDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       if (data.id.isValid) {
-        final finder = await findById(data.id, builder: builder);
-        if (!finder.$1) {
-          final I = _source(builder).doc(data.id);
-          if (isEncryptor) {
-            var raw = await input(data.source);
-            if (raw.isValid) {
-              await I.set(raw, SetOptions(merge: true));
-              return response.withData(data);
-            } else {
-              return response.withStatus(Status.invalid);
-            }
-          } else {
-            await I.set(data.source, SetOptions(merge: true));
-            return response.withData(data);
-          }
-        } else {
-          return response.withIgnore(
-            finder.$2,
-            message: finder.$3,
-            status: finder.$4,
-          );
-        }
+        final finder = await _source(builder).setByOnce(
+          builder: build,
+          encryptor: encryptor,
+          data: data,
+        );
+        return response.modify(
+          successful: finder.$1,
+          error: !finder.$1,
+          result: finder.$3,
+          ignores: finder.$2 != null ? [finder.$2!] : null,
+          message: finder.$4,
+          status: finder.$5,
+        );
       } else {
         return response.withStatus(Status.invalidId);
       }
@@ -154,13 +605,21 @@ abstract class FireStoreDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       if (data.isValid) {
-        for (var i in data) {
-          var result = await insert(i, isConnected: true, builder: builder);
-          if (result.ignores.isValid) response.withIgnore(result.ignores[0]);
-        }
-        return response.withResult(data);
+        final finder = await _source(builder).setByMultiple(
+          builder: build,
+          encryptor: encryptor,
+          data: data,
+        );
+        return response.modify(
+          error: !finder.$1,
+          successful: finder.$1,
+          ignores: finder.$3,
+          result: finder.$4,
+          message: finder.$5,
+          status: finder.$6,
+        );
       } else {
-        return response.withStatus(Status.invalid);
+        return response.withStatus(Status.invalidId);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -176,24 +635,23 @@ abstract class FireStoreDataSourceImpl<T extends Data>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      if (id.isValid && data.isValid) {
-        final finder = await findById(id, builder: builder);
-        final I = _source(builder).doc(id);
-        if (finder.$1) {
-          try {
-            var v = isEncryptor
-                ? await input(finder.$2?.source.attach(data))
-                : data;
-            await I.update(v);
-            return response.withBackup(finder.$2);
-          } on FirebaseException catch (_) {
-            return response.withException(_.message, status: Status.failure);
-          }
-        } else {
-          return response.withIgnore(finder.$2, status: Status.notFound);
-        }
+      if (id.isValid) {
+        final finder = await _source(builder).updateById(
+          builder: build,
+          encryptor: encryptor,
+          id: id,
+          data: data,
+        );
+        return response.modify(
+          successful: finder.$1,
+          error: !finder.$1,
+          backups: finder.$2 != null ? [finder.$2!] : null,
+          result: finder.$3,
+          message: finder.$4,
+          status: finder.$5,
+        );
       } else {
-        return response.withStatus(Status.invalid);
+        return response.withStatus(Status.invalidId);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -209,17 +667,17 @@ abstract class FireStoreDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        final finder = await findById(id, builder: builder);
-        final I = _source(builder).doc(id);
+        var finder = await _source(builder).deleteById(
+          builder: build,
+          encryptor: encryptor,
+          id: id,
+        );
         if (finder.$1) {
-          try {
-            await I.delete();
-            return response.withBackup(finder.$2, status: Status.ok);
-          } on FirebaseException catch (_) {
-            return response.withException(_.message, status: Status.failure);
-          }
+          return response
+              .withBackup(finder.$2)
+              .withResult(finder.$3, status: finder.$5);
         } else {
-          return response.withIgnore(finder.$2, status: Status.notFound);
+          return response.withException(finder.$4, status: finder.$5);
         }
       } else {
         return response.withStatus(Status.invalidId);
@@ -236,16 +694,14 @@ abstract class FireStoreDataSourceImpl<T extends Data>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      var I = await gets(isConnected: true, builder: builder);
-      if (I.isSuccessful && I.result.isValid) {
-        await _source(builder).get().then((value) async {
-          for (var i in value.docs) {
-            await delete(i.id, builder: builder, isConnected: true);
-          }
-        });
-        return response.withBackups(I.result, status: Status.ok);
+      var finder = await _source(builder).clearBy(
+        builder: build,
+        encryptor: encryptor,
+      );
+      if (finder.$1) {
+        return response.withBackups(finder.$2, status: finder.$4);
       } else {
-        return response.withStatus(Status.notFound);
+        return response.withException(finder.$3, status: finder.$4);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -260,11 +716,15 @@ abstract class FireStoreDataSourceImpl<T extends Data>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findById(id, builder: builder);
+      var finder = await _source(builder).findById(
+        builder: build,
+        encryptor: encryptor,
+        id: id,
+      );
       if (finder.$1) {
-        return response.withData(finder.$2);
+        return response.withData(finder.$2).withResult(finder.$3);
       } else {
-        return response.withException(finder.$3, status: finder.$4);
+        return response.withException(finder.$4, status: finder.$5);
       }
     } else {
       return response.withStatus(Status.networkError);
@@ -279,7 +739,11 @@ abstract class FireStoreDataSourceImpl<T extends Data>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findBy(builder: builder, onlyUpdates: forUpdates);
+      var finder = await _source(builder).getBy(
+        builder: build,
+        encryptor: encryptor,
+        onlyUpdates: forUpdates,
+      );
       if (finder.$1) {
         return response.withResult(finder.$2);
       } else {
@@ -312,14 +776,14 @@ abstract class FireStoreDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       try {
-        _source(builder).doc(id).snapshots().listen((event) async {
-          var value = event.data();
-          if (event.exists || value != null) {
-            var v = isEncryptor ? await output(value) : value;
-            controller.add(response.withData(build(v)));
+        _source(builder)
+            .liveById(builder: build, encryptor: encryptor, id: id)
+            .listen((finder) {
+          if (finder.$1) {
+            controller.add(response.withData(finder.$2));
           } else {
             controller.add(
-              response.withData(null, status: Status.notFound),
+              response.withData(null, message: finder.$4, status: finder.$5),
             );
           }
         });
@@ -345,17 +809,18 @@ abstract class FireStoreDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       try {
-        _source(builder).snapshots().listen((event) async {
-          if (event.docs.isNotEmpty) {
-            List<T> result = [];
-            for (var i in event.docs) {
-              var v = isEncryptor ? await output(i.data()) : i.data();
-              result.add(build(v));
-            }
-            controller.add(response.withResult(result));
+        _source(builder)
+            .liveBy(
+          builder: build,
+          encryptor: encryptor,
+          onlyUpdates: forUpdates,
+        )
+            .listen((finder) {
+          if (finder.$1) {
+            controller.add(response.withResult(finder.$2));
           } else {
             controller.add(
-              response.withResult([], status: Status.notFound),
+              response.withResult(null, message: finder.$3, status: finder.$4),
             );
           }
         });
