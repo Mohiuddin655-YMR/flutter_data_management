@@ -18,8 +18,8 @@ extension FireStoreDataFinder on CollectionReference {
           return (false, null, null, Status.notFound);
         }
       });
-    } catch (_) {
-      return (false, null, "$_", Status.failure);
+    } on FirebaseException catch (_) {
+      return (false, null, _.message, Status.failure);
     }
   }
 
@@ -41,8 +41,8 @@ extension FireStoreDataFinder on CollectionReference {
             return (false, null, null, null, Status.notFound);
           }
         });
-      } catch (_) {
-        return (false, null, null, "$_", Status.failure);
+      } on FirebaseException catch (_) {
+        return (false, null, null, _.message, Status.failure);
       }
     } else {
       return (false, null, null, null, Status.invalidId);
@@ -86,8 +86,8 @@ extension FireStoreDataFinder on CollectionReference {
           return (false, null, null, Status.notFound);
         }
       });
-    } catch (_) {
-      return (false, null, "$_", Status.failure);
+    } on FirebaseException catch (_) {
+      return (false, null, _.message, Status.failure);
     }
   }
 
@@ -110,8 +110,8 @@ extension FireStoreDataFinder on CollectionReference {
             controller.add((false, null, null, null, Status.notFound));
           }
         });
-      } catch (_) {
-        controller.add((false, null, null, "$_", Status.failure));
+      } on FirebaseException catch (_) {
+        controller.add((false, null, null, _.message, Status.failure));
       }
     } else {
       controller.add((false, null, null, null, Status.invalidId));
@@ -137,8 +137,8 @@ extension FireStoreDataFinder on CollectionReference {
           controller.add((false, null, null, Status.notFound));
         }
       });
-    } catch (_) {
-      controller.add((false, null, "$_", Status.failure));
+    } on FirebaseException catch (_) {
+      controller.add((false, null, _.message, Status.failure));
     }
     return controller.stream;
   }
@@ -169,8 +169,8 @@ extension FireStoreDataFinder on CollectionReference {
             return (false, data, null, null, Status.alreadyFound);
           }
         });
-      } catch (_) {
-        return (false, null, null, "$_", Status.failure);
+      } on FirebaseException catch (_) {
+        return (false, null, null, _.message, Status.failure);
       }
     } else {
       return (false, null, null, null, Status.invalidId);
@@ -199,8 +199,8 @@ extension FireStoreDataFinder on CollectionReference {
             }
           }
           if (data.length != ignores.length) {
-            return setAll(current).then((task) {
-              if (task) {
+            return setAll(current).then((successful) {
+              if (successful) {
                 return (true, current, ignores, value, null, Status.ok);
               } else {
                 return (
@@ -219,8 +219,8 @@ extension FireStoreDataFinder on CollectionReference {
             return (false, null, ignores, null, null, Status.alreadyFound);
           }
         });
-      } catch (_) {
-        return (false, null, null, null, "$_", Status.failure);
+      } on FirebaseException catch (_) {
+        return (false, null, null, null, _.message, Status.failure);
       }
     } else {
       return (false, null, null, null, null, Status.invalidId);
@@ -254,8 +254,8 @@ extension FireStoreDataFinder on CollectionReference {
             return (false, null, null, null, Status.notFound);
           }
         });
-      } catch (_) {
-        return (false, null, null, "$_", Status.failure);
+      } on FirebaseException catch (_) {
+        return (false, null, null, _.message, Status.failure);
       }
     } else {
       return (false, null, null, null, Status.invalidId);
@@ -288,8 +288,8 @@ extension FireStoreDataFinder on CollectionReference {
             return (false, null, null, null, Status.notFound);
           }
         });
-      } catch (_) {
-        return (false, null, null, "$_", Status.failure);
+      } on FirebaseException catch (_) {
+        return (false, null, null, _.message, Status.failure);
       }
     } else {
       return (false, null, null, null, Status.invalidId);
@@ -301,7 +301,7 @@ extension FireStoreDataFinder on CollectionReference {
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
-    if (id.isValid) {
+    if (ids.isNotEmpty) {
       try {
         return getAts<T>(
           builder: builder,
@@ -322,8 +322,8 @@ extension FireStoreDataFinder on CollectionReference {
             return (false, null, null, null, Status.notFound);
           }
         });
-      } catch (_) {
-        return (false, null, null, "$_", Status.failure);
+      } on FirebaseException catch (_) {
+        return (false, null, null, _.message, Status.failure);
       }
     } else {
       return (false, null, null, null, Status.invalidId);
@@ -353,8 +353,8 @@ extension FireStoreDataFinder on CollectionReference {
           return (false, null, null, Status.notFound);
         }
       });
-    } catch (_) {
-      return (false, null, "$_", Status.failure);
+    } on FirebaseException catch (_) {
+      return (false, null, _.message, Status.failure);
     }
   }
 }
@@ -493,9 +493,14 @@ extension _FireStoreExtension on CollectionReference {
   }
 
   Future<bool> updateAt(Map<String, dynamic> data) {
-    return doc(data.entityId).update(data).then((value) {
-      return true;
-    });
+    var id = data.entityId;
+    if (id != null && id.isNotEmpty) {
+      return doc(id).update(data).then((value) {
+        return true;
+      });
+    } else {
+      return Future.error("Id isn't valid!");
+    }
   }
 
   Future<bool> deleteAt<T extends Entity>(T data) {

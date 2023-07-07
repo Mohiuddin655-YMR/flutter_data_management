@@ -77,7 +77,7 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
                 ),
               ],
             ),
-            BlocConsumer<RemoteDataController<User>, DataResponse<User>>(
+            BlocBuilder<RemoteDataController<User>, DataResponse<User>>(
               builder: (context, state) {
                 return Container(
                   width: double.infinity,
@@ -90,33 +90,6 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
                     textAlign: TextAlign.center,
                   ),
                 );
-              },
-              listener: (context, state) {
-                if (state.isLoading) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(state.message),
-                  ));
-                } else if (state.isMessage) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(state.message),
-                  ));
-                } else if (state.isException) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(state.exception),
-                  ));
-                } else if (state.isValid) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Valid Data"),
-                  ));
-                } else if (state.isSuccessful) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Successful"),
-                  ));
-                } else if (state.isCancel) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Cancel"),
-                  ));
-                }
               },
             ),
             Container(
@@ -165,7 +138,6 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
 class RemoteUserDataSource extends RealtimeDataSourceImpl<User> {
   RemoteUserDataSource({
     super.path = "users",
-    super.encryptor = const DataEncryptor(),
   });
 
   @override
