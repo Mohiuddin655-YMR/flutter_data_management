@@ -138,6 +138,7 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
 class RemoteUserDataSource extends RealtimeDataSourceImpl<User> {
   RemoteUserDataSource({
     super.path = "users",
+    super.encryptor = const DataEncryptor(),
   });
 
   @override

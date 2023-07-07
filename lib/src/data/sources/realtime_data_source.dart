@@ -28,7 +28,7 @@ extension RealtimeDataFinder on DatabaseReference {
     Encryptor? encryptor,
     required String id,
   }) async {
-    if (id.isValid) {
+    if (id.isNotEmpty) {
       try {
         return getAt<T>(
           builder: builder,
@@ -97,7 +97,7 @@ extension RealtimeDataFinder on DatabaseReference {
     required String id,
   }) {
     final controller = StreamController<FindByIdFinder<T>>();
-    if (id.isValid) {
+    if (id.isNotEmpty) {
       try {
         liveAt<T>(
           builder: builder,
@@ -147,8 +147,9 @@ extension RealtimeDataFinder on DatabaseReference {
     required LocalDataBuilder<T> builder,
     Encryptor? encryptor,
     required T data,
+    bool withPriority = false,
   }) async {
-    if (data.id.isValid) {
+    if (data.id.isNotEmpty) {
       try {
         return getAt<T>(
           builder: builder,
@@ -156,7 +157,12 @@ extension RealtimeDataFinder on DatabaseReference {
           id: data.id,
         ).then((value) {
           if (value == null) {
-            return setAt(data).then((successful) {
+            return setAt(
+              builder: builder,
+              encryptor: encryptor,
+              data: data,
+              withPriority: withPriority,
+            ).then((successful) {
               if (successful) {
                 return (true, null, null, null, Status.ok);
               } else {
@@ -181,8 +187,9 @@ extension RealtimeDataFinder on DatabaseReference {
     required LocalDataBuilder<T> builder,
     Encryptor? encryptor,
     required List<T> data,
+    bool withPriority = false,
   }) async {
-    if (data.isValid) {
+    if (data.isNotEmpty) {
       try {
         return getAll<T>(
           builder: builder,
@@ -199,7 +206,12 @@ extension RealtimeDataFinder on DatabaseReference {
             }
           }
           if (data.length != ignores.length) {
-            return setAll(current).then((successful) {
+            return setAll(
+              builder: builder,
+              encryptor: encryptor,
+              data: current,
+              withPriority: withPriority,
+            ).then((successful) {
               if (successful) {
                 return (true, current, ignores, value, null, Status.ok);
               } else {
@@ -233,7 +245,7 @@ extension RealtimeDataFinder on DatabaseReference {
     required String id,
     required Map<String, dynamic> data,
   }) async {
-    if (id.isValid) {
+    if (id.isNotEmpty) {
       try {
         return getAt<T>(
           builder: builder,
@@ -241,7 +253,13 @@ extension RealtimeDataFinder on DatabaseReference {
           id: id,
         ).then((value) {
           if (value != null) {
-            return updateAt(data).then((successful) {
+            return updateAt(
+              builder: builder,
+              encryptor: encryptor,
+              data: encryptor != null
+                  ? value.source.attach(data)
+                  : data.withId(id),
+            ).then((successful) {
               if (successful) {
                 return (true, value, null, null, Status.ok);
               } else {
@@ -267,7 +285,7 @@ extension RealtimeDataFinder on DatabaseReference {
     Encryptor? encryptor,
     required String id,
   }) async {
-    if (id.isValid) {
+    if (id.isNotEmpty) {
       try {
         return getAt<T>(
           builder: builder,
@@ -275,7 +293,11 @@ extension RealtimeDataFinder on DatabaseReference {
           id: id,
         ).then((value) {
           if (value != null) {
-            return deleteAt(value).then((successful) {
+            return deleteAt(
+              builder: builder,
+              encryptor: encryptor,
+              data: value,
+            ).then((successful) {
               if (successful) {
                 return (true, value, null, null, Status.ok);
               } else {
@@ -309,7 +331,11 @@ extension RealtimeDataFinder on DatabaseReference {
           ids: ids,
         ).then((value) {
           if (value.isNotEmpty) {
-            return deleteAll(value).then((successful) {
+            return deleteAll(
+              builder: builder,
+              encryptor: encryptor,
+              data: value,
+            ).then((successful) {
               if (successful) {
                 return (true, null, value, null, Status.ok);
               } else {
@@ -340,7 +366,11 @@ extension RealtimeDataFinder on DatabaseReference {
         encryptor: encryptor,
       ).then((value) {
         if (value.isNotEmpty) {
-          return deleteAll(value).then((successful) {
+          return deleteAll(
+            builder: builder,
+            encryptor: encryptor,
+            data: value,
+          ).then((successful) {
             if (successful) {
               return (true, value, null, Status.ok);
             } else {
@@ -459,48 +489,103 @@ extension _RealtimeExtension on DatabaseReference {
     return controller.stream;
   }
 
-  Future<bool> setAt<T extends Entity>(T data, {bool withPriority = true}) {
+  Future<bool> setAt<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required T data,
+    bool withPriority = false,
+  }) async {
+    var isEncryptor = encryptor != null;
     var ref = child(data.id);
-    if (withPriority) {
-      return ref.setWithPriority(data.source, Entity.ms).then((value) {
-        return true;
-      });
+    if (isEncryptor) {
+      var raw = await encryptor.input(data.source);
+      if (raw.isNotEmpty) {
+        if (withPriority) {
+          return ref.setWithPriority(raw, data.timeMills).then((value) {
+            return true;
+          });
+        } else {
+          return ref.set(raw).then((value) {
+            return true;
+          });
+        }
+      } else {
+        return Future.error("Encryption error!");
+      }
     } else {
-      return ref.set(data.source).then((value) {
-        return true;
-      });
+      if (withPriority) {
+        return ref.setWithPriority(data.source, data.timeMills).then((value) {
+          return true;
+        });
+      } else {
+        return ref.set(data.source).then((value) {
+          return true;
+        });
+      }
     }
   }
 
-  Future<bool> setAll<T extends Entity>(List<T> data) async {
+  Future<bool> setAll<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required List<T> data,
+    bool withPriority = false,
+  }) async {
     var counter = 0;
     for (var i in data) {
-      if (await setAt(i)) counter++;
+      if (await setAt(
+        builder: builder,
+        encryptor: encryptor,
+        data: i,
+        withPriority: withPriority,
+      )) counter++;
     }
     return data.length == counter;
   }
 
-  Future<bool> updateAt(Map<String, dynamic> data) {
-    var id = data.entityId;
+  Future<bool> updateAt<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required Map<String, dynamic> data,
+  }) async {
+    var isEncryptor = encryptor != null;
+    var id = data.id;
     if (id != null && id.isNotEmpty) {
-      return child(id).update(data).then((value) {
-        return true;
-      });
+      var v = isEncryptor ? await encryptor.input(data) : data;
+      if (v.isNotEmpty) {
+        return child(id).update(v).then((value) {
+          return true;
+        });
+      } else {
+        return Future.error("Encryption error!");
+      }
     } else {
       return Future.error("Id isn't valid!");
     }
   }
 
-  Future<bool> deleteAt<T extends Entity>(T data) {
+  Future<bool> deleteAt<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required T data,
+  }) {
     return child(data.id).remove().then((value) {
       return true;
     });
   }
 
-  Future<bool> deleteAll<T extends Entity>(List<T> data) async {
+  Future<bool> deleteAll<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required List<T> data,
+  }) async {
     var counter = 0;
     for (var i in data) {
-      if (await deleteAt(i)) counter++;
+      if (await deleteAt(
+        builder: builder,
+        encryptor: encryptor,
+        data: i,
+      )) counter++;
     }
     return data.length == counter;
   }
