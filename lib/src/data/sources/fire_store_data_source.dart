@@ -27,12 +27,12 @@ abstract class FireStoreDataSourceImpl<T extends Data>
 
   @override
   Future<(bool, List<T>, String?, Status)> findBy<R>({
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
     bool onlyUpdates = false,
   }) async {
     List<T> result = [];
     try {
-      return await _source(source).get().then((_) async {
+      return await _source(builder).get().then((_) async {
         if (_.docs.isNotEmpty || _.docChanges.isNotEmpty) {
           if (onlyUpdates) {
             for (var i in _.docChanges) {
@@ -62,11 +62,11 @@ abstract class FireStoreDataSourceImpl<T extends Data>
   @override
   Future<(bool, T?, String?, Status)> findById<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     if (id.isValid) {
       try {
-        return await _source(source).doc(id).get().then((_) async {
+        return await _source(builder).doc(id).get().then((_) async {
           if (_.exists && _.data() is Map<String, dynamic>) {
             var v = isEncryptor ? await output(_.data()) : _.data();
             return (true, build(v), null, Status.alreadyFound);
@@ -91,7 +91,7 @@ abstract class FireStoreDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        var finder = await findById(id, source: builder);
+        var finder = await findById(id, builder: builder);
         return response.withAvailable(
           !finder.$1,
           data: finder.$2,
@@ -115,7 +115,7 @@ abstract class FireStoreDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       if (data.id.isValid) {
-        final finder = await findById(data.id, source: builder);
+        final finder = await findById(data.id, builder: builder);
         if (!finder.$1) {
           final I = _source(builder).doc(data.id);
           if (isEncryptor) {
@@ -177,7 +177,7 @@ abstract class FireStoreDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid && data.isValid) {
-        final finder = await findById(id, source: builder);
+        final finder = await findById(id, builder: builder);
         final I = _source(builder).doc(id);
         if (finder.$1) {
           try {
@@ -209,7 +209,7 @@ abstract class FireStoreDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        final finder = await findById(id, source: builder);
+        final finder = await findById(id, builder: builder);
         final I = _source(builder).doc(id);
         if (finder.$1) {
           try {
@@ -260,7 +260,7 @@ abstract class FireStoreDataSourceImpl<T extends Data>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findById(id, source: builder);
+      final finder = await findById(id, builder: builder);
       if (finder.$1) {
         return response.withData(finder.$2);
       } else {
@@ -279,7 +279,7 @@ abstract class FireStoreDataSourceImpl<T extends Data>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findBy(source: builder, onlyUpdates: forUpdates);
+      final finder = await findBy(builder: builder, onlyUpdates: forUpdates);
       if (finder.$1) {
         return response.withResult(finder.$2);
       } else {

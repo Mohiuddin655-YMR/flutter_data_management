@@ -1,17 +1,14 @@
 import 'package:data_management/core.dart';
-import 'package:example/di.dart';
-import 'package:example/firebase_realtime_data_test.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api_data_test.dart';
+import 'di.dart';
 import 'firebase_firestore_data_test.dart';
+import 'firebase_realtime_data_test.dart';
 import 'local_data_test.dart';
-
-late SharedPreferences preferences;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,7 +59,7 @@ class Application extends StatelessWidget {
                   create: (context) => locator<RemoteDataController<User>>(),
                 ),
               ],
-              child: const FirebaseRealtimeDataTest(),
+              child: const LocalDataTest(),
             ),
           ),
         ),

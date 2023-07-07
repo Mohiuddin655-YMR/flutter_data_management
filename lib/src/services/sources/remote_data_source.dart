@@ -10,12 +10,12 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   });
 
   Future<(bool, List<T>, String?, Status)> findBy<R>({
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   });
 
   Future<(bool, T?, String?, Status)> findById<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   });
 
   @override

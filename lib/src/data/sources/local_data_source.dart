@@ -3,7 +3,7 @@ part of 'sources.dart';
 abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
   LocalDataSourceImpl({
     required super.path,
-    super.preferences,
+    super.database,
   });
 
   String _source<R>(
@@ -18,26 +18,26 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
     }
   }
 
-  bool isExisted(String id, List<T>? data) {
-    if (data != null && data.isNotEmpty) {
-      return data.where((E) => E.id.equals(id)).isNotEmpty;
-    } else {
-      return false;
-    }
-  }
-
   @override
   Future<Response<T>> isAvailable<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) async {
     final response = Response<T>();
-    try {
-      var I = await gets(builder: builder);
-      var result = I.result.where((_) => _.id == id).isEmpty;
-      return response.withAvailable(result);
-    } catch (_) {
-      return response.withException(_, status: Status.failure);
+    if (id.isValid) {
+      var finder = await database.findById(
+        id: id,
+        path: _source(builder),
+        builder: build,
+      );
+      return response.withAvailable(
+        !finder.$1,
+        data: finder.$2,
+        message: finder.$4,
+        status: finder.$5,
+      );
+    } else {
+      return response.withStatus(Status.invalidId);
     }
   }
 
@@ -48,25 +48,22 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
   }) async {
     final response = Response<T>();
     try {
-      var I = await gets(builder: builder);
-      final request = I.result;
-      final isInsertable = !isExisted(data.id, request);
-      if (isInsertable) {
-        request.add(data);
-        return database.input(_source(builder), request).then((value) {
-          if (value) {
-            return response.withResult(request);
-          } else {
-            return response.withException(
-              "Insertion error!",
-              status: Status.error,
-            );
-          }
-        }).onError((e, s) {
-          return response.withException(e, status: Status.failure);
-        });
+      if (data.id.isValid) {
+        final finder = await database.setByData(
+          data: data,
+          path: _source(builder),
+          builder: build,
+        );
+        return response.modify(
+          successful: finder.$1,
+          error: !finder.$1,
+          result: finder.$3,
+          ignores: finder.$2 != null ? [finder.$2!] : null,
+          message: finder.$4,
+          status: finder.$5,
+        );
       } else {
-        return response.withIgnore(data, message: "Already data added!");
+        return response.withStatus(Status.invalidId);
       }
     } catch (_) {
       return response.withException(_, status: Status.failure);
@@ -80,29 +77,23 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
   }) async {
     final response = Response<T>();
     try {
-      var I = await gets(builder: builder);
-      final request = I.result;
-      for (var item in data) {
-        final isInsertable = !isExisted(item.id, request);
-        if (isInsertable) {
-          request.add(item);
-          await database.input(_source(builder), request).then((value) {
-            if (value) {
-              response.withResult(request);
-            } else {
-              response.withException(
-                "Insertion error!",
-                status: Status.error,
-              );
-            }
-          }).onError((e, s) {
-            response.withException(e, status: Status.failure);
-          });
-        } else {
-          response.withIgnore(item, message: "Already inserted!");
-        }
+      if (data.isValid) {
+        final finder = await database.setByList(
+          data: data,
+          path: _source(builder),
+          builder: build,
+        );
+        return response.modify(
+          error: !finder.$1,
+          successful: finder.$1,
+          ignores: finder.$3,
+          result: finder.$4,
+          message: finder.$5,
+          status: finder.$6,
+        );
+      } else {
+        return response.withStatus(Status.invalidId);
       }
-      return response;
     } catch (_) {
       return response.withException(_, status: Status.failure);
     }
@@ -116,26 +107,23 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
   }) async {
     final response = Response<T>();
     try {
-      final I = await gets(builder: builder);
-      var finder = I.result.findToUpdate(data.withId(id), build);
-      if (finder.$3) {
-        return database.input(_source(builder), finder.$2).then((value) {
-          if (value) {
-            return response.withResult(finder.$2).withBackup(finder.$1);
-          } else {
-            return response.withException(
-              "Database error!",
-              status: Status.error,
-            );
-          }
-        }).onError((e, s) {
-          return response.withException(e, status: Status.failure);
-        });
-      } else {
-        return response.withException(
-          "Data not updated!",
-          status: Status.notFound,
+      if (id.isValid) {
+        final finder = await database.updateByData(
+          id: id,
+          data: data,
+          path: _source(builder),
+          builder: build,
         );
+        return response.modify(
+          successful: finder.$1,
+          error: !finder.$1,
+          backups: finder.$2 != null ? [finder.$2!] : null,
+          result: finder.$3,
+          message: finder.$4,
+          status: finder.$5,
+        );
+      } else {
+        return response.withStatus(Status.invalidId);
       }
     } catch (_) {
       return response.withException(_, status: Status.failure);
@@ -149,20 +137,22 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
   }) async {
     final response = Response<T>();
     try {
-      var I = await gets(builder: builder);
-      var finder = I.result.findById(id);
-      return database.input(_source(builder), finder.$2).then((value) {
-        if (value) {
-          return response.withResult(finder.$2).withBackup(finder.$1);
+      if (id.isValid) {
+        var finder = await database.deleteById(
+          id: id,
+          path: _source(builder),
+          builder: build,
+        );
+        if (finder.$1) {
+          return response
+              .withBackup(finder.$2)
+              .withResult(finder.$3, status: finder.$5);
         } else {
-          return response.withException(
-            "Database error!",
-            status: Status.error,
-          );
+          return response.withException(finder.$4, status: finder.$5);
         }
-      }).onError((e, s) {
-        return response.withException(e, status: Status.failure);
-      });
+      } else {
+        return response.withStatus(Status.invalidId);
+      }
     } catch (_) {
       return response.withException(_, status: Status.failure);
     }
@@ -174,19 +164,15 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
   }) async {
     final response = Response<T>();
     try {
-      var I = await gets(builder: builder);
-      return database.input(_source(builder), null).then((value) {
-        if (value) {
-          return response.withBackups(I.result);
-        } else {
-          return response.withException(
-            "Database error!",
-            status: Status.error,
-          );
-        }
-      }).onError((_, s) {
-        return response.withException(_, status: Status.failure);
-      });
+      var finder = await database.clearBy(
+        path: _source(builder),
+        builder: build,
+      );
+      if (finder.$1) {
+        return response.withBackups(finder.$2, status: finder.$4);
+      } else {
+        return response.withException(finder.$3, status: finder.$4);
+      }
     } catch (_) {
       return response.withException(_, status: Status.failure);
     }
@@ -199,12 +185,15 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
   }) async {
     final response = Response<T>();
     try {
-      var I = await gets(builder: builder);
-      final result = I.result.where((E) => E.id.equals(id));
-      if (result.isNotEmpty) {
-        return response.withData(result.first);
+      var finder = await database.findById(
+        id: id,
+        path: _source(builder),
+        builder: build,
+      );
+      if (finder.$1) {
+        return response.withData(finder.$2).withResult(finder.$3);
       } else {
-        return response.withException("Data not found!");
+        return response.withException(finder.$4, status: finder.$5);
       }
     } catch (_) {
       return response.withException(_, status: Status.failure);
@@ -218,11 +207,15 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
   }) async {
     final response = Response<T>();
     try {
-      return database.output<T>(_source(builder), build).then((value) {
-        return response.withResult(value);
-      }).onError((e, s) {
-        return response.withException(e, status: Status.failure);
-      });
+      var finder = await database.findBy(
+        path: _source(builder),
+        builder: build,
+      );
+      if (finder.$1) {
+        return response.withResult(finder.$2);
+      } else {
+        return response.withException(finder.$3, status: finder.$4);
+      }
     } catch (_) {
       return response.withException(_, status: Status.failure);
     }
@@ -251,15 +244,12 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
             controller.add(response.withData(result));
           } else {
             controller.add(
-              response.withException("Data not found!").withData(null),
+              response.withData(null, status: Status.notFound),
             );
           }
         });
       } else {
-        controller.add(response.modify(
-          exception: "Undefined ID [$id]",
-          status: Status.undefined,
-        ));
+        controller.add(response.withStatus(Status.invalidId));
       }
     } catch (_) {
       controller.add(response.withException(_, status: Status.failure));
@@ -281,7 +271,7 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
           controller.add(response.withResult(result));
         } else {
           controller.add(
-            response.withException("Data not found!").withResult([]),
+            response.withResult([], status: Status.notFound),
           );
         }
       });
@@ -290,65 +280,4 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
     }
     return controller.stream;
   }
-}
-
-extension _LocalExtension on Future<LocalDatabase> {
-  Future<bool> input<T extends Entity>(
-    String key,
-    List<T>? data,
-  ) async {
-    var db = await this;
-    return db.input(key, data);
-  }
-
-  Future<List<T>> output<T extends Entity>(
-    String key,
-    OnDataBuilder<T> builder,
-  ) async {
-    var db = await this;
-    return db.output(key, builder);
-  }
-}
-
-extension _LocalListExtension<T extends Entity> on List<T>? {
-  (T?, List<T>, bool) findToUpdate(
-    Map<String, dynamic> data,
-    OnDataBuilder<T> builder,
-  ) {
-    T? B;
-    var i = use.indexWhere((E) {
-      if (data.id.equals(E.id)) {
-        B = E;
-        return true;
-      } else {
-        return false;
-      }
-    });
-    if (i > -1) {
-      use.removeAt(i);
-      use.insert(i, builder(data));
-      return (B, use, true);
-    } else {
-      return (null, use, false);
-    }
-  }
-
-  (T?, List<T>) findById(String id) {
-    T? B;
-    var I = use.where((E) {
-      if (id.equals(E.id)) {
-        B = E;
-        return false;
-      } else {
-        return true;
-      }
-    }).toList();
-    return (B, I);
-  }
-}
-
-extension _LocalMapExtension on Map<String, dynamic> {
-  String get id => this["id"];
-
-  Map<String, dynamic> withId(String id) => attach({"id": id});
 }

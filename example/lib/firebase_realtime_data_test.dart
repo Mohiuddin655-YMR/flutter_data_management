@@ -179,7 +179,7 @@ class RemoteUserDataSource extends RealtimeDataSourceImpl<User> {
 /// Use for local data => insert, update, delete, get, gets, live, lives, clear
 class LocalUserDataSource extends LocalDataSourceImpl<User> {
   LocalUserDataSource({
-    super.preferences,
+    super.database,
     super.path = "users",
   });
 

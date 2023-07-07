@@ -189,7 +189,7 @@ class RemotePostDataSource extends ApiDataSourceImpl<Post> {
 /// Use for local data => insert, update, delete, get, gets, live, lives, clear
 class LocalPostDataSource extends LocalDataSourceImpl<Post> {
   LocalPostDataSource({
-    super.preferences,
+    super.database,
     super.path = "products",
   });
 

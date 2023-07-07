@@ -27,11 +27,11 @@ abstract class RealtimeDataSourceImpl<T extends Data>
 
   @override
   Future<(bool, List<T>, String?, Status)> findBy<R>({
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     List<T> result = [];
     try {
-      return await _source(source).get().then((_) async {
+      return await _source(builder).get().then((_) async {
         if (_.exists) {
           for (var i in _.children) {
             if (i.value != null && i.value is Map<String, dynamic>) {
@@ -52,11 +52,11 @@ abstract class RealtimeDataSourceImpl<T extends Data>
   @override
   Future<(bool, T?, String?, Status)> findById<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     if (id.isValid) {
       try {
-        return await _source(source).child(id).get().then((_) async {
+        return await _source(builder).child(id).get().then((_) async {
           if (_.exists && _.value is Map<String, dynamic>) {
             var v = isEncryptor ? await output(_.value) : _.value;
             return (true, build(v), null, Status.alreadyFound);
@@ -81,7 +81,7 @@ abstract class RealtimeDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        var finder = await findById(id, source: builder);
+        var finder = await findById(id, builder: builder);
         return response.withAvailable(
           !finder.$1,
           data: finder.$2,
@@ -105,7 +105,7 @@ abstract class RealtimeDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       if (data.id.isValid) {
-        final finder = await findById(data.id, source: builder);
+        final finder = await findById(data.id, builder: builder);
         if (!finder.$1) {
           final I = _source(builder).child(data.id);
           if (isEncryptor) {
@@ -167,7 +167,7 @@ abstract class RealtimeDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid && data.isValid) {
-        final finder = await findById(id, source: builder);
+        final finder = await findById(id, builder: builder);
         final I = _source(builder).child(id);
         if (finder.$1) {
           try {
@@ -199,7 +199,7 @@ abstract class RealtimeDataSourceImpl<T extends Data>
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        final finder = await findById(id, source: builder);
+        final finder = await findById(id, builder: builder);
         final I = _source(builder).child(id);
         if (finder.$1) {
           try {
@@ -246,7 +246,7 @@ abstract class RealtimeDataSourceImpl<T extends Data>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findById(id, source: builder);
+      final finder = await findById(id, builder: builder);
       if (finder.$1) {
         return response.withData(finder.$2);
       } else {
@@ -264,7 +264,7 @@ abstract class RealtimeDataSourceImpl<T extends Data>
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findBy(source: builder);
+      final finder = await findBy(builder: builder);
       if (finder.$1) {
         return response.withResult(finder.$2);
       } else {

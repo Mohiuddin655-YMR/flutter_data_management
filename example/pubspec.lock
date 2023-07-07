@@ -66,7 +66,7 @@ packages:
     source: hosted
     version: "1.1.1"
   cloud_firestore:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: cloud_firestore
       sha256: "5bbc1f5bffa79af54ca035b92b57f81c6fb35ee5471ead67e29c8e12de8432f8"
@@ -135,7 +135,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.0.7"
+    version: "0.0.8-alpha1"
   dbus:
     dependency: transitive
     description:
@@ -209,7 +209,7 @@ packages:
     source: hosted
     version: "2.6.0"
   firebase_database:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: firebase_database
       sha256: "36699bda00feb31433606f034078c690f148c15a4721b351a83c796ba4bba4e7"
@@ -241,10 +241,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_andomie
-      sha256: "895c80a4212b8a44f8b7b43e689f96104d855ebe63dd11db04cdc52cf90a9134"
+      sha256: "64cfd3d051718e20805e05d5daa1f02bcf9abe3612c4fa805268d7d68d2a24fc"
       url: "https://pub.dev"
     source: hosted
-    version: "0.4.6"
+    version: "0.4.8-alpha6"
   flutter_bloc:
     dependency: "direct main"
     description:
@@ -440,7 +440,7 @@ packages:
     source: hosted
     version: "6.0.5"
   shared_preferences:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: shared_preferences
       sha256: "396f85b8afc6865182610c0a2fc470853d56499f75f7499e2a73a9f0539d23d0"

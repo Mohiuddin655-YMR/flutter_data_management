@@ -41,11 +41,11 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
   @override
   Future<(bool, T?, String? message, Status status)> findById<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     if (id.isValid) {
       try {
-        final I = _source(id, source);
+        final I = _source(id, builder);
         final result = await database.get(I);
         final value = result.data;
         final code = result.statusCode;
@@ -69,11 +69,11 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
 
   @override
   Future<(bool, List<T>, String?, Status)> findBy<R>({
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
     List<T> result = [];
     try {
-      final I = currentSource(source);
+      final I = currentSource(builder);
       return await database.get(I).then((_) async {
         if (_.statusCode == api.status.ok) {
           if (_.data is List) {
@@ -130,7 +130,7 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     final response = Response<T>();
     if (isConnected) {
       if (data.id.isValid && data.source.isValid) {
-        final finder = await findById(data.id, source: builder);
+        final finder = await findById(data.id, builder: builder);
         final I = _source(data.id, builder, api.autoGenerateId);
         if (!finder.$1) {
           try {
@@ -201,7 +201,7 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid && data.isValid) {
-        final finder = await findById(id, source: builder);
+        final finder = await findById(id, builder: builder);
         final I = _source(id, builder);
         if (finder.$1) {
           try {
@@ -246,7 +246,7 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     final response = Response<T>();
     if (isConnected) {
       if (id.isValid) {
-        final finder = await findById(id, source: builder);
+        final finder = await findById(id, builder: builder);
         final I = _source(id, builder);
         if (finder.$1) {
           try {
@@ -308,7 +308,7 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findById(id, source: builder);
+      final finder = await findById(id, builder: builder);
       if (finder.$1) {
         return response.withData(finder.$2);
       } else {
@@ -326,7 +326,7 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
   }) async {
     final response = Response<T>();
     if (isConnected) {
-      final finder = await findBy(source: builder);
+      final finder = await findBy(builder: builder);
       if (finder.$1) {
         return response.withResult(finder.$2);
       } else {

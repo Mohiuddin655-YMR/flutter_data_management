@@ -186,7 +186,7 @@ class RemoteProductDataSource extends FireStoreDataSourceImpl<Product> {
 /// Use for local data => insert, update, delete, get, gets, live, lives, clear
 class LocalProductDataSource extends LocalDataSourceImpl<Product> {
   LocalProductDataSource({
-    super.preferences,
+    super.database,
     super.path = "products",
   });
 
