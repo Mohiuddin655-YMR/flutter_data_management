@@ -449,7 +449,7 @@ extension _RealtimeExtension on DatabaseReference {
     required String id,
   }) {
     final controller = StreamController<T?>();
-    if (id.isValid) {
+    if (id.isNotEmpty) {
       var isEncryptor = encryptor != null;
       child(id).onValue.listen((i) async {
         var data = i.snapshot.value;
@@ -776,11 +776,13 @@ abstract class RealtimeDataSourceImpl<T extends Data>
         builder: build,
         encryptor: encryptor,
       );
-      if (finder.$1) {
-        return response.withBackups(finder.$2, status: finder.$4);
-      } else {
-        return response.withException(finder.$3, status: finder.$4);
-      }
+      return response.modify(
+        successful: finder.$1,
+        error: !finder.$1,
+        backups: finder.$2,
+        message: finder.$3,
+        status: finder.$4,
+      );
     } else {
       return response.withStatus(Status.networkError);
     }

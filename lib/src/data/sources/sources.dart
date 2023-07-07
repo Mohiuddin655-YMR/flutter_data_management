@@ -17,9 +17,3 @@ part 'fire_store_data_source.dart';
 part 'local_data_source.dart';
 
 part 'realtime_data_source.dart';
-
-extension _LocalMapExtension on Map<String, dynamic> {
-  String? get id => this[EntityKeys.id];
-
-  Map<String, dynamic> withId(String id) => attach({EntityKeys.id: id});
-}

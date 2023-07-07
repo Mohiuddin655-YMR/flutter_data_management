@@ -1,4 +1,7 @@
 
+## 0.0.8
+* Stable version
+
 ## 0.0.7
 * Clear unnecessary library
 
