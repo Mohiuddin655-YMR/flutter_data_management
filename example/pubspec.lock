@@ -135,7 +135,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.0.8-alpha1"
+    version: "0.0.8-alpha3"
   dbus:
     dependency: transitive
     description:

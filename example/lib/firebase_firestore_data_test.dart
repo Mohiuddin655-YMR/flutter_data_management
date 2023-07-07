@@ -145,6 +145,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
 class RemoteProductDataSource extends FireStoreDataSourceImpl<Product> {
   RemoteProductDataSource({
     super.path = "products",
+    super.encryptor = const DataEncryptor(),
   });
 
   @override
