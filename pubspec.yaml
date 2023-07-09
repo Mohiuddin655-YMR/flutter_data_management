@@ -1,6 +1,6 @@
 name: data_management
 description: Collection of service with advanced style and controlling system.
-version: 0.0.8
+version: 0.0.9-alpha1
 homepage: https://github.com/P-YMR/flutter_data_management.git
 
 environment:

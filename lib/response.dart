@@ -1,6 +1,6 @@
 part of 'core.dart';
 
-class DataResponse<T> extends Response<T> {
+class DataResponse<T extends Data> extends Response<T> {
   DataResponse({
     super.requestCode,
     super.available,

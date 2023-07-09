@@ -1,21 +1,12 @@
 part of 'handlers.dart';
 
 class LocalDataHandlerImpl<T extends Data> extends LocalDataHandler<T> {
-  LocalDataHandlerImpl._({
+  LocalDataHandlerImpl.fromRepository({
     required super.repository,
   });
 
-  factory LocalDataHandlerImpl.fromRepository(
-    LocalDataRepository<T> repository,
-  ) {
-    return LocalDataHandlerImpl._(repository: repository);
-  }
-
-  factory LocalDataHandlerImpl.fromSource(LocalDataSource<T> source) {
-    return LocalDataHandlerImpl._(
-      repository: LocalDataRepositoryImpl(source: source),
-    );
-  }
+  LocalDataHandlerImpl.fromSource(LocalDataSource<T> source)
+      : super(repository: LocalDataRepositoryImpl(source: source));
 
   @override
   Future<Response<T>> isAvailable<R>(

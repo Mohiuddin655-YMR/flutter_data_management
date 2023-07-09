@@ -1,6 +1,6 @@
 part of 'controllers.dart';
 
-abstract class DataController<T extends Entity> extends Cubit<DataResponse<T>> {
+abstract class DataController<T extends Data> extends Cubit<DataResponse<T>> {
   DataController() : super(DataResponse<T>());
 
   void isAvailable<R>(
