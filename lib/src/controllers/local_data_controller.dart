@@ -3,19 +3,11 @@ part of 'controllers.dart';
 class LocalDataController<T extends Data> extends DataController<T> {
   final LocalDataHandler<T> handler;
 
-  LocalDataController._(this.handler);
+  LocalDataController(this.handler);
 
-  factory LocalDataController.fromHandler(
-    LocalDataHandler<T> handler,
-  ) {
-    return LocalDataController._(handler);
-  }
-
-  factory LocalDataController.fromSource({
+  LocalDataController.fromSource({
     required LocalDataSource<T> source,
-  }) {
-    return LocalDataController._(LocalDataHandlerImpl<T>.fromSource(source));
-  }
+  }) : handler = LocalDataHandlerImpl<T>.fromSource(source);
 
   @override
   void isAvailable<R>(

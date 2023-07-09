@@ -1,7 +1,7 @@
 part of 'handlers.dart';
 
 class LocalDataHandlerImpl<T extends Data> extends LocalDataHandler<T> {
-  LocalDataHandlerImpl.fromRepository({
+  LocalDataHandlerImpl({
     required super.repository,
   });
 

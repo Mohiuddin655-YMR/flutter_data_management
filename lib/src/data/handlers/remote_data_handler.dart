@@ -1,31 +1,23 @@
 part of 'handlers.dart';
 
 class RemoteDataHandlerImpl<T extends Data> extends RemoteDataHandler<T> {
-  RemoteDataHandlerImpl._({
+  RemoteDataHandlerImpl({
     required super.repository,
   });
 
-  factory RemoteDataHandlerImpl.fromRepository(
-    RemoteDataRepository<T> repository,
-  ) {
-    return RemoteDataHandlerImpl._(repository: repository);
-  }
-
-  factory RemoteDataHandlerImpl.fromSource({
+  RemoteDataHandlerImpl.fromSource({
     required RemoteDataSource<T> source,
     LocalDataSource<T>? backup,
     ConnectivityProvider? connectivity,
     bool isCacheMode = false,
-  }) {
-    return RemoteDataHandlerImpl._(
-      repository: RemoteDataRepositoryImpl(
-        source: source,
-        backup: backup,
-        connectivity: connectivity,
-        isCacheMode: isCacheMode,
-      ),
-    );
-  }
+  }) : super(
+          repository: RemoteDataRepositoryImpl(
+            source: source,
+            backup: backup,
+            connectivity: connectivity,
+            isCacheMode: isCacheMode,
+          ),
+        );
 
   @override
   Future<Response<T>> isAvailable<R>(

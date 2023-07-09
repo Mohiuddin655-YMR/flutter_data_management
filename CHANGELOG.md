@@ -1,4 +1,4 @@
-## 0.0.9-alpha1
+## 0.0.9-alpha2
 * Alpha version
 
 ## 0.0.8

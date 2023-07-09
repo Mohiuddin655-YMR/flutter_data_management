@@ -3,27 +3,19 @@ part of 'controllers.dart';
 class RemoteDataController<T extends Data> extends DataController<T> {
   final RemoteDataHandler<T> handler;
 
-  RemoteDataController._(this.handler);
+  RemoteDataController(this.handler);
 
-  factory RemoteDataController.fromHandler(
-    RemoteDataHandler<T> handler,
-  ) {
-    return RemoteDataController._(handler);
-  }
-
-  factory RemoteDataController.fromSource({
+  RemoteDataController.fromSource({
     required RemoteDataSource<T> source,
     LocalDataSource<T>? backup,
     ConnectivityProvider? connectivity,
     bool isCacheMode = false,
-  }) {
-    return RemoteDataController._(RemoteDataHandlerImpl<T>.fromSource(
-      source: source,
-      backup: backup,
-      connectivity: connectivity,
-      isCacheMode: isCacheMode,
-    ));
-  }
+  }) : handler = RemoteDataHandlerImpl<T>.fromSource(
+          source: source,
+          backup: backup,
+          connectivity: connectivity,
+          isCacheMode: isCacheMode,
+        );
 
   @override
   void isAvailable<R>(
