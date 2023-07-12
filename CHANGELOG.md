@@ -1,6 +1,9 @@
 ## 0.0.9-alpha2
 * Alpha version
 
+## 0.0.9
+* Stable version
+
 ## 0.0.8
 * Stable version
 
