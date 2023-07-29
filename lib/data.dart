@@ -13,9 +13,9 @@ class Data extends Entity {
     );
   }
 
-  static String get key => Entity.key;
+  static String get generateID => Entity.generateID;
 
-  static int get ms => Entity.ms;
+  static int get generateTimeMills => Entity.generateTimeMills;
 
   static String? autoId(dynamic source) => Entity.autoId(source);
 

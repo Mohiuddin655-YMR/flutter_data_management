@@ -17,12 +17,12 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
   Widget build(BuildContext context) {
     var p1 = User(
       id: "1",
-      timeMills: Data.ms,
+      timeMills: Data.generateTimeMills,
       name: "Mr. X",
     );
     var p2 = User(
       id: "2",
-      timeMills: Data.ms,
+      timeMills: Data.generateTimeMills,
       name: "Mr. Y",
     );
     return SizedBox(

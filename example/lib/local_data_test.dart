@@ -15,25 +15,25 @@ class LocalDataTest extends StatefulWidget {
 class _LocalDataTestState extends State<LocalDataTest> {
   late Product p1 = Product(
     id: "1",
-    timeMills: Data.ms,
+    timeMills: Data.generateTimeMills,
     name: "Oppo F17 Pro",
     price: 23500,
   );
   late Product p2 = Product(
     id: "2",
-    timeMills: Data.ms,
+    timeMills: Data.generateTimeMills,
     name: "Oppo A5s",
     price: 14000,
   );
   late Cart c1 = Cart(
     id: "1",
-    timeMills: Data.ms,
+    timeMills: Data.generateTimeMills,
     quantity: 3,
     product: p1,
   );
   late Cart c2 = Cart(
     id: "2",
-    timeMills: Data.ms,
+    timeMills: Data.generateTimeMills,
     quantity: 2,
     product: p2,
   );

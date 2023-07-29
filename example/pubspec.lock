@@ -135,7 +135,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.0.8"
+    version: "0.0.9"
   dbus:
     dependency: transitive
     description:
@@ -241,10 +241,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_andomie
-      sha256: "0931de8c5360d63307cde3ff1ef200ff44a1c275531340e80f07c3655e43be34"
+      sha256: cb153131232037802d8fdedeef634cc4f49e30769c9f2874cfb3c8d155e47796
       url: "https://pub.dev"
     source: hosted
-    version: "0.5.0"
+    version: "0.5.5-alpha1"
   flutter_bloc:
     dependency: "direct main"
     description:

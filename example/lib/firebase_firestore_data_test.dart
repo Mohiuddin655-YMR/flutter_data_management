@@ -17,13 +17,13 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
   Widget build(BuildContext context) {
     var p1 = Product(
       id: "1",
-      timeMills: Data.ms,
+      timeMills: Data.generateTimeMills,
       name: "Oppo F17 Pro",
       price: 23500,
     );
     var p2 = Product(
       id: "2",
-      timeMills: Data.ms,
+      timeMills: Data.generateTimeMills,
       name: "Oppo A5s",
       price: 14000,
     );
