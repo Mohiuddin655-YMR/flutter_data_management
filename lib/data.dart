@@ -1,6 +1,6 @@
 part of 'core.dart';
 
-class Data extends Entity {
+class Data<Key extends EntityKey> extends Entity<Key> {
   Data({
     super.id,
     super.timeMills,
