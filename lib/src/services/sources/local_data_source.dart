@@ -14,6 +14,7 @@ abstract class LocalDataSource<T extends Entity> extends DataSource<T> {
 
   LocalDatabase? _proxy;
 
-  Future<LocalDatabase> get database async =>
-      _proxy ??= await LocalDatabaseImpl.I;
+  Future<LocalDatabase> get database async {
+    return _proxy ??= await LocalDatabaseImpl.I;
+  }
 }

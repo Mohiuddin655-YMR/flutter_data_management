@@ -10,7 +10,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
     super.database,
   });
 
-  String _source<R>(OnDataSourceBuilder<R>? source,) {
+  String _source<R>(OnDataSourceBuilder<R>? source) {
     final parent = path;
     dynamic current = source?.call(parent as R);
     if (current is String) {
@@ -22,7 +22,8 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for check current data
   @override
-  Future<DataResponse<T>> isAvailable<R>(String id, {
+  Future<DataResponse<T>> isAvailable<R>(
+    String id, {
     OnDataSourceBuilder<R>? builder,
   }) async {
     final response = DataResponse<T>();
@@ -45,7 +46,8 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for create single data
   @override
-  Future<DataResponse<T>> insert<R>(T data, {
+  Future<DataResponse<T>> insert<R>(
+    T data, {
     OnDataSourceBuilder<R>? builder,
   }) async {
     final response = DataResponse<T>();
@@ -74,7 +76,8 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for create multiple data
   @override
-  Future<DataResponse<T>> inserts<R>(List<T> data, {
+  Future<DataResponse<T>> inserts<R>(
+    List<T> data, {
     OnDataSourceBuilder<R>? builder,
   }) async {
     final response = DataResponse<T>();
@@ -103,10 +106,11 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for update single data
   @override
-  Future<DataResponse<T>> update<R>(String id,
-      Map<String, dynamic> data, {
-        OnDataSourceBuilder<R>? builder,
-      }) async {
+  Future<DataResponse<T>> update<R>(
+    String id,
+    Map<String, dynamic> data, {
+    OnDataSourceBuilder<R>? builder,
+  }) async {
     final response = DataResponse<T>();
     try {
       if (id.isValid) {
@@ -134,7 +138,8 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for delete single data
   @override
-  Future<DataResponse<T>> delete<R>(String id, {
+  Future<DataResponse<T>> delete<R>(
+    String id, {
     OnDataSourceBuilder<R>? builder,
   }) async {
     final response = DataResponse<T>();
@@ -183,7 +188,8 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for fetch single data
   @override
-  Future<DataResponse<T>> get<R>(String id, {
+  Future<DataResponse<T>> get<R>(
+    String id, {
     OnDataSourceBuilder<R>? builder,
   }) async {
     final response = DataResponse<T>();
@@ -235,7 +241,8 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for fetch single observable data when data update
   @override
-  Stream<DataResponse<T>> live<R>(String id, {
+  Stream<DataResponse<T>> live<R>(
+    String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
     final controller = StreamController<DataResponse<T>>();

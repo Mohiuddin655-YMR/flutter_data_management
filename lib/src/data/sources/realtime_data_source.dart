@@ -12,14 +12,24 @@ abstract class RealtimeDataSource<T extends Entity>
     super.encryptor,
   });
 
-  FirebaseDatabase? _db;
+  rdb.FirebaseDatabase? _db;
 
-  FirebaseDatabase get database => _db ??= FirebaseDatabase.instance;
+  rdb.FirebaseDatabase get database => _db ??= rdb.FirebaseDatabase.instance;
 
-  DatabaseReference _source<R>(OnDataSourceBuilder<R>? source,) {
+  rdb.DatabaseReference _source<R>(OnDataSourceBuilder<R>? source) {
     final parent = database.ref(path);
     dynamic current = source?.call(parent as R);
-    if (current is DatabaseReference) {
+    if (current is rdb.DatabaseReference) {
+      return current;
+    } else {
+      return parent;
+    }
+  }
+
+  rdb.Query _query<R>(OnDataSourceBuilder<R>? source) {
+    final parent = database.ref(path);
+    dynamic current = source?.call(parent as R);
+    if (current is rdb.Query || current is rdb.DatabaseReference) {
       return current;
     } else {
       return parent;
@@ -28,7 +38,8 @@ abstract class RealtimeDataSource<T extends Entity>
 
   /// Use for check current data
   @override
-  Future<DataResponse<T>> isAvailable<R>(String id, {
+  Future<DataResponse<T>> isAvailable<R>(
+    String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
@@ -56,7 +67,8 @@ abstract class RealtimeDataSource<T extends Entity>
 
   /// Use for create single data
   @override
-  Future<DataResponse<T>> insert<R>(T data, {
+  Future<DataResponse<T>> insert<R>(
+    T data, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
@@ -86,7 +98,8 @@ abstract class RealtimeDataSource<T extends Entity>
 
   /// Use for create multiple data
   @override
-  Future<DataResponse<T>> inserts<R>(List<T> data, {
+  Future<DataResponse<T>> inserts<R>(
+    List<T> data, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
@@ -116,11 +129,12 @@ abstract class RealtimeDataSource<T extends Entity>
 
   /// Use for update single data
   @override
-  Future<DataResponse<T>> update<R>(String id,
-      Map<String, dynamic> data, {
-        bool isConnected = false,
-        OnDataSourceBuilder<R>? builder,
-      }) async {
+  Future<DataResponse<T>> update<R>(
+    String id,
+    Map<String, dynamic> data, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? builder,
+  }) async {
     final response = DataResponse<T>();
     if (isConnected) {
       if (id.isValid) {
@@ -148,7 +162,8 @@ abstract class RealtimeDataSource<T extends Entity>
 
   /// Use for delete single data
   @override
-  Future<DataResponse<T>> delete<R>(String id, {
+  Future<DataResponse<T>> delete<R>(
+    String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
@@ -201,13 +216,14 @@ abstract class RealtimeDataSource<T extends Entity>
 
   /// Use for fetch single data
   @override
-  Future<DataResponse<T>> get<R>(String id, {
+  Future<DataResponse<T>> get<R>(
+    String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
     final response = DataResponse<T>();
     if (isConnected) {
-      var finder = await _source(builder).findById(
+      var finder = await _source(builder).getById(
         builder: build,
         encryptor: encryptor,
         id: id,
@@ -231,7 +247,7 @@ abstract class RealtimeDataSource<T extends Entity>
   }) async {
     final response = DataResponse<T>();
     if (isConnected) {
-      var finder = await _source(builder).getBy(
+      var finder = await _query(builder).getBy(
         builder: build,
         encryptor: encryptor,
         onlyUpdates: forUpdates,
@@ -261,7 +277,8 @@ abstract class RealtimeDataSource<T extends Entity>
 
   /// Use for fetch single observable data when data update
   @override
-  Stream<DataResponse<T>> live<R>(String id, {
+  Stream<DataResponse<T>> live<R>(
+    String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) {
@@ -303,7 +320,7 @@ abstract class RealtimeDataSource<T extends Entity>
     final response = DataResponse<T>();
     if (isConnected) {
       try {
-        _source(builder)
+        _query(builder)
             .liveBy(
           builder: build,
           encryptor: encryptor,
@@ -331,29 +348,7 @@ abstract class RealtimeDataSource<T extends Entity>
   }
 }
 
-extension RealtimeDataFinder on DatabaseReference {
-  Future<FindByFinder<T>> findBy<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    bool onlyUpdates = false,
-  }) async {
-    try {
-      return getAll<T>(
-        builder: builder,
-        encryptor: encryptor,
-        onlyUpdates: onlyUpdates,
-      ).then((value) {
-        if (value.isNotEmpty) {
-          return (true, value, null, Status.alreadyFound);
-        } else {
-          return (false, null, null, Status.notFound);
-        }
-      });
-    } on FirebaseException catch (_) {
-      return (false, null, _.message, Status.failure);
-    }
-  }
-
+extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   Future<FindByIdFinder<T>> findById<T extends Entity>({
     required LocalDataBuilder<T> builder,
     Encryptor? encryptor,
@@ -380,46 +375,12 @@ extension RealtimeDataFinder on DatabaseReference {
     }
   }
 
-  Future<FindByFinder<T>> getBy<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    bool onlyUpdates = false,
-  }) {
-    return findBy(
-      builder: builder,
-      encryptor: encryptor,
-      onlyUpdates: onlyUpdates,
-    );
-  }
-
   Future<FindByIdFinder<T>> getById<T extends Entity>({
     required LocalDataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) {
     return findById(builder: builder, encryptor: encryptor, id: id);
-  }
-
-  Future<FindByFinder<T>> getByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required List<String> ids,
-  }) async {
-    try {
-      return getAts<T>(
-        builder: builder,
-        encryptor: encryptor,
-        ids: ids,
-      ).then((value) {
-        if (value.isNotEmpty) {
-          return (true, value, null, Status.alreadyFound);
-        } else {
-          return (false, null, null, Status.notFound);
-        }
-      });
-    } on FirebaseException catch (_) {
-      return (false, null, _.message, Status.failure);
-    }
   }
 
   Stream<FindByIdFinder<T>> liveById<T extends Entity>({
@@ -446,30 +407,6 @@ extension RealtimeDataFinder on DatabaseReference {
       }
     } else {
       controller.add((false, null, null, null, Status.invalidId));
-    }
-    return controller.stream;
-  }
-
-  Stream<FindByFinder<T>> liveBy<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    bool onlyUpdates = false,
-  }) {
-    final controller = StreamController<FindByFinder<T>>();
-    try {
-      livesAll<T>(
-        builder: builder,
-        encryptor: encryptor,
-        onlyUpdates: onlyUpdates,
-      ).listen((value) {
-        if (value.isNotEmpty) {
-          controller.add((true, value, null, Status.alreadyFound));
-        } else {
-          controller.add((false, null, null, Status.notFound));
-        }
-      });
-    } on FirebaseException catch (_) {
-      controller.add((false, null, _.message, Status.failure));
     }
     return controller.stream;
   }
@@ -522,16 +459,15 @@ extension RealtimeDataFinder on DatabaseReference {
   }) async {
     if (data.isNotEmpty) {
       try {
-        return getAll<T>(
+        return getAts<T>(
           builder: builder,
           encryptor: encryptor,
+          ids: data.map((e) => e.id).toList(),
         ).then((value) {
           List<T> current = [];
           List<T> ignores = [];
           for (var i in data) {
-            final insertable = value
-                .where((E) => E.id == i.id)
-                .isEmpty;
+            final insertable = value.where((E) => E.id == i.id).isEmpty;
             if (insertable) {
               current.add(i);
             } else {
@@ -549,12 +485,12 @@ extension RealtimeDataFinder on DatabaseReference {
                 return (true, current, ignores, value, null, Status.ok);
               } else {
                 return (
-                false,
-                null,
-                null,
-                null,
-                "Database error!",
-                Status.error,
+                  false,
+                  null,
+                  null,
+                  null,
+                  "Database error!",
+                  Status.error,
                 );
               }
             }).onError((e, s) {
@@ -651,44 +587,6 @@ extension RealtimeDataFinder on DatabaseReference {
     }
   }
 
-  Future<DeleteByIdFinder<T>> deleteByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required List<String> ids,
-  }) async {
-    if (ids.isNotEmpty) {
-      try {
-        return getAts<T>(
-          builder: builder,
-          encryptor: encryptor,
-          ids: ids,
-        ).then((value) {
-          if (value.isNotEmpty) {
-            return deleteAll(
-              builder: builder,
-              encryptor: encryptor,
-              data: value,
-            ).then((successful) {
-              if (successful) {
-                return (true, null, value, null, Status.ok);
-              } else {
-                return (false, null, null, "Database error!", Status.error);
-              }
-            }).onError((e, s) {
-              return (false, null, null, "$e", Status.failure);
-            });
-          } else {
-            return (false, null, null, null, Status.notFound);
-          }
-        });
-      } on FirebaseException catch (_) {
-        return (false, null, null, _.message, Status.failure);
-      }
-    } else {
-      return (false, null, null, null, Status.invalidId);
-    }
-  }
-
   Future<ClearByFinder<T>> clearBy<T extends Entity>({
     required LocalDataBuilder<T> builder,
     Encryptor? encryptor,
@@ -722,7 +620,67 @@ extension RealtimeDataFinder on DatabaseReference {
   }
 }
 
-extension _RealtimeExtension on DatabaseReference {
+extension _RealtimeQueryFinder on rdb.Query {
+  Future<FindByFinder<T>> findBy<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+  }) async {
+    try {
+      return getAll<T>(
+        builder: builder,
+        encryptor: encryptor,
+        onlyUpdates: onlyUpdates,
+      ).then((value) {
+        if (value.isNotEmpty) {
+          return (true, value, null, Status.alreadyFound);
+        } else {
+          return (false, null, null, Status.notFound);
+        }
+      });
+    } on FirebaseException catch (_) {
+      return (false, null, _.message, Status.failure);
+    }
+  }
+
+  Future<FindByFinder<T>> getBy<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+  }) {
+    return findBy(
+      builder: builder,
+      encryptor: encryptor,
+      onlyUpdates: onlyUpdates,
+    );
+  }
+
+  Stream<FindByFinder<T>> liveBy<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+  }) {
+    final controller = StreamController<FindByFinder<T>>();
+    try {
+      livesAll<T>(
+        builder: builder,
+        encryptor: encryptor,
+        onlyUpdates: onlyUpdates,
+      ).listen((value) {
+        if (value.isNotEmpty) {
+          controller.add((true, value, null, Status.alreadyFound));
+        } else {
+          controller.add((false, null, null, Status.notFound));
+        }
+      });
+    } on FirebaseException catch (_) {
+      controller.add((false, null, _.message, Status.failure));
+    }
+    return controller.stream;
+  }
+}
+
+extension _RealtimeReferenceExtension on rdb.DatabaseReference {
   Future<T?> getAt<T extends Entity>({
     required LocalDataBuilder<T> builder,
     Encryptor? encryptor,
@@ -755,27 +713,6 @@ extension _RealtimeExtension on DatabaseReference {
     return result;
   }
 
-  Future<List<T>> getAll<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    bool onlyUpdates = false,
-  }) async {
-    var isEncryptor = encryptor != null;
-    List<T> result = [];
-    return get().then((_) async {
-      if (_.children.isNotEmpty) {
-        for (var i in _.children) {
-          var data = i.value;
-          if (i.exists) {
-            var v = isEncryptor ? await encryptor.output(data) : data;
-            result.add(builder(v));
-          }
-        }
-      }
-      return result;
-    });
-  }
-
   Stream<T?> liveAt<T extends Entity>({
     required LocalDataBuilder<T> builder,
     Encryptor? encryptor,
@@ -794,31 +731,6 @@ extension _RealtimeExtension on DatabaseReference {
         }
       });
     }
-    return controller.stream;
-  }
-
-  Stream<List<T>> livesAll<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    bool onlyUpdates = false,
-  }) {
-    final controller = StreamController<List<T>>();
-    var isEncryptor = encryptor != null;
-    List<T> result = [];
-    onValue.listen((_) async {
-      result.clear();
-      var value = _.snapshot.children;
-      if (value.isNotEmpty) {
-        for (var i in value) {
-          var data = i.value;
-          if (i.exists) {
-            var v = isEncryptor ? await encryptor.output(data) : data;
-            result.add(builder(v));
-          }
-        }
-      }
-      controller.add(result);
-    });
     return controller.stream;
   }
 
@@ -921,5 +833,53 @@ extension _RealtimeExtension on DatabaseReference {
       )) counter++;
     }
     return data.length == counter;
+  }
+}
+
+extension _RealtimeQueryExtension on rdb.Query {
+  Future<List<T>> getAll<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+  }) async {
+    var isEncryptor = encryptor != null;
+    List<T> result = [];
+    return get().then((_) async {
+      if (_.children.isNotEmpty) {
+        for (var i in _.children) {
+          var data = i.value;
+          if (i.exists) {
+            var v = isEncryptor ? await encryptor.output(data) : data;
+            result.add(builder(v));
+          }
+        }
+      }
+      return result;
+    });
+  }
+
+  Stream<List<T>> livesAll<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+  }) {
+    final controller = StreamController<List<T>>();
+    var isEncryptor = encryptor != null;
+    List<T> result = [];
+    onValue.listen((_) async {
+      result.clear();
+      var value = _.snapshot.children;
+      if (value.isNotEmpty) {
+        for (var i in value) {
+          var data = i.value;
+          if (i.exists) {
+            var v = isEncryptor ? await encryptor.output(data) : data;
+            result.add(builder(v));
+          }
+        }
+      }
+      controller.add(result);
+    });
+    return controller.stream;
   }
 }

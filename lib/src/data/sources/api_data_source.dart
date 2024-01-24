@@ -17,9 +17,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   dio.Dio get database => _db ??= dio.Dio(api._options);
 
-  String path<R>(
-    OnDataSourceBuilder<R>? source,
-  ) {
+  String _source<R>(OnDataSourceBuilder<R>? source) {
     final root = _path;
     dynamic current = source?.call(root as R);
     if (current is String) {
@@ -43,7 +41,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           api: api,
           builder: build,
           encryptor: encryptor,
-          path: path(builder),
+          path: _source(builder),
           id: id,
         );
         return response.withAvailable(
@@ -74,7 +72,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           api: api,
           builder: build,
           encryptor: encryptor,
-          path: path(builder),
+          path: _source(builder),
           data: data,
         );
         return response.modify(
@@ -107,7 +105,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           api: api,
           builder: build,
           encryptor: encryptor,
-          path: path(builder),
+          path: _source(builder),
           data: data,
         );
         return response.modify(
@@ -141,7 +139,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           api: api,
           builder: build,
           encryptor: encryptor,
-          path: path(builder),
+          path: _source(builder),
           id: id,
           data: data,
         );
@@ -175,7 +173,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           api: api,
           builder: build,
           encryptor: encryptor,
-          path: path(builder),
+          path: _source(builder),
           id: id,
         );
         return response.modify(
@@ -206,7 +204,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
         api: api,
         builder: build,
         encryptor: encryptor,
-        path: path(builder),
+        path: _source(builder),
       );
       return response.modify(
         successful: finder.$1,
@@ -233,7 +231,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
         api: api,
         builder: build,
         encryptor: encryptor,
-        path: path(builder),
+        path: _source(builder),
         id: id,
       );
       if (finder.$1) {
@@ -259,7 +257,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
         api: api,
         builder: build,
         encryptor: encryptor,
-        path: path(builder),
+        path: _source(builder),
       );
       if (finder.$1) {
         return response.withResult(finder.$2);
@@ -299,7 +297,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
               api: api,
               builder: build,
               encryptor: encryptor,
-              path: path(builder),
+              path: _source(builder),
               id: id)
           .listen((finder) {
         if (finder.$1) {
@@ -331,7 +329,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
               api: api,
               builder: build,
               encryptor: encryptor,
-              path: path(builder))
+              path: _source(builder))
           .listen((finder) {
         if (finder.$1) {
           controller.add(response.withResult(finder.$2));
@@ -1157,8 +1155,8 @@ class Api {
 
   String _parent(String parent) => "$baseUrl/$parent";
 
-  BaseOptions get _options {
-    return BaseOptions(
+  dio.BaseOptions get _options {
+    return dio.BaseOptions(
       baseUrl: '',
       connectTimeout: config.connectTimeout,
       contentType: config.contentType,
@@ -1226,11 +1224,11 @@ class ApiConfig {
   final Map<String, dynamic>? queryParameters;
   final bool? receiveDataWhenStatusError;
   final Duration? receiveTimeout;
-  final RequestEncoder? requestEncoder;
-  final ResponseDecoder? responseDecoder;
+  final dio.RequestEncoder? requestEncoder;
+  final dio.ResponseDecoder? responseDecoder;
   final ApiResponseType? responseType;
   final Duration? sendTimeout;
-  final ValidateStatus? validateStatus;
+  final dio.ValidateStatus? validateStatus;
 
   const ApiConfig({
     this.connectTimeout,
@@ -1265,13 +1263,13 @@ class ApiConfig {
     bool? preserveHeaderCase,
     ApiResponseType? responseType,
     String? contentType,
-    ValidateStatus? validateStatus,
+    dio.ValidateStatus? validateStatus,
     bool? receiveDataWhenStatusError,
     bool? followRedirects,
     int? maxRedirects,
     bool? persistentConnection,
-    RequestEncoder? requestEncoder,
-    ResponseDecoder? responseDecoder,
+    dio.RequestEncoder? requestEncoder,
+    dio.ResponseDecoder? responseDecoder,
     ApiListFormat? listFormat,
   }) {
     return ApiConfig(
@@ -1304,18 +1302,18 @@ enum ApiResponseType {
   plain,
   bytes;
 
-  ResponseType get type {
+  dio.ResponseType get type {
     switch (this) {
       case json:
-        return ResponseType.json;
+        return dio.ResponseType.json;
       case stream:
-        return ResponseType.stream;
+        return dio.ResponseType.stream;
       case plain:
-        return ResponseType.plain;
+        return dio.ResponseType.plain;
       case bytes:
-        return ResponseType.bytes;
+        return dio.ResponseType.bytes;
       default:
-        return ResponseType.json;
+        return dio.ResponseType.json;
     }
   }
 }
@@ -1328,22 +1326,22 @@ enum ApiListFormat {
   multi,
   multiCompatible;
 
-  ListFormat get format {
+  dio.ListFormat get format {
     switch (this) {
       case csv:
-        return ListFormat.csv;
+        return dio.ListFormat.csv;
       case ssv:
-        return ListFormat.ssv;
+        return dio.ListFormat.ssv;
       case tsv:
-        return ListFormat.tsv;
+        return dio.ListFormat.tsv;
       case pipes:
-        return ListFormat.pipes;
+        return dio.ListFormat.pipes;
       case multi:
-        return ListFormat.multi;
+        return dio.ListFormat.multi;
       case multiCompatible:
-        return ListFormat.multiCompatible;
+        return dio.ListFormat.multiCompatible;
       default:
-        return ListFormat.multiCompatible;
+        return dio.ListFormat.multiCompatible;
     }
   }
 }

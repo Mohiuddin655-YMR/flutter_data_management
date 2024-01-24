@@ -30,8 +30,16 @@ Future<void> main() async {
   runApp(const Application());
 }
 
-class Application extends StatelessWidget {
+class Application extends StatefulWidget {
   const Application({super.key});
+
+  @override
+  State<Application> createState() => _ApplicationState();
+}
+
+class _ApplicationState extends State<Application>
+    with SingleTickerProviderStateMixin {
+  late final _tabController = TabController(length: 4, vsync: this);
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +67,30 @@ class Application extends StatelessWidget {
                   create: (context) => locator<RemoteDataController<User>>(),
                 ),
               ],
-              child: const ApiDataTest(),
+              child: Column(
+                children: [
+                  TabBar(
+                    controller: _tabController,
+                    tabs: const [
+                      Text("Api"),
+                      Text("Firestore"),
+                      Text("Realtime"),
+                      Text("Local"),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: const [
+                        ApiDataTest(),
+                        FirebaseFireStoreDataTest(),
+                        FirebaseRealtimeDataTest(),
+                        LocalDataTest(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

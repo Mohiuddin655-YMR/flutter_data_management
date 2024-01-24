@@ -1,3 +1,9 @@
+## 0.1.2
+
+* Stable version
+* Query support
+* Data or Entity based data model support
+
 ## 0.1.2-alpha1
 
 * Alpha version
