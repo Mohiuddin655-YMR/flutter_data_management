@@ -1,6 +1,5 @@
 import 'package:data_management/core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_andomie/utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'di.dart';
@@ -28,7 +27,6 @@ class Application extends StatelessWidget {
           /// Create a data management controller with bloc
           child: BlocProvider(
             create: (context) {
-
               /// Create data controller by data source
               return RemoteDataController<Post>.fromSource(
                 source: PostDataSource(),
@@ -196,7 +194,7 @@ class PostHandler extends RemoteDataHandlerImpl<Post> {
   }) : super(repository: postRepository);
 
   /// OPTIONAL FUNCTION
-  Future<Response<Post>> fetchInnerData() {
+  Future<DataResponse<Post>> fetchInnerData() {
     return postRepository.fetchInnerData();
   }
 }
@@ -206,11 +204,11 @@ class PostHandler extends RemoteDataHandlerImpl<Post> {
 /// or use directly "RemoteDataRepositoryImpl<Post>"
 class PostRepository extends RemoteDataRepositoryImpl<Post> {
   PostRepository({
-    required super.source,
+    required super.remote,
   });
 
   /// OPTIONAL FUNCTION
-  Future<Response<Post>> fetchInnerData() async {
+  Future<DataResponse<Post>> fetchInnerData() async {
     /// Build custom path with builder function
     String builder(String parent) {
       /// CUSTOMIZE PARENT PATH
@@ -218,13 +216,13 @@ class PostRepository extends RemoteDataRepositoryImpl<Post> {
     }
 
     if (isCacheMode && isLocal) {
-      return backup!.gets(builder: builder);
+      return local!.gets(builder: builder);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return backup!.gets(builder: builder);
+        return local!.gets(builder: builder);
       } else {
-        return source.gets(
+        return remote.gets(
           isConnected: connected,
           builder: builder,
         );
@@ -236,11 +234,11 @@ class PostRepository extends RemoteDataRepositoryImpl<Post> {
 /// Step - 2
 /// When you use remote database (ex. Firebase Firestore, Firebase Realtime, Api, or Encrypted Api data)
 /// Use for remote data => insert, update, delete, get, gets, live, lives, clear
-class PostDataSource extends ApiDataSourceImpl<Post> {
+class PostDataSource extends ApiDataSource<Post> {
   PostDataSource({
     super.path = "posts",
     super.api = const Api(
-      api: "https://jsonplaceholder.typicode.com",
+      baseUrl: "https://jsonplaceholder.typicode.com",
       status: ApiStatus(ok: 200),
       timer: ApiTimer(streamReloadTime: 500),
       autoGenerateId: true,
@@ -328,7 +326,7 @@ class Post extends Data {
 
   @override
   Map<String, dynamic> get source {
-    return super.source.generate({
+    return super.source.attach({
       "id": idInt,
       "userId": idInt,
       "title": title ?? "Title",

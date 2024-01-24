@@ -1,6 +1,9 @@
 part of 'controllers.dart';
 
-class RemoteDataController<T extends Data> extends DataController<T> {
+///
+/// You can use [Data] without [Entity]
+///
+class RemoteDataController<T extends Entity> extends DataController<T> {
   final RemoteDataHandler<T> handler;
 
   RemoteDataController(this.handler);
@@ -17,6 +20,7 @@ class RemoteDataController<T extends Data> extends DataController<T> {
           isCacheMode: isCacheMode,
         );
 
+  /// Use for check current data
   @override
   void isAvailable<R>(
     String id, {
@@ -25,6 +29,7 @@ class RemoteDataController<T extends Data> extends DataController<T> {
     request(() => handler.isAvailable(id, builder: source));
   }
 
+  /// Use for create single data
   @override
   void create<R>(
     T data, {
@@ -33,6 +38,7 @@ class RemoteDataController<T extends Data> extends DataController<T> {
     request(() => handler.insert(data, builder: source));
   }
 
+  /// Use for create multiple data
   @override
   void creates<R>(
     List<T> data, {
@@ -41,6 +47,7 @@ class RemoteDataController<T extends Data> extends DataController<T> {
     request(() => handler.inserts(data, builder: source));
   }
 
+  /// Use for update single data
   @override
   void update<R>({
     required String id,

@@ -1,6 +1,9 @@
 part of 'core.dart';
 
-class DataResponse<T extends Data> extends Response<T> {
+///
+/// You can use base class [Data] without [Entity]
+///
+class DataResponse<T extends Entity> extends Response<T> {
   DataResponse({
     super.requestCode,
     super.available,

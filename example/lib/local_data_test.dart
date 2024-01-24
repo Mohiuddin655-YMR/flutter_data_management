@@ -196,7 +196,7 @@ class Cart extends Data {
 
   @override
   Map<String, dynamic> get source {
-    return super.source.generate({
+    return super.source.attach({
       "quantity": quantity,
       "product": product?.source,
     });

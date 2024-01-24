@@ -1,36 +1,43 @@
 part of 'repositories.dart';
 
-class LocalDataRepositoryImpl<T extends Data> extends LocalDataRepository<T> {
+///
+/// You can use [Data] without [Entity]
+///
+class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
   LocalDataRepositoryImpl({
     required super.source,
   });
 
+  /// Use for check current data
   @override
-  Future<Response<T>> isAvailable<R>(
+  Future<DataResponse<T>> isAvailable<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
     return source.isAvailable(id, builder: builder);
   }
 
+  /// Use for create single data
   @override
-  Future<Response<T>> insert<R>(
+  Future<DataResponse<T>> insert<R>(
     T data, {
     OnDataSourceBuilder<R>? builder,
   }) {
     return source.insert(data, builder: builder);
   }
 
+  /// Use for create multiple data
   @override
-  Future<Response<T>> inserts<R>(
+  Future<DataResponse<T>> inserts<R>(
     List<T> data, {
     OnDataSourceBuilder<R>? builder,
   }) {
     return source.inserts(data, builder: builder);
   }
 
+  /// Use for update single data
   @override
-  Future<Response<T>> update<R>(
+  Future<DataResponse<T>> update<R>(
     String id,
     Map<String, dynamic> data, {
     OnDataSourceBuilder<R>? builder,
@@ -39,7 +46,7 @@ class LocalDataRepositoryImpl<T extends Data> extends LocalDataRepository<T> {
   }
 
   @override
-  Future<Response<T>> delete<R>(
+  Future<DataResponse<T>> delete<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
@@ -47,14 +54,14 @@ class LocalDataRepositoryImpl<T extends Data> extends LocalDataRepository<T> {
   }
 
   @override
-  Future<Response<T>> clear<R>({
+  Future<DataResponse<T>> clear<R>({
     OnDataSourceBuilder<R>? builder,
   }) {
     return source.clear(builder: builder);
   }
 
   @override
-  Future<Response<T>> get<R>(
+  Future<DataResponse<T>> get<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
@@ -62,21 +69,21 @@ class LocalDataRepositoryImpl<T extends Data> extends LocalDataRepository<T> {
   }
 
   @override
-  Future<Response<T>> gets<R>({
+  Future<DataResponse<T>> gets<R>({
     OnDataSourceBuilder<R>? builder,
   }) {
     return source.gets(builder: builder);
   }
 
   @override
-  Future<Response<T>> getUpdates<R>({
+  Future<DataResponse<T>> getUpdates<R>({
     OnDataSourceBuilder<R>? builder,
   }) {
     return source.getUpdates(builder: builder);
   }
 
   @override
-  Stream<Response<T>> live<R>(
+  Stream<DataResponse<T>> live<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
@@ -84,7 +91,7 @@ class LocalDataRepositoryImpl<T extends Data> extends LocalDataRepository<T> {
   }
 
   @override
-  Stream<Response<T>> lives<R>({
+  Stream<DataResponse<T>> lives<R>({
     OnDataSourceBuilder<R>? builder,
   }) {
     return source.lives(builder: builder);

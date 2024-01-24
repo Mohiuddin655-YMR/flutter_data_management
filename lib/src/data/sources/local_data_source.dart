@@ -1,14 +1,16 @@
 part of 'sources.dart';
 
-abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
+///
+/// You can use base class [Data] without [Entity]
+///
+abstract class LocalDataSourceImpl<T extends Entity>
+    extends LocalDataSource<T> {
   LocalDataSourceImpl({
     required super.path,
     super.database,
   });
 
-  String _source<R>(
-    OnDataSourceBuilder<R>? source,
-  ) {
+  String _source<R>(OnDataSourceBuilder<R>? source,) {
     final parent = path;
     dynamic current = source?.call(parent as R);
     if (current is String) {
@@ -18,12 +20,12 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
     }
   }
 
+  /// Use for check current data
   @override
-  Future<Response<T>> isAvailable<R>(
-    String id, {
+  Future<DataResponse<T>> isAvailable<R>(String id, {
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     if (id.isValid) {
       var finder = await database.findById(
         id: id,
@@ -41,12 +43,12 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
     }
   }
 
+  /// Use for create single data
   @override
-  Future<Response<T>> insert<R>(
-    T data, {
+  Future<DataResponse<T>> insert<R>(T data, {
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     try {
       if (data.id.isValid) {
         final finder = await database.setByData(
@@ -70,12 +72,12 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
     }
   }
 
+  /// Use for create multiple data
   @override
-  Future<Response<T>> inserts<R>(
-    List<T> data, {
+  Future<DataResponse<T>> inserts<R>(List<T> data, {
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     try {
       if (data.isValid) {
         final finder = await database.setByList(
@@ -99,13 +101,13 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
     }
   }
 
+  /// Use for update single data
   @override
-  Future<Response<T>> update<R>(
-    String id,
-    Map<String, dynamic> data, {
-    OnDataSourceBuilder<R>? builder,
-  }) async {
-    final response = Response<T>();
+  Future<DataResponse<T>> update<R>(String id,
+      Map<String, dynamic> data, {
+        OnDataSourceBuilder<R>? builder,
+      }) async {
+    final response = DataResponse<T>();
     try {
       if (id.isValid) {
         final finder = await database.updateByData(
@@ -130,12 +132,12 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
     }
   }
 
+  /// Use for delete single data
   @override
-  Future<Response<T>> delete<R>(
-    String id, {
+  Future<DataResponse<T>> delete<R>(String id, {
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     try {
       if (id.isValid) {
         var finder = await database.deleteById(
@@ -158,11 +160,12 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
     }
   }
 
+  /// Use for delete all data
   @override
-  Future<Response<T>> clear<R>({
+  Future<DataResponse<T>> clear<R>({
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     try {
       var finder = await database.clearBy(
         path: _source(builder),
@@ -178,12 +181,12 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
     }
   }
 
+  /// Use for fetch single data
   @override
-  Future<Response<T>> get<R>(
-    String id, {
+  Future<DataResponse<T>> get<R>(String id, {
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     try {
       var finder = await database.findById(
         id: id,
@@ -200,12 +203,13 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
     }
   }
 
+  /// Use for fetch all data
   @override
-  Future<Response<T>> gets<R>({
+  Future<DataResponse<T>> gets<R>({
     OnDataSourceBuilder<R>? builder,
     bool forUpdates = false,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     try {
       var finder = await database.findBy(
         path: _source(builder),
@@ -221,20 +225,21 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
     }
   }
 
+  /// Use for fetch all recent updated data
   @override
-  Future<Response<T>> getUpdates<R>({
+  Future<DataResponse<T>> getUpdates<R>({
     OnDataSourceBuilder<R>? builder,
   }) {
     return gets(builder: builder, forUpdates: true);
   }
 
+  /// Use for fetch single observable data when data update
   @override
-  Stream<Response<T>> live<R>(
-    String id, {
+  Stream<DataResponse<T>> live<R>(String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
-    final controller = StreamController<Response<T>>();
-    final response = Response<T>();
+    final controller = StreamController<DataResponse<T>>();
+    final response = DataResponse<T>();
     try {
       if (id.isNotEmpty) {
         Timer.periodic(const Duration(milliseconds: 500), (timer) async {
@@ -257,12 +262,13 @@ abstract class LocalDataSourceImpl<T extends Data> extends LocalDataSource<T> {
     return controller.stream;
   }
 
+  /// Use for fetch all observable data when data update
   @override
-  Stream<Response<T>> lives<R>({
+  Stream<DataResponse<T>> lives<R>({
     OnDataSourceBuilder<R>? builder,
   }) {
-    final controller = StreamController<Response<T>>();
-    final response = Response<T>();
+    final controller = StreamController<DataResponse<T>>();
+    final response = DataResponse<T>();
     try {
       Timer.periodic(const Duration(milliseconds: 500), (timer) async {
         final I = await gets(builder: builder);

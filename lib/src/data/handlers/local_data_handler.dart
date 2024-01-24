@@ -1,6 +1,9 @@
 part of 'handlers.dart';
 
-class LocalDataHandlerImpl<T extends Data> extends LocalDataHandler<T> {
+///
+/// You can use [Data] without [Entity]
+///
+class LocalDataHandlerImpl<T extends Entity> extends LocalDataHandler<T> {
   LocalDataHandlerImpl({
     required super.repository,
   });
@@ -9,7 +12,7 @@ class LocalDataHandlerImpl<T extends Data> extends LocalDataHandler<T> {
       : super(repository: LocalDataRepositoryImpl(source: source));
 
   @override
-  Future<Response<T>> isAvailable<R>(
+  Future<DataResponse<T>> isAvailable<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
@@ -17,7 +20,7 @@ class LocalDataHandlerImpl<T extends Data> extends LocalDataHandler<T> {
   }
 
   @override
-  Future<Response<T>> insert<R>(
+  Future<DataResponse<T>> insert<R>(
     T data, {
     OnDataSourceBuilder<R>? builder,
   }) {
@@ -25,7 +28,7 @@ class LocalDataHandlerImpl<T extends Data> extends LocalDataHandler<T> {
   }
 
   @override
-  Future<Response<T>> inserts<R>(
+  Future<DataResponse<T>> inserts<R>(
     List<T> data, {
     OnDataSourceBuilder<R>? builder,
   }) {
@@ -33,7 +36,7 @@ class LocalDataHandlerImpl<T extends Data> extends LocalDataHandler<T> {
   }
 
   @override
-  Future<Response<T>> update<R>(
+  Future<DataResponse<T>> update<R>(
     String id,
     Map<String, dynamic> data, {
     OnDataSourceBuilder<R>? builder,
@@ -42,7 +45,7 @@ class LocalDataHandlerImpl<T extends Data> extends LocalDataHandler<T> {
   }
 
   @override
-  Future<Response<T>> delete<R>(
+  Future<DataResponse<T>> delete<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
@@ -50,14 +53,14 @@ class LocalDataHandlerImpl<T extends Data> extends LocalDataHandler<T> {
   }
 
   @override
-  Future<Response<T>> clear<R>({
+  Future<DataResponse<T>> clear<R>({
     OnDataSourceBuilder<R>? builder,
   }) {
     return repository.clear(builder: builder);
   }
 
   @override
-  Future<Response<T>> get<R>(
+  Future<DataResponse<T>> get<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
@@ -65,21 +68,21 @@ class LocalDataHandlerImpl<T extends Data> extends LocalDataHandler<T> {
   }
 
   @override
-  Future<Response<T>> gets<R>({
+  Future<DataResponse<T>> gets<R>({
     OnDataSourceBuilder<R>? builder,
   }) {
     return repository.gets(builder: builder);
   }
 
   @override
-  Future<Response<T>> getUpdates<R>({
+  Future<DataResponse<T>> getUpdates<R>({
     OnDataSourceBuilder<R>? builder,
   }) {
     return repository.getUpdates(builder: builder);
   }
 
   @override
-  Stream<Response<T>> live<R>(
+  Stream<DataResponse<T>> live<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
@@ -87,7 +90,7 @@ class LocalDataHandlerImpl<T extends Data> extends LocalDataHandler<T> {
   }
 
   @override
-  Stream<Response<T>> lives<R>({
+  Stream<DataResponse<T>> lives<R>({
     OnDataSourceBuilder<R>? builder,
   }) {
     return repository.lives(builder: builder);

@@ -1,6 +1,9 @@
 part of 'controllers.dart';
 
-class LocalDataController<T extends Data> extends DataController<T> {
+///
+/// You can use [Data] without [Entity]
+///
+class LocalDataController<T extends Entity> extends DataController<T> {
   final LocalDataHandler<T> handler;
 
   LocalDataController(this.handler);
@@ -9,6 +12,7 @@ class LocalDataController<T extends Data> extends DataController<T> {
     required LocalDataSource<T> source,
   }) : handler = LocalDataHandlerImpl<T>.fromSource(source);
 
+  /// Use for check current data
   @override
   void isAvailable<R>(
     String id, {
@@ -17,6 +21,7 @@ class LocalDataController<T extends Data> extends DataController<T> {
     request(() => handler.isAvailable(id, builder: source));
   }
 
+  /// Use for create single data
   @override
   void create<R>(
     T data, {
@@ -25,6 +30,7 @@ class LocalDataController<T extends Data> extends DataController<T> {
     request(() => handler.insert(data, builder: source));
   }
 
+  /// Use for create multiple data
   @override
   void creates<R>(
     List<T> data, {
@@ -33,6 +39,7 @@ class LocalDataController<T extends Data> extends DataController<T> {
     request(() => handler.inserts(data, builder: source));
   }
 
+  /// Use for update single data
   @override
   void update<R>({
     required String id,

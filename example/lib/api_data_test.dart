@@ -140,12 +140,12 @@ class _ApiDataTestState extends State<ApiDataTest> {
 /// Step - 2
 /// When you use remote database (ex. Firebase Firestore, Firebase Realtime, Api, Encrypted Api data)
 /// Use for remote data => insert, update, delete, get, gets, live, lives, clear
-class RemotePostDataSource extends ApiDataSourceImpl<Post> {
+class RemotePostDataSource extends ApiDataSource<Post> {
   RemotePostDataSource({
     super.path = "posts",
     //super.encryptor = const Encryptor(),
     super.api = const Api(
-      api: "https://jsonplaceholder.typicode.com",
+      baseUrl: "https://jsonplaceholder.typicode.com",
       status: ApiStatus(ok: 200),
       timer: ApiTimer(streamReloadTime: 500),
       autoGenerateId: true,
@@ -214,7 +214,7 @@ class Post extends Data {
 
   @override
   Map<String, dynamic> get source {
-    return super.source.generate({
+    return super.source.attach({
       "id": idInt,
       "userId": idInt,
       "title": title ?? "Title",

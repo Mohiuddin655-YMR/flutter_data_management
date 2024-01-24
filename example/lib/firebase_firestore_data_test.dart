@@ -142,7 +142,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
 /// Step - 2
 /// When you use remote database (ex. Firebase Firestore, Firebase Realtime, Api, Encrypted Api data)
 /// Use for remote data => insert, update, delete, get, gets, live, lives, clear
-class RemoteProductDataSource extends FireStoreDataSourceImpl<Product> {
+class RemoteProductDataSource extends FireStoreDataSource<Product> {
   RemoteProductDataSource({
     super.path = "products",
     super.encryptor = const DataEncryptor(),
@@ -207,7 +207,7 @@ class Product extends Data {
 
   @override
   Map<String, dynamic> get source {
-    return super.source.generate({
+    return super.source.attach({
       "name": name ?? "Name",
       "price": price,
     });

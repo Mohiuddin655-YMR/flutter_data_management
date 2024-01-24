@@ -1,29 +1,34 @@
 part of 'repositories.dart';
 
-class RemoteDataRepositoryImpl<T extends Data> extends RemoteDataRepository<T> {
+///
+/// You can use [Data] without [Entity]
+///
+class RemoteDataRepositoryImpl<T extends Entity>
+    extends RemoteDataRepository<T> {
   RemoteDataRepositoryImpl({
-    required super.source,
+    required super.remote,
     super.connectivity,
-    super.backup,
+    super.local,
     super.isCacheMode,
   });
 
+  /// Use for check current data
   @override
-  Future<Response<T>> isAvailable<R>(
+  Future<DataResponse<T>> isAvailable<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.isAvailable(id, builder: builder);
+      return local!.isAvailable(id, builder: builder);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return backup!.isAvailable(
+        return local!.isAvailable(
           id,
           builder: builder,
         );
       } else {
-        return source.isAvailable(
+        return remote.isAvailable(
           id,
           isConnected: connected,
           builder: builder,
@@ -32,124 +37,127 @@ class RemoteDataRepositoryImpl<T extends Data> extends RemoteDataRepository<T> {
     }
   }
 
+  /// Use for create single data
   @override
-  Future<Response<T>> insert<R>(
+  Future<DataResponse<T>> insert<R>(
     T data, {
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.insert(data, builder: builder);
+      return local!.insert(data, builder: builder);
     } else {
       var connected = await isConnected;
-      var response = await source.insert(
+      var response = await remote.insert(
         data,
         isConnected: connected,
         builder: builder,
       );
       if (response.isSuccessful && isLocal) {
-        await backup!.insert(data, builder: builder);
+        await local!.insert(data, builder: builder);
       }
       return response;
     }
   }
 
+  /// Use for create multiple data
   @override
-  Future<Response<T>> inserts<R>(
+  Future<DataResponse<T>> inserts<R>(
     List<T> data, {
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.inserts(data, builder: builder);
+      return local!.inserts(data, builder: builder);
     } else {
       var connected = await isConnected;
-      var response = await source.inserts(
+      var response = await remote.inserts(
         data,
         isConnected: connected,
         builder: builder,
       );
       if (response.isSuccessful && isLocal) {
-        await backup!.inserts(data, builder: builder);
+        await local!.inserts(data, builder: builder);
       }
       return response;
     }
   }
 
+  /// Use for update single data
   @override
-  Future<Response<T>> update<R>(
+  Future<DataResponse<T>> update<R>(
     String id,
     Map<String, dynamic> data, {
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.update(id, data, builder: builder);
+      return local!.update(id, data, builder: builder);
     } else {
       var connected = await isConnected;
-      var response = await source.update(
+      var response = await remote.update(
         id,
         data,
         isConnected: connected,
         builder: builder,
       );
       if (response.isSuccessful && isLocal) {
-        await backup!.update(id, data, builder: builder);
+        await local!.update(id, data, builder: builder);
       }
       return response;
     }
   }
 
   @override
-  Future<Response<T>> delete<R>(
+  Future<DataResponse<T>> delete<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.delete(id, builder: builder);
+      return local!.delete(id, builder: builder);
     } else {
       var connected = await isConnected;
-      var response = await source.delete(
+      var response = await remote.delete(
         id,
         isConnected: connected,
         builder: builder,
       );
       if (response.isSuccessful && isLocal) {
-        await backup!.delete(id, builder: builder);
+        await local!.delete(id, builder: builder);
       }
       return response;
     }
   }
 
   @override
-  Future<Response<T>> clear<R>({
+  Future<DataResponse<T>> clear<R>({
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.clear(builder: builder);
+      return local!.clear(builder: builder);
     } else {
       var connected = await isConnected;
-      var response = await source.clear(
+      var response = await remote.clear(
         isConnected: connected,
         builder: builder,
       );
       if (response.isSuccessful && isLocal) {
-        await backup!.clear(builder: builder);
+        await local!.clear(builder: builder);
       }
       return response;
     }
   }
 
   @override
-  Future<Response<T>> get<R>(
+  Future<DataResponse<T>> get<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.get(id, builder: builder);
+      return local!.get(id, builder: builder);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return backup!.get(id, builder: builder);
+        return local!.get(id, builder: builder);
       } else {
-        return source.get(
+        return remote.get(
           id,
           isConnected: connected,
           builder: builder,
@@ -159,21 +167,21 @@ class RemoteDataRepositoryImpl<T extends Data> extends RemoteDataRepository<T> {
   }
 
   @override
-  Future<Response<T>> gets<R>({
+  Future<DataResponse<T>> gets<R>({
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.gets(
+      return local!.gets(
         builder: builder,
       );
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return backup!.gets(
+        return local!.gets(
           builder: builder,
         );
       } else {
-        return source.gets(
+        return remote.gets(
           isConnected: connected,
           builder: builder,
         );
@@ -182,19 +190,19 @@ class RemoteDataRepositoryImpl<T extends Data> extends RemoteDataRepository<T> {
   }
 
   @override
-  Future<Response<T>> getUpdates<R>({
+  Future<DataResponse<T>> getUpdates<R>({
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.getUpdates(builder: builder);
+      return local!.getUpdates(builder: builder);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return backup!.getUpdates(
+        return local!.getUpdates(
           builder: builder,
         );
       } else {
-        return source.getUpdates(
+        return remote.getUpdates(
           isConnected: connected,
           builder: builder,
         );
@@ -203,21 +211,21 @@ class RemoteDataRepositoryImpl<T extends Data> extends RemoteDataRepository<T> {
   }
 
   @override
-  Stream<Response<T>> live<R>(
+  Stream<DataResponse<T>> live<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) async* {
     if (isCacheMode && isLocal) {
-      yield* backup!.live(id, builder: builder);
+      yield* local!.live(id, builder: builder);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        yield* backup!.live(
+        yield* local!.live(
           id,
           builder: builder,
         );
       } else {
-        yield* source.live(
+        yield* remote.live(
           id,
           isConnected: connected,
           builder: builder,
@@ -227,19 +235,19 @@ class RemoteDataRepositoryImpl<T extends Data> extends RemoteDataRepository<T> {
   }
 
   @override
-  Stream<Response<T>> lives<R>({
+  Stream<DataResponse<T>> lives<R>({
     OnDataSourceBuilder<R>? builder,
   }) async* {
     if (isCacheMode && isLocal) {
-      yield* backup!.lives(builder: builder);
+      yield* local!.lives(builder: builder);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        yield* backup!.lives(
+        yield* local!.lives(
           builder: builder,
         );
       } else {
-        yield* source.lives(
+        yield* remote.lives(
           isConnected: connected,
           builder: builder,
         );

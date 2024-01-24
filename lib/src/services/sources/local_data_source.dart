@@ -1,5 +1,9 @@
 part of 'sources.dart';
 
+/// # Won't Use Directly
+/// You can use:
+/// * <b>[LocalDataSourceImpl]</b> : Use for local or save instance related data.
+///
 abstract class LocalDataSource<T extends Entity> extends DataSource<T> {
   final String path;
 

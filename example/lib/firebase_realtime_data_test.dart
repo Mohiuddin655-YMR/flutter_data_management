@@ -135,7 +135,7 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
 /// Step - 2
 /// When you use remote database (ex. Firebase Firestore, Firebase Realtime, Api, Encrypted Api data)
 /// Use for remote data => insert, update, delete, get, gets, live, lives, clear
-class RemoteUserDataSource extends RealtimeDataSourceImpl<User> {
+class RemoteUserDataSource extends RealtimeDataSource<User> {
   RemoteUserDataSource({
     super.path = "users",
     super.encryptor = const DataEncryptor(),
@@ -195,7 +195,7 @@ class User extends Data {
 
   @override
   Map<String, dynamic> get source {
-    return super.source.generate({
+    return super.source.attach({
       "name": name ?? "Name",
     });
   }

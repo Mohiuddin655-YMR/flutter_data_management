@@ -1,10 +1,13 @@
 part of 'sources.dart';
 
-abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
+///
+/// You can use base class [Data] without [Entity]
+///
+abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   final Api api;
   final String _path;
 
-  ApiDataSourceImpl({
+  ApiDataSource({
     required this.api,
     required String path,
     super.encryptor,
@@ -12,7 +15,7 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
 
   dio.Dio? _db;
 
-  dio.Dio get database => _db ??= dio.Dio();
+  dio.Dio get database => _db ??= dio.Dio(api._options);
 
   String path<R>(
     OnDataSourceBuilder<R>? source,
@@ -26,13 +29,14 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     }
   }
 
+  /// Use for check current data
   @override
-  Future<Response<T>> isAvailable<R>(
+  Future<DataResponse<T>> isAvailable<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     if (isConnected) {
       if (id.isValid) {
         var finder = await database.findById(
@@ -56,13 +60,14 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     }
   }
 
+  /// Use for create single data
   @override
-  Future<Response<T>> insert<R>(
+  Future<DataResponse<T>> insert<R>(
     T data, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     if (isConnected) {
       if (data.id.isValid) {
         final finder = await database.setByOnce(
@@ -88,13 +93,14 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     }
   }
 
+  /// Use for create multiple data
   @override
-  Future<Response<T>> inserts<R>(
+  Future<DataResponse<T>> inserts<R>(
     List<T> data, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     if (isConnected) {
       if (data.isValid) {
         final finder = await database.setByMultiple(
@@ -120,14 +126,15 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     }
   }
 
+  /// Use for update single data
   @override
-  Future<Response<T>> update<R>(
+  Future<DataResponse<T>> update<R>(
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     if (isConnected) {
       if (id.isValid) {
         final finder = await database.updateById(
@@ -154,13 +161,14 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     }
   }
 
+  /// Use for delete single data
   @override
-  Future<Response<T>> delete<R>(
+  Future<DataResponse<T>> delete<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     if (isConnected) {
       if (id.isValid) {
         var finder = await database.deleteById(
@@ -186,12 +194,13 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     }
   }
 
+  /// Use for delete all data
   @override
-  Future<Response<T>> clear<R>({
+  Future<DataResponse<T>> clear<R>({
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     if (isConnected) {
       var finder = await database.clearBy(
         api: api,
@@ -211,13 +220,14 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     }
   }
 
+  /// Use for fetch single data
   @override
-  Future<Response<T>> get<R>(
+  Future<DataResponse<T>> get<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     if (isConnected) {
       var finder = await database.findById(
         api: api,
@@ -236,13 +246,14 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     }
   }
 
+  /// Use for fetch all data
   @override
-  Future<Response<T>> gets<R>({
+  Future<DataResponse<T>> gets<R>({
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
     bool forUpdates = false,
   }) async {
-    final response = Response<T>();
+    final response = DataResponse<T>();
     if (isConnected) {
       var finder = await database.getBy(
         api: api,
@@ -260,8 +271,9 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     }
   }
 
+  /// Use for fetch all recent updated data
   @override
-  Future<Response<T>> getUpdates<R>({
+  Future<DataResponse<T>> getUpdates<R>({
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) {
@@ -272,14 +284,15 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     );
   }
 
+  /// Use for fetch single observable data when data update
   @override
-  Stream<Response<T>> live<R>(
+  Stream<DataResponse<T>> live<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) {
-    final controller = StreamController<Response<T>>();
-    final response = Response<T>();
+    final controller = StreamController<DataResponse<T>>();
+    final response = DataResponse<T>();
     if (isConnected) {
       database
           .liveById(
@@ -303,14 +316,15 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     return controller.stream;
   }
 
+  /// Use for fetch all observable data when data update
   @override
-  Stream<Response<T>> lives<R>({
+  Stream<DataResponse<T>> lives<R>({
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
     bool forUpdates = false,
   }) {
-    final controller = StreamController<Response<T>>();
-    final response = Response<T>();
+    final controller = StreamController<DataResponse<T>>();
+    final response = DataResponse<T>();
     if (isConnected) {
       database
           .liveBy(
@@ -333,52 +347,6 @@ abstract class ApiDataSourceImpl<T extends Data> extends RemoteDataSource<T> {
     return controller.stream;
   }
 }
-
-class Api {
-  final bool autoGenerateId;
-  final String api;
-  final ApiStatus status;
-  final ApiTimer timer;
-
-  const Api({
-    required this.api,
-    this.autoGenerateId = true,
-    this.status = const ApiStatus(),
-    this.timer = const ApiTimer(),
-  });
-
-  String parent(String parent) => "$api/$parent";
-}
-
-class ApiTimer {
-  final int reloadTime;
-  final int streamReloadTime;
-
-  const ApiTimer({
-    this.reloadTime = 0,
-    this.streamReloadTime = 300,
-  });
-}
-
-class ApiStatus {
-  final int ok;
-  final int canceled;
-  final int created;
-  final int updated;
-  final int deleted;
-  final int notFound;
-
-  const ApiStatus({
-    this.ok = 200,
-    this.created = 201,
-    this.updated = 202,
-    this.deleted = 203,
-    this.canceled = 204,
-    this.notFound = 404,
-  });
-}
-
-enum ApiRequest { get, post }
 
 extension ApiDataFinder on dio.Dio {
   Future<FindByFinder<T>> findBy<T extends Entity>({
@@ -668,7 +636,7 @@ extension ApiDataFinder on dio.Dio {
               encryptor: encryptor,
               path: path,
               data: encryptor != null
-                  ? value.source.attach(data)
+                  ? value.source.adjust(data)
                   : data.withId(id),
             ).then((feedback) {
               if (feedback != null) {
@@ -850,6 +818,48 @@ extension ApiDataFinder on dio.Dio {
       }
     }
   }
+
+  Future<SetByDataFinder<T>> custom<T extends Entity>({
+    required Api api,
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required String path,
+    required T data,
+  }) async {
+    if (data.id.isNotEmpty) {
+      try {
+        return setAt(
+          api: api,
+          builder: builder,
+          encryptor: encryptor,
+          path: path,
+          data: data,
+        ).then((feedback) {
+          if (feedback != null) {
+            if (feedback is T) {
+              return (true, feedback, null, null, Status.ok);
+            } else if (feedback is List<T>) {
+              return (true, null, feedback, null, Status.ok);
+            } else {
+              return (true, null, null, null, Status.ok);
+            }
+          } else {
+            return (false, null, null, "Database error!", Status.error);
+          }
+        }).onError((e, s) {
+          return (false, null, null, "$e", Status.error);
+        });
+      } on dio.DioException catch (_) {
+        if (_.response?.statusCode.use == api.status.notFound) {
+          return (false, null, null, null, null);
+        } else {
+          return (false, null, null, _.message, Status.failure);
+        }
+      }
+    } else {
+      return (false, null, null, null, Status.invalidId);
+    }
+  }
 }
 
 extension _ApiExtension on dio.Dio {
@@ -862,7 +872,7 @@ extension _ApiExtension on dio.Dio {
   }) async {
     try {
       var isEncryptor = encryptor != null;
-      final I = api.parent(path).child(id);
+      final I = api._parent(path).child(id);
       final result = await get(I);
       final value = result.data;
       final code = result.statusCode;
@@ -906,7 +916,7 @@ extension _ApiExtension on dio.Dio {
   }) async {
     var isEncryptor = encryptor != null;
     List<T> result = [];
-    final I = api.parent(path);
+    final I = api._parent(path);
     return get(I).then((_) async {
       if (_.statusCode == api.status.ok) {
         if (_.data is List) {
@@ -982,7 +992,7 @@ extension _ApiExtension on dio.Dio {
     required T data,
   }) async {
     var isEncryptor = encryptor != null;
-    final I = api.parent(path).child(data.id, api.autoGenerateId);
+    final I = api._parent(path).child(data.id, api.autoGenerateId);
     final v = isEncryptor ? await encryptor.output(data.source) : data.source;
     if (v.isNotEmpty) {
       final result = await post(I, data: v);
@@ -1035,7 +1045,7 @@ extension _ApiExtension on dio.Dio {
     var isEncryptor = encryptor != null;
     var id = data.id;
     if (id != null && id.isNotEmpty) {
-      var I = api.parent(path).child(id);
+      var I = api._parent(path).child(id);
       var v = isEncryptor ? await encryptor.input(data) : data;
       if (v.isNotEmpty) {
         final result = await put(I, data: v);
@@ -1069,7 +1079,7 @@ extension _ApiExtension on dio.Dio {
     required T data,
   }) async {
     var isEncryptor = encryptor != null;
-    final I = api.parent(path).child(data.id);
+    final I = api._parent(path).child(data.id);
     var result = await delete(I);
     var code = result.statusCode;
     if (code == api.status.ok || code == api.status.deleted) {
@@ -1128,4 +1138,212 @@ extension ApiRequestTypeExtension on ApiRequest? {
   bool get isGet => use == ApiRequest.get;
 
   bool get isPost => use == ApiRequest.post;
+}
+
+class Api {
+  final bool autoGenerateId;
+  final String baseUrl;
+  final ApiConfig config;
+  final ApiStatus status;
+  final ApiTimer timer;
+
+  const Api({
+    this.autoGenerateId = true,
+    required this.baseUrl,
+    this.config = const ApiConfig(),
+    this.status = const ApiStatus(),
+    this.timer = const ApiTimer(),
+  });
+
+  String _parent(String parent) => "$baseUrl/$parent";
+
+  BaseOptions get _options {
+    return BaseOptions(
+      baseUrl: '',
+      connectTimeout: config.connectTimeout,
+      contentType: config.contentType,
+      extra: config.extra,
+      followRedirects: config.followRedirects,
+      headers: config.headers,
+      listFormat: config.listFormat?.format,
+      maxRedirects: config.maxRedirects,
+      method: config.method,
+      persistentConnection: config.persistentConnection,
+      preserveHeaderCase: config.preserveHeaderCase,
+      queryParameters: config.queryParameters,
+      receiveDataWhenStatusError: config.receiveDataWhenStatusError,
+      receiveTimeout: config.receiveTimeout,
+      requestEncoder: config.requestEncoder,
+      responseDecoder: config.responseDecoder,
+      responseType: config.responseType?.type,
+      sendTimeout: config.sendTimeout,
+      validateStatus: config.validateStatus,
+    );
+  }
+}
+
+class ApiTimer {
+  final int reloadTime;
+  final int streamReloadTime;
+
+  const ApiTimer({
+    this.reloadTime = 0,
+    this.streamReloadTime = 300,
+  });
+}
+
+class ApiStatus {
+  final int ok;
+  final int canceled;
+  final int created;
+  final int updated;
+  final int deleted;
+  final int notFound;
+
+  const ApiStatus({
+    this.ok = 200,
+    this.created = 201,
+    this.updated = 202,
+    this.deleted = 203,
+    this.canceled = 204,
+    this.notFound = 404,
+  });
+}
+
+enum ApiRequest { get, post }
+
+class ApiConfig {
+  final Duration? connectTimeout;
+  final String? contentType;
+  final Map<String, dynamic>? extra;
+  final bool? followRedirects;
+  final Map<String, dynamic>? headers;
+  final ApiListFormat? listFormat;
+  final int? maxRedirects;
+  final String? method;
+  final bool preserveHeaderCase;
+  final bool? persistentConnection;
+  final Map<String, dynamic>? queryParameters;
+  final bool? receiveDataWhenStatusError;
+  final Duration? receiveTimeout;
+  final RequestEncoder? requestEncoder;
+  final ResponseDecoder? responseDecoder;
+  final ApiResponseType? responseType;
+  final Duration? sendTimeout;
+  final ValidateStatus? validateStatus;
+
+  const ApiConfig({
+    this.connectTimeout,
+    this.contentType,
+    this.extra,
+    this.followRedirects,
+    this.headers,
+    this.listFormat,
+    this.maxRedirects,
+    this.method,
+    this.preserveHeaderCase = false,
+    this.persistentConnection,
+    this.queryParameters,
+    this.receiveDataWhenStatusError,
+    this.receiveTimeout,
+    this.requestEncoder,
+    this.responseDecoder,
+    this.responseType = ApiResponseType.json,
+    this.sendTimeout,
+    this.validateStatus,
+  });
+
+  ApiConfig copy({
+    String? method,
+    Map<String, dynamic>? queryParameters,
+    String? path,
+    Duration? connectTimeout,
+    Duration? receiveTimeout,
+    Duration? sendTimeout,
+    Map<String, Object?>? extra,
+    Map<String, Object?>? headers,
+    bool? preserveHeaderCase,
+    ApiResponseType? responseType,
+    String? contentType,
+    ValidateStatus? validateStatus,
+    bool? receiveDataWhenStatusError,
+    bool? followRedirects,
+    int? maxRedirects,
+    bool? persistentConnection,
+    RequestEncoder? requestEncoder,
+    ResponseDecoder? responseDecoder,
+    ApiListFormat? listFormat,
+  }) {
+    return ApiConfig(
+      connectTimeout: connectTimeout ?? this.connectTimeout,
+      contentType: contentType ?? this.contentType,
+      extra: extra ?? this.extra,
+      followRedirects: followRedirects ?? this.followRedirects,
+      headers: headers ?? this.headers,
+      listFormat: listFormat ?? this.listFormat,
+      maxRedirects: maxRedirects ?? this.maxRedirects,
+      method: method ?? this.method,
+      persistentConnection: persistentConnection ?? this.persistentConnection,
+      preserveHeaderCase: preserveHeaderCase ?? this.preserveHeaderCase,
+      queryParameters: queryParameters ?? this.queryParameters,
+      receiveDataWhenStatusError:
+          receiveDataWhenStatusError ?? this.receiveDataWhenStatusError,
+      receiveTimeout: receiveTimeout ?? this.receiveTimeout,
+      requestEncoder: requestEncoder ?? requestEncoder,
+      responseDecoder: responseDecoder ?? this.responseDecoder,
+      responseType: responseType ?? this.responseType,
+      sendTimeout: sendTimeout ?? this.sendTimeout,
+      validateStatus: validateStatus ?? this.validateStatus,
+    );
+  }
+}
+
+enum ApiResponseType {
+  json,
+  stream,
+  plain,
+  bytes;
+
+  ResponseType get type {
+    switch (this) {
+      case json:
+        return ResponseType.json;
+      case stream:
+        return ResponseType.stream;
+      case plain:
+        return ResponseType.plain;
+      case bytes:
+        return ResponseType.bytes;
+      default:
+        return ResponseType.json;
+    }
+  }
+}
+
+enum ApiListFormat {
+  csv,
+  ssv,
+  tsv,
+  pipes,
+  multi,
+  multiCompatible;
+
+  ListFormat get format {
+    switch (this) {
+      case csv:
+        return ListFormat.csv;
+      case ssv:
+        return ListFormat.ssv;
+      case tsv:
+        return ListFormat.tsv;
+      case pipes:
+        return ListFormat.pipes;
+      case multi:
+        return ListFormat.multi;
+      case multiCompatible:
+        return ListFormat.multiCompatible;
+      default:
+        return ListFormat.multiCompatible;
+    }
+  }
 }
