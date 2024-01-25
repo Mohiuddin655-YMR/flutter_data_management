@@ -1,4 +1,4 @@
-part of 'controllers.dart';
+part of '../../services/controllers/controller.dart';
 
 ///
 /// You can use [Data] without [Entity]
@@ -6,19 +6,20 @@ part of 'controllers.dart';
 class RemoteDataController<T extends Entity> extends DataController<T> {
   final RemoteDataHandler<T> handler;
 
-  RemoteDataController(this.handler);
+  RemoteDataController(this.handler) : super._();
 
   RemoteDataController.fromSource({
     required RemoteDataSource<T> source,
     LocalDataSource<T>? backup,
     ConnectivityProvider? connectivity,
     bool isCacheMode = false,
-  }) : handler = RemoteDataHandlerImpl<T>.fromSource(
+  })  : handler = RemoteDataHandlerImpl<T>.fromSource(
           source: source,
           backup: backup,
           connectivity: connectivity,
           isCacheMode: isCacheMode,
-        );
+        ),
+        super._();
 
   /// Use for check current data
   @override
@@ -26,7 +27,7 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.isAvailable(id, builder: source));
+    _change(() => handler.isAvailable(id, builder: source));
   }
 
   /// Use for create single data
@@ -35,7 +36,7 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
     T data, {
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.insert(data, builder: source));
+    _change(() => handler.insert(data, builder: source));
   }
 
   /// Use for create multiple data
@@ -44,7 +45,7 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
     List<T> data, {
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.inserts(data, builder: source));
+    _change(() => handler.inserts(data, builder: source));
   }
 
   /// Use for update single data
@@ -54,7 +55,7 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
     required Map<String, dynamic> data,
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.update(id, data, builder: source));
+    _change(() => handler.update(id, data, builder: source));
   }
 
   @override
@@ -62,14 +63,14 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.delete(id, builder: source));
+    _change(() => handler.delete(id, builder: source));
   }
 
   @override
   void clear<R>({
     OnDataSourceBuilder<R>? source,
   }) async {
-    request(() => handler.clear(builder: source));
+    _change(() => handler.clear(builder: source));
   }
 
   @override
@@ -77,21 +78,21 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.get(id, builder: source));
+    _change(() => handler.get(id, builder: source));
   }
 
   @override
   void gets<R>({
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.gets(builder: source));
+    _change(() => handler.gets(builder: source));
   }
 
   @override
   void getUpdates<R>({
     OnDataSourceBuilder<R>? source,
   }) {
-    request(() => handler.getUpdates(builder: source));
+    _change(() => handler.getUpdates(builder: source));
   }
 
   @override

@@ -1,4 +1,4 @@
-part of 'core.dart';
+import 'package:flutter_andomie/utils.dart';
 
 class DataEncryptor extends Encryptor {
   const DataEncryptor({

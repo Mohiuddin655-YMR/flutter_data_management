@@ -1,4 +1,10 @@
-part of 'sources.dart';
+import 'dart:async';
+
+import 'package:flutter_andomie/core.dart';
+
+import '../../core/typedefs.dart';
+import '../../services/sources/local_data_source.dart';
+import '../../utils/response.dart';
 
 ///
 /// You can use base class [Data] without [Entity]

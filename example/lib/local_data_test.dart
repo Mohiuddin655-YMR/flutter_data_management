@@ -1,7 +1,5 @@
 import 'package:data_management/core.dart';
-import 'package:example/di.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'firebase_firestore_data_test.dart';
 
@@ -40,119 +38,116 @@ class _LocalDataTestState extends State<LocalDataTest> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => locator<LocalDataController<Cart>>(),
-      child: BlocBuilder<LocalDataController<Cart>, DataResponse<Cart>>(
-        builder: (context, state) {
-          LocalDataController<Cart> controller = context.read();
-          return SizedBox(
-            width: double.infinity,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Wrap(
-                    runSpacing: 12,
-                    spacing: 12,
-                    runAlignment: WrapAlignment.center,
-                    alignment: WrapAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        child: const Text("Availability"),
-                        onPressed: () => controller.isAvailable("1"),
-                      ),
-                      ElevatedButton(
-                        child: const Text("Insert"),
-                        onPressed: () => controller.create(c1),
-                      ),
-                      ElevatedButton(
-                        child: const Text("Inserts"),
-                        onPressed: () => controller.creates([c1, c2]),
-                      ),
-                      ElevatedButton(
-                        child: const Text("Update"),
-                        onPressed: () => controller.update(
-                          id: c1.id,
-                          data: c1.copyWith(quantity: 1).source,
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          controller.delete("1");
-                        },
-                        child: const Text("Delete"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          controller.clear();
-                        },
-                        child: const Text("Clear"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          controller.get("1");
-                        },
-                        child: const Text("Get"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          controller.gets();
-                        },
-                        child: const Text("Gets"),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    alignment: Alignment.center,
-                    color: Colors.grey.withAlpha(50),
-                    margin: const EdgeInsets.symmetric(vertical: 24),
-                    child: Text(
-                      state.toString(),
-                      textAlign: TextAlign.center,
+    final controller = DataController<Cart>.of(context);
+    return DataBuilder<Cart>(
+      builder: (context, state) {
+        return SizedBox(
+          width: double.infinity,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Wrap(
+                  runSpacing: 12,
+                  spacing: 12,
+                  runAlignment: WrapAlignment.center,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      child: const Text("Availability"),
+                      onPressed: () => controller.isAvailable("1"),
                     ),
+                    ElevatedButton(
+                      child: const Text("Insert"),
+                      onPressed: () => controller.create(c1),
+                    ),
+                    ElevatedButton(
+                      child: const Text("Inserts"),
+                      onPressed: () => controller.creates([c1, c2]),
+                    ),
+                    ElevatedButton(
+                      child: const Text("Update"),
+                      onPressed: () => controller.update(
+                        id: c1.id,
+                        data: c1.copyWith(quantity: 1).source,
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        controller.delete("1");
+                      },
+                      child: const Text("Delete"),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        controller.clear();
+                      },
+                      child: const Text("Clear"),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        controller.get("1");
+                      },
+                      child: const Text("Get"),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        controller.gets();
+                      },
+                      child: const Text("Gets"),
+                    ),
+                  ],
+                ),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  alignment: Alignment.center,
+                  color: Colors.grey.withAlpha(50),
+                  margin: const EdgeInsets.symmetric(vertical: 24),
+                  child: Text(
+                    state.toString(),
+                    textAlign: TextAlign.center,
                   ),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    alignment: Alignment.center,
-                    color: Colors.grey.withAlpha(50),
-                    margin: const EdgeInsets.symmetric(vertical: 24),
-                    child: StreamBuilder(
-                        stream: controller.live("1"),
-                        builder: (context, snapshot) {
-                          var value = snapshot.data ?? DataResponse();
-                          return Text(
-                            value.data.toString(),
-                            textAlign: TextAlign.center,
-                          );
-                        }),
-                  ),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    alignment: Alignment.center,
-                    color: Colors.grey.withAlpha(50),
-                    margin: const EdgeInsets.symmetric(vertical: 24),
-                    child: StreamBuilder(
-                      stream: controller.lives(),
+                ),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  alignment: Alignment.center,
+                  color: Colors.grey.withAlpha(50),
+                  margin: const EdgeInsets.symmetric(vertical: 24),
+                  child: StreamBuilder(
+                      stream: controller.live("1"),
                       builder: (context, snapshot) {
-                        var value = snapshot.data ?? DataResponse<Cart>();
+                        var value = snapshot.data ?? DataResponse();
                         return Text(
-                          value.result.toString(),
+                          value.data.toString(),
                           textAlign: TextAlign.center,
                         );
-                      },
-                    ),
+                      }),
+                ),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  alignment: Alignment.center,
+                  color: Colors.grey.withAlpha(50),
+                  margin: const EdgeInsets.symmetric(vertical: 24),
+                  child: StreamBuilder(
+                    stream: controller.lives(),
+                    builder: (context, snapshot) {
+                      var value = snapshot.data ?? DataResponse<Cart>();
+                      return Text(
+                        value.result.toString(),
+                        textAlign: TextAlign.center,
+                      );
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

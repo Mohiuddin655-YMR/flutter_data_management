@@ -1,4 +1,11 @@
-part of 'handlers.dart';
+import 'package:flutter_andomie/utils.dart';
+
+import '../../core/typedefs.dart';
+import '../../services/handlers/remote_data_handler.dart';
+import '../../services/sources/local_data_source.dart';
+import '../../services/sources/remote_data_source.dart';
+import '../../utils/response.dart';
+import '../repositories/remote_data_repository.dart';
 
 ///
 /// You can use [Data] without [Entity]
@@ -15,8 +22,8 @@ class RemoteDataHandlerImpl<T extends Entity> extends RemoteDataHandler<T> {
     bool isCacheMode = false,
   }) : super(
           repository: RemoteDataRepositoryImpl(
-            remote: source,
-            local: backup,
+            source: source,
+            backup: backup,
             connectivity: connectivity,
             isCacheMode: isCacheMode,
           ),

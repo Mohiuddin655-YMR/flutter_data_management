@@ -1,4 +1,7 @@
-part of 'repositories.dart';
+import 'package:flutter_andomie/core.dart';
+
+import '../sources/local_data_source.dart';
+import 'data_repository.dart';
 
 /// # Won't Use Directly
 /// You can use:

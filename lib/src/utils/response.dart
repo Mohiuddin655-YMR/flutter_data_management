@@ -1,4 +1,4 @@
-part of 'core.dart';
+import 'package:flutter_andomie/core.dart';
 
 ///
 /// You can use base class [Data] without [Entity]

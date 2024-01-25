@@ -2,10 +2,8 @@ import 'package:data_management/core.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'api_data_test.dart';
-import 'di.dart';
 import 'firebase_firestore_data_test.dart';
 import 'firebase_realtime_data_test.dart';
 import 'local_data_test.dart';
@@ -13,9 +11,8 @@ import 'local_data_test.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    options: !kIsWeb
-        ? null
-        : const FirebaseOptions(
+    options: kIsWeb
+        ? const FirebaseOptions(
             apiKey: "AIzaSyAnDJmmToo0dPGEeAV9J-7bsghSaiByFjU",
             authDomain: "flutter-ui-kits.firebaseapp.com",
             databaseURL: "https://flutter-ui-kits-default-rtdb.firebaseio.com",
@@ -24,10 +21,34 @@ Future<void> main() async {
             messagingSenderId: "807732577100",
             appId: "1:807732577100:web:c6e2766be76043102945e9",
             measurementId: "G-SW8PH1RQ0B",
-          ),
+          )
+        : null,
   );
-  await diInit();
-  runApp(const Application());
+  runApp(
+    DataControllers(
+      controllers: [
+        DataController<Cart>.fromLocalSource(
+          source: CartDataSource(),
+        ),
+        DataController<Product>.fromRemoteSource(
+          source: RemoteProductDataSource(),
+          // (Optional) if you need to backup your data when network unavailable
+          backup: LocalProductDataSource(),
+        ),
+        DataController<Post>.fromRemoteSource(
+          source: RemotePostDataSource(),
+          // (Optional) if you need to backup your data when network unavailable
+          backup: LocalPostDataSource(),
+        ),
+        DataController<User>.fromRemoteSource(
+          source: RemoteUserDataSource(),
+          // (Optional) if you need to backup your data when network unavailable
+          backup: LocalUserDataSource(),
+        ),
+      ],
+      child: const Application(),
+    ),
+  );
 }
 
 class Application extends StatefulWidget {
@@ -41,6 +62,13 @@ class _ApplicationState extends State<Application>
     with SingleTickerProviderStateMixin {
   late final _tabController = TabController(length: 4, vsync: this);
 
+  final tabs = [
+    "Api",
+    "Firestore",
+    "Realtime",
+    "Local",
+  ];
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -52,45 +80,29 @@ class _ApplicationState extends State<Application>
       home: Scaffold(
         body: SafeArea(
           child: Center(
-            child: MultiBlocProvider(
-              providers: [
-                BlocProvider(
-                  create: (context) => locator<LocalDataController<Cart>>(),
+            child: Column(
+              children: [
+                TabBar(
+                  controller: _tabController,
+                  tabs: tabs.map((e) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Text(e),
+                    );
+                  }).toList(),
                 ),
-                BlocProvider(
-                  create: (context) => locator<RemoteDataController<Post>>(),
-                ),
-                BlocProvider(
-                  create: (context) => locator<RemoteDataController<Product>>(),
-                ),
-                BlocProvider(
-                  create: (context) => locator<RemoteDataController<User>>(),
-                ),
-              ],
-              child: Column(
-                children: [
-                  TabBar(
+                Expanded(
+                  child: TabBarView(
                     controller: _tabController,
-                    tabs: const [
-                      Text("Api"),
-                      Text("Firestore"),
-                      Text("Realtime"),
-                      Text("Local"),
+                    children: const [
+                      ApiDataTest(),
+                      FirebaseFireStoreDataTest(),
+                      FirebaseRealtimeDataTest(),
+                      LocalDataTest(),
                     ],
                   ),
-                  Expanded(
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: const [
-                        ApiDataTest(),
-                        FirebaseFireStoreDataTest(),
-                        FirebaseRealtimeDataTest(),
-                        LocalDataTest(),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

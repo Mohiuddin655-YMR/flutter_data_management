@@ -1,4 +1,8 @@
-part of 'sources.dart';
+import 'package:flutter_andomie/core.dart';
+
+import '../../core/typedefs.dart';
+import '../../utils/response.dart';
+import 'data_source.dart';
 
 /// # Won't Use Directly
 /// You can use:

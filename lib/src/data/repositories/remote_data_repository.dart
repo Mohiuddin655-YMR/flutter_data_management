@@ -1,4 +1,8 @@
-part of 'repositories.dart';
+import 'package:flutter_andomie/utils/entities/entities.dart';
+
+import '../../core/typedefs.dart';
+import '../../services/repositories/remote_data_repository.dart';
+import '../../utils/response.dart';
 
 ///
 /// You can use [Data] without [Entity]
@@ -6,9 +10,9 @@ part of 'repositories.dart';
 class RemoteDataRepositoryImpl<T extends Entity>
     extends RemoteDataRepository<T> {
   RemoteDataRepositoryImpl({
-    required super.remote,
+    required super.source,
     super.connectivity,
-    super.local,
+    super.backup,
     super.isCacheMode,
   });
 
@@ -19,16 +23,16 @@ class RemoteDataRepositoryImpl<T extends Entity>
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return local!.isAvailable(id, builder: builder);
+      return backup!.isAvailable(id, builder: builder);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return local!.isAvailable(
+        return backup!.isAvailable(
           id,
           builder: builder,
         );
       } else {
-        return remote.isAvailable(
+        return source.isAvailable(
           id,
           isConnected: connected,
           builder: builder,
@@ -44,16 +48,16 @@ class RemoteDataRepositoryImpl<T extends Entity>
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return local!.insert(data, builder: builder);
+      return backup!.insert(data, builder: builder);
     } else {
       var connected = await isConnected;
-      var response = await remote.insert(
+      var response = await source.insert(
         data,
         isConnected: connected,
         builder: builder,
       );
       if (response.isSuccessful && isLocal) {
-        await local!.insert(data, builder: builder);
+        await backup!.insert(data, builder: builder);
       }
       return response;
     }
@@ -66,16 +70,16 @@ class RemoteDataRepositoryImpl<T extends Entity>
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return local!.inserts(data, builder: builder);
+      return backup!.inserts(data, builder: builder);
     } else {
       var connected = await isConnected;
-      var response = await remote.inserts(
+      var response = await source.inserts(
         data,
         isConnected: connected,
         builder: builder,
       );
       if (response.isSuccessful && isLocal) {
-        await local!.inserts(data, builder: builder);
+        await backup!.inserts(data, builder: builder);
       }
       return response;
     }
@@ -89,17 +93,17 @@ class RemoteDataRepositoryImpl<T extends Entity>
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return local!.update(id, data, builder: builder);
+      return backup!.update(id, data, builder: builder);
     } else {
       var connected = await isConnected;
-      var response = await remote.update(
+      var response = await source.update(
         id,
         data,
         isConnected: connected,
         builder: builder,
       );
       if (response.isSuccessful && isLocal) {
-        await local!.update(id, data, builder: builder);
+        await backup!.update(id, data, builder: builder);
       }
       return response;
     }
@@ -111,16 +115,16 @@ class RemoteDataRepositoryImpl<T extends Entity>
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return local!.delete(id, builder: builder);
+      return backup!.delete(id, builder: builder);
     } else {
       var connected = await isConnected;
-      var response = await remote.delete(
+      var response = await source.delete(
         id,
         isConnected: connected,
         builder: builder,
       );
       if (response.isSuccessful && isLocal) {
-        await local!.delete(id, builder: builder);
+        await backup!.delete(id, builder: builder);
       }
       return response;
     }
@@ -131,15 +135,15 @@ class RemoteDataRepositoryImpl<T extends Entity>
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return local!.clear(builder: builder);
+      return backup!.clear(builder: builder);
     } else {
       var connected = await isConnected;
-      var response = await remote.clear(
+      var response = await source.clear(
         isConnected: connected,
         builder: builder,
       );
       if (response.isSuccessful && isLocal) {
-        await local!.clear(builder: builder);
+        await backup!.clear(builder: builder);
       }
       return response;
     }
@@ -151,13 +155,13 @@ class RemoteDataRepositoryImpl<T extends Entity>
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return local!.get(id, builder: builder);
+      return backup!.get(id, builder: builder);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return local!.get(id, builder: builder);
+        return backup!.get(id, builder: builder);
       } else {
-        return remote.get(
+        return source.get(
           id,
           isConnected: connected,
           builder: builder,
@@ -171,17 +175,17 @@ class RemoteDataRepositoryImpl<T extends Entity>
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return local!.gets(
+      return backup!.gets(
         builder: builder,
       );
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return local!.gets(
+        return backup!.gets(
           builder: builder,
         );
       } else {
-        return remote.gets(
+        return source.gets(
           isConnected: connected,
           builder: builder,
         );
@@ -194,15 +198,15 @@ class RemoteDataRepositoryImpl<T extends Entity>
     OnDataSourceBuilder<R>? builder,
   }) async {
     if (isCacheMode && isLocal) {
-      return local!.getUpdates(builder: builder);
+      return backup!.getUpdates(builder: builder);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return local!.getUpdates(
+        return backup!.getUpdates(
           builder: builder,
         );
       } else {
-        return remote.getUpdates(
+        return source.getUpdates(
           isConnected: connected,
           builder: builder,
         );
@@ -216,16 +220,16 @@ class RemoteDataRepositoryImpl<T extends Entity>
     OnDataSourceBuilder<R>? builder,
   }) async* {
     if (isCacheMode && isLocal) {
-      yield* local!.live(id, builder: builder);
+      yield* backup!.live(id, builder: builder);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        yield* local!.live(
+        yield* backup!.live(
           id,
           builder: builder,
         );
       } else {
-        yield* remote.live(
+        yield* source.live(
           id,
           isConnected: connected,
           builder: builder,
@@ -239,15 +243,15 @@ class RemoteDataRepositoryImpl<T extends Entity>
     OnDataSourceBuilder<R>? builder,
   }) async* {
     if (isCacheMode && isLocal) {
-      yield* local!.lives(builder: builder);
+      yield* backup!.lives(builder: builder);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        yield* local!.lives(
+        yield* backup!.lives(
           builder: builder,
         );
       } else {
-        yield* remote.lives(
+        yield* source.lives(
           isConnected: connected,
           builder: builder,
         );

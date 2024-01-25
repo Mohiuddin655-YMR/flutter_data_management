@@ -1,4 +1,8 @@
-part of 'repositories.dart';
+import 'package:flutter_andomie/utils/entities/entities.dart';
+
+import '../../core/typedefs.dart';
+import '../../services/repositories/local_data_repository.dart';
+import '../../utils/response.dart';
 
 ///
 /// You can use [Data] without [Entity]

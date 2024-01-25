@@ -1,6 +1,5 @@
 import 'package:data_management/core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class FirebaseFireStoreDataTest extends StatefulWidget {
   const FirebaseFireStoreDataTest({Key? key}) : super(key: key);
@@ -11,7 +10,7 @@ class FirebaseFireStoreDataTest extends StatefulWidget {
 }
 
 class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
-  late RemoteDataController<Product> controller = context.read();
+  late DataController<Product> controller = DataController.of(context);
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +83,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
                 ),
               ],
             ),
-            BlocBuilder<RemoteDataController<Product>, DataResponse<Product>>(
+            DataBuilder<Product>(
               builder: (context, state) {
                 return Container(
                   width: double.infinity,

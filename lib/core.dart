@@ -1,9 +1,5 @@
 library core;
 
-import 'package:flutter_andomie/core.dart';
-
-export 'src/src.dart';
-
-part 'data.dart';
-part 'encryptor.dart';
-part 'response.dart';
+export 'data_management.dart';
+export 'src/widgets/builder.dart';
+export 'src/widgets/provider.dart';

@@ -1,12 +1,8 @@
 import 'package:data_management/core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'di.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await diInit();
   runApp(const Application());
 }
 
@@ -25,19 +21,16 @@ class Application extends StatelessWidget {
         body: SafeArea(
           /// Step - 3
           /// Create a data management controller with bloc
-          child: BlocProvider(
-            create: (context) {
+          child: DataControllers(
+            controllers: [
               /// Create data controller by data source
-              return RemoteDataController<Post>.fromSource(
+              RemoteDataController<Post>.fromSource(
                 source: PostDataSource(),
 
                 /// (Optional) if you need to backup your data when network unavailable
                 backup: PostBackupSource(),
-              );
-
-              /// Create custom data controller
-              ///
-            },
+              ),
+            ],
             child: const ApiDataTest(),
           ),
         ),
@@ -56,7 +49,7 @@ class ApiDataTest extends StatefulWidget {
 }
 
 class _ApiDataTestState extends State<ApiDataTest> {
-  late RemoteDataController<Post> controller = context.read();
+  late DataController<Post> controller = DataController.of(context);
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +121,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
                 ),
               ],
             ),
-            BlocBuilder<RemoteDataController<Post>, DataResponse<Post>>(
+            DataBuilder<Post>(
               builder: (context, state) {
                 return Container(
                   width: double.infinity,
@@ -204,7 +197,7 @@ class PostHandler extends RemoteDataHandlerImpl<Post> {
 /// or use directly "RemoteDataRepositoryImpl<Post>"
 class PostRepository extends RemoteDataRepositoryImpl<Post> {
   PostRepository({
-    required super.remote,
+    required super.source,
   });
 
   /// OPTIONAL FUNCTION
@@ -216,13 +209,13 @@ class PostRepository extends RemoteDataRepositoryImpl<Post> {
     }
 
     if (isCacheMode && isLocal) {
-      return local!.gets(builder: builder);
+      return backup!.gets(builder: builder);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return local!.gets(builder: builder);
+        return backup!.gets(builder: builder);
       } else {
-        return remote.gets(
+        return source.gets(
           isConnected: connected,
           builder: builder,
         );

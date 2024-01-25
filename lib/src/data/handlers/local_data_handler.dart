@@ -1,4 +1,10 @@
-part of 'handlers.dart';
+import 'package:flutter_andomie/utils.dart';
+
+import '../../core/typedefs.dart';
+import '../../services/handlers/local_data_handler.dart';
+import '../../services/sources/local_data_source.dart';
+import '../../utils/response.dart';
+import '../repositories/local_data_repository.dart';
 
 ///
 /// You can use [Data] without [Entity]

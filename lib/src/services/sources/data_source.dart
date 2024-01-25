@@ -1,7 +1,7 @@
-part of 'sources.dart';
+import 'package:flutter_andomie/utils/entities/entities.dart';
 
-typedef OnDataBuilder<T extends Entity> = T Function(dynamic);
-typedef OnDataSourceBuilder<R> = R? Function(R parent);
+import '../../core/typedefs.dart';
+import '../../utils/response.dart';
 
 /// # Won't Use Directly
 /// You can use:

@@ -1,6 +1,5 @@
 import 'package:data_management/core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ApiDataTest extends StatefulWidget {
   const ApiDataTest({Key? key}) : super(key: key);
@@ -10,7 +9,7 @@ class ApiDataTest extends StatefulWidget {
 }
 
 class _ApiDataTestState extends State<ApiDataTest> {
-  late RemoteDataController<Post> controller = context.read();
+  late DataController<Post> controller = DataController.of(context);
 
   @override
   Widget build(BuildContext context) {
@@ -82,8 +81,8 @@ class _ApiDataTestState extends State<ApiDataTest> {
                 ),
               ],
             ),
-            BlocBuilder<RemoteDataController<Post>, DataResponse<Post>>(
-              builder: (context, state) {
+            DataBuilder<Post>(
+              builder: (context, response) {
                 return Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
@@ -91,7 +90,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
                   color: Colors.grey.withAlpha(50),
                   margin: const EdgeInsets.symmetric(vertical: 24),
                   child: Text(
-                    state.toString(),
+                    response.toString(),
                     textAlign: TextAlign.center,
                   ),
                 );
