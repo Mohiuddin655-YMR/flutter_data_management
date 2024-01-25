@@ -1,3 +1,11 @@
+## 0.1.3
+
+* Stable version
+* Observable support
+* BaseDataUseCase added
+* DataControllers added for initialization mode
+* DataBuilder added for observe response when controller state change
+
 ## 0.1.2
 
 * Stable version
