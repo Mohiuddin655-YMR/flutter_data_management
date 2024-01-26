@@ -1,3 +1,7 @@
+## 0.1.4
+
+* Add base use case to use directly
+
 ## 0.1.3
 
 * Stable version

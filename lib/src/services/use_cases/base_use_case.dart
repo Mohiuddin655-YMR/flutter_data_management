@@ -1,5 +1,10 @@
-import 'package:data_management/core.dart';
 import 'package:flutter_andomie/core.dart';
+
+import '../../data/repositories/local_data_repository.dart';
+import '../../data/repositories/remote_data_repository.dart';
+import '../repositories/data_repository.dart';
+import '../sources/local_data_source.dart';
+import '../sources/remote_data_source.dart';
 
 class BaseDataUseCase<T extends Entity> {
   final DataRepository<T> repository;
