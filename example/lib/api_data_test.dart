@@ -213,7 +213,7 @@ class Post extends Data {
 
   @override
   Map<String, dynamic> get source {
-    return super.source.attach({
+    return super.source..addAll({
       "id": idInt,
       "userId": idInt,
       "title": title ?? "Title",

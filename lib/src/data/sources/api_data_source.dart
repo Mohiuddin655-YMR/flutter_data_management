@@ -4,7 +4,6 @@ import 'package:dio/dio.dart' as dio;
 import 'package:flutter_andomie/core.dart';
 
 import '../../core/configs.dart';
-import '../../core/extensions.dart';
 import '../../core/typedefs.dart';
 import '../../services/sources/remote_data_source.dart';
 import '../../utils/response.dart';

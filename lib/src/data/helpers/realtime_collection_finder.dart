@@ -178,7 +178,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
               builder: builder,
               encryptor: encryptor,
               data: encryptor != null
-                  ? value.source.adjust(data)
+                  ? value.source.generate(data)
                   : data.withId(id),
             ).then((successful) {
               if (successful) {
@@ -269,5 +269,13 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     } catch (_) {
       return (false, null, "$_", Status.failure);
     }
+  }
+}
+
+extension _DataMapHelper on Map<String, dynamic>? {
+  Map<String, dynamic> generate(Map<String, dynamic> current) {
+    final data = this ?? {};
+    data.addAll(current);
+    return data;
   }
 }

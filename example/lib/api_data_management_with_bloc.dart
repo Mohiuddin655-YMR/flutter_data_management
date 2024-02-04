@@ -319,11 +319,12 @@ class Post extends Data {
 
   @override
   Map<String, dynamic> get source {
-    return super.source.attach({
-      "id": idInt,
-      "userId": idInt,
-      "title": title ?? "Title",
-      "body": body,
-    });
+    return super.source
+      ..addAll({
+        "id": idInt,
+        "userId": idInt,
+        "title": title ?? "Title",
+        "body": body,
+      });
   }
 }

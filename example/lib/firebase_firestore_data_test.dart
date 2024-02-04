@@ -206,7 +206,7 @@ class Product extends Data {
 
   @override
   Map<String, dynamic> get source {
-    return super.source.attach({
+    return super.source..addAll({
       "name": name ?? "Name",
       "price": price,
     });

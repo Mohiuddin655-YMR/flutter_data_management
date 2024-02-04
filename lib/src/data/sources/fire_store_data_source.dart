@@ -5,7 +5,6 @@ import 'package:cloud_firestore_platform_interface/cloud_firestore_platform_inte
 import 'package:flutter_andomie/core.dart';
 
 import '../../core/configs.dart';
-import '../../core/extensions.dart';
 import '../../core/typedefs.dart';
 import '../../services/sources/remote_data_source.dart';
 import '../../utils/response.dart';

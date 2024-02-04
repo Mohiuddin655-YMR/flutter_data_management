@@ -282,7 +282,7 @@ extension _ApiDataFinder on dio.Dio {
               encryptor: encryptor,
               path: path,
               data: encryptor != null
-                  ? value.source.adjust(data)
+                  ? value.source.generate(data)
                   : data.withId(id),
             ).then((feedback) {
               if (feedback != null) {
@@ -412,5 +412,13 @@ extension _ApiDataFinder on dio.Dio {
         return (false, null, _.message, Status.failure);
       }
     }
+  }
+}
+
+extension _DataMapHelper on Map<String, dynamic>? {
+  Map<String, dynamic> generate(Map<String, dynamic> current) {
+    final data = this ?? {};
+    data.addAll(current);
+    return data;
   }
 }
