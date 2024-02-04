@@ -1,13 +1,16 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseException;
+import 'package:data_management/core.dart';
 import 'package:firebase_database/firebase_database.dart' as rdb;
 import 'package:flutter_andomie/core.dart';
 
-import '../../core/extensions.dart';
-import '../../core/typedefs.dart';
-import '../../services/sources/remote_data_source.dart';
-import '../../utils/response.dart';
+import '../../core/configs.dart';
+
+part '../helpers/realtime_collection_extension.dart';
+part '../helpers/realtime_collection_finder.dart';
+part '../helpers/realtime_query_config.dart';
+part '../helpers/realtime_query_extension.dart';
+part '../helpers/realtime_query_finder.dart';
 
 ///
 /// You can use base class [Data] without [Entity]
@@ -306,11 +309,8 @@ abstract class RealtimeDataSource<T extends Entity>
             );
           }
         });
-      } on FirebaseException catch (_) {
-        controller.add(response.withException(
-          _.message,
-          status: Status.failure,
-        ));
+      } catch (_) {
+        controller.add(response.withException(_, status: Status.failure));
       }
     } else {
       controller.add(response.withStatus(Status.networkError));
@@ -344,551 +344,40 @@ abstract class RealtimeDataSource<T extends Entity>
             );
           }
         });
-      } on FirebaseException catch (_) {
-        controller.add(response.withException(
-          _.message,
-          status: Status.failure,
-        ));
+      } catch (_) {
+        controller.add(response.withException(_, status: Status.failure));
       }
     } else {
       controller.add(response.withStatus(Status.networkError));
     }
     return controller.stream;
   }
-}
 
-extension _RealtimeReferenceFinder on rdb.DatabaseReference {
-  Future<FindByIdFinder<T>> findById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required String id,
+  /// Use for fetch data by query
+  @override
+  Future<DataResponse<T>> query<R>({
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? builder,
+    List<Query> queries = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const RealtimePagingOptions.empty(),
   }) async {
-    if (id.isNotEmpty) {
-      try {
-        return getAt<T>(
-          builder: builder,
-          encryptor: encryptor,
-          id: id,
-        ).then((value) {
-          if (value != null) {
-            return (true, value, null, null, Status.alreadyFound);
-          } else {
-            return (false, null, null, null, Status.notFound);
-          }
-        });
-      } on FirebaseException catch (_) {
-        return (false, null, null, _.message, Status.failure);
-      }
-    } else {
-      return (false, null, null, null, Status.invalidId);
-    }
-  }
-
-  Future<FindByIdFinder<T>> getById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required String id,
-  }) {
-    return findById(builder: builder, encryptor: encryptor, id: id);
-  }
-
-  Stream<FindByIdFinder<T>> liveById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required String id,
-  }) {
-    final controller = StreamController<FindByIdFinder<T>>();
-    if (id.isNotEmpty) {
-      try {
-        liveAt<T>(
-          builder: builder,
-          encryptor: encryptor,
-          id: id,
-        ).listen((value) {
-          if (value != null) {
-            controller.add((true, value, null, null, Status.alreadyFound));
-          } else {
-            controller.add((false, null, null, null, Status.notFound));
-          }
-        });
-      } on FirebaseException catch (_) {
-        controller.add((false, null, null, _.message, Status.failure));
-      }
-    } else {
-      controller.add((false, null, null, null, Status.invalidId));
-    }
-    return controller.stream;
-  }
-
-  Future<SetByDataFinder<T>> setByOnce<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required T data,
-    bool withPriority = false,
-  }) async {
-    if (data.id.isNotEmpty) {
-      try {
-        return getAt<T>(
-          builder: builder,
-          encryptor: encryptor,
-          id: data.id,
-        ).then((value) {
-          if (value == null) {
-            return setAt(
-              builder: builder,
-              encryptor: encryptor,
-              data: data,
-              withPriority: withPriority,
-            ).then((successful) {
-              if (successful) {
-                return (true, null, null, null, Status.ok);
-              } else {
-                return (false, null, null, "Database error!", Status.error);
-              }
-            }).onError((e, s) {
-              return (false, null, null, "$e", Status.error);
-            });
-          } else {
-            return (false, data, null, null, Status.alreadyFound);
-          }
-        });
-      } on FirebaseException catch (_) {
-        return (false, null, null, _.message, Status.failure);
-      }
-    } else {
-      return (false, null, null, null, Status.invalidId);
-    }
-  }
-
-  Future<SetByListFinder<T>> setByMultiple<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required List<T> data,
-    bool withPriority = false,
-  }) async {
-    if (data.isNotEmpty) {
-      try {
-        return getAts<T>(
-          builder: builder,
-          encryptor: encryptor,
-          ids: data.map((e) => e.id).toList(),
-        ).then((value) {
-          List<T> current = [];
-          List<T> ignores = [];
-          for (var i in data) {
-            final insertable = value.where((E) => E.id == i.id).isEmpty;
-            if (insertable) {
-              current.add(i);
-            } else {
-              ignores.add(i);
-            }
-          }
-          if (data.length != ignores.length) {
-            return setAll(
-              builder: builder,
-              encryptor: encryptor,
-              data: current,
-              withPriority: withPriority,
-            ).then((successful) {
-              if (successful) {
-                return (true, current, ignores, value, null, Status.ok);
-              } else {
-                return (
-                  false,
-                  null,
-                  null,
-                  null,
-                  "Database error!",
-                  Status.error,
-                );
-              }
-            }).onError((e, s) {
-              return (false, null, null, null, "$e", Status.failure);
-            });
-          } else {
-            return (false, null, ignores, null, null, Status.alreadyFound);
-          }
-        });
-      } on FirebaseException catch (_) {
-        return (false, null, null, null, _.message, Status.failure);
-      }
-    } else {
-      return (false, null, null, null, null, Status.invalidId);
-    }
-  }
-
-  Future<UpdateByDataFinder<T>> updateById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required String id,
-    required Map<String, dynamic> data,
-  }) async {
-    if (id.isNotEmpty) {
-      try {
-        return getAt<T>(
-          builder: builder,
-          encryptor: encryptor,
-          id: id,
-        ).then((value) {
-          if (value != null) {
-            return updateAt(
-              builder: builder,
-              encryptor: encryptor,
-              data: encryptor != null
-                  ? value.source.adjust(data)
-                  : data.withId(id),
-            ).then((successful) {
-              if (successful) {
-                return (true, value, null, null, Status.ok);
-              } else {
-                return (false, null, null, "Database error!", Status.error);
-              }
-            }).onError((e, s) {
-              return (false, null, null, "$e", Status.failure);
-            });
-          } else {
-            return (false, null, null, null, Status.notFound);
-          }
-        });
-      } on FirebaseException catch (_) {
-        return (false, null, null, _.message, Status.failure);
-      }
-    } else {
-      return (false, null, null, null, Status.invalidId);
-    }
-  }
-
-  Future<DeleteByIdFinder<T>> deleteById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required String id,
-  }) async {
-    if (id.isNotEmpty) {
-      try {
-        return getAt<T>(
-          builder: builder,
-          encryptor: encryptor,
-          id: id,
-        ).then((value) {
-          if (value != null) {
-            return deleteAt(
-              builder: builder,
-              encryptor: encryptor,
-              data: value,
-            ).then((successful) {
-              if (successful) {
-                return (true, value, null, null, Status.ok);
-              } else {
-                return (false, null, null, "Database error!", Status.error);
-              }
-            }).onError((e, s) {
-              return (false, null, null, "$e", Status.failure);
-            });
-          } else {
-            return (false, null, null, null, Status.notFound);
-          }
-        });
-      } on FirebaseException catch (_) {
-        return (false, null, null, _.message, Status.failure);
-      }
-    } else {
-      return (false, null, null, null, Status.invalidId);
-    }
-  }
-
-  Future<ClearByFinder<T>> clearBy<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-  }) async {
-    try {
-      return getAll<T>(
-        builder: builder,
+    final response = DataResponse<T>();
+    if (isConnected) {
+      var finder = await _query(builder).getByPaging(
+        builder: build,
         encryptor: encryptor,
-      ).then((value) {
-        if (value.isNotEmpty) {
-          return deleteAll(
-            builder: builder,
-            encryptor: encryptor,
-            data: value,
-          ).then((successful) {
-            if (successful) {
-              return (true, value, null, Status.ok);
-            } else {
-              return (false, null, "Database error!", Status.error);
-            }
-          }).onError((e, s) {
-            return (false, null, "$e", Status.failure);
-          });
-        } else {
-          return (false, null, null, Status.notFound);
-        }
-      });
-    } on FirebaseException catch (_) {
-      return (false, null, _.message, Status.failure);
-    }
-  }
-}
-
-extension _RealtimeQueryFinder on rdb.Query {
-  Future<FindByFinder<T>> findBy<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    bool onlyUpdates = false,
-  }) async {
-    try {
-      return getAll<T>(
-        builder: builder,
-        encryptor: encryptor,
-        onlyUpdates: onlyUpdates,
-      ).then((value) {
-        if (value.isNotEmpty) {
-          return (true, value, null, Status.alreadyFound);
-        } else {
-          return (false, null, null, Status.notFound);
-        }
-      });
-    } on FirebaseException catch (_) {
-      return (false, null, _.message, Status.failure);
-    }
-  }
-
-  Future<FindByFinder<T>> getBy<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    bool onlyUpdates = false,
-  }) {
-    return findBy(
-      builder: builder,
-      encryptor: encryptor,
-      onlyUpdates: onlyUpdates,
-    );
-  }
-
-  Stream<FindByFinder<T>> liveBy<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    bool onlyUpdates = false,
-  }) {
-    final controller = StreamController<FindByFinder<T>>();
-    try {
-      livesAll<T>(
-        builder: builder,
-        encryptor: encryptor,
-        onlyUpdates: onlyUpdates,
-      ).listen((value) {
-        if (value.isNotEmpty) {
-          controller.add((true, value, null, Status.alreadyFound));
-        } else {
-          controller.add((false, null, null, Status.notFound));
-        }
-      });
-    } on FirebaseException catch (_) {
-      controller.add((false, null, _.message, Status.failure));
-    }
-    return controller.stream;
-  }
-}
-
-extension _RealtimeReferenceExtension on rdb.DatabaseReference {
-  Future<T?> getAt<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required String id,
-  }) async {
-    var isEncryptor = encryptor != null;
-    return child(id).get().then((i) async {
-      var data = i.value;
-      if (i.exists && data is Map<String, dynamic>) {
-        var v = isEncryptor ? await encryptor.output(data) : data;
-        return builder(v);
-      }
-      return null;
-    });
-  }
-
-  Future<List<T>> getAts<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required List<String> ids,
-  }) async {
-    List<T> result = [];
-    for (String id in ids) {
-      var data = await getAt(
-        builder: builder,
-        id: id,
+        queries: queries,
+        sorts: sorts,
+        options: options,
       );
-      if (data != null) result.add(data);
-    }
-    return result;
-  }
-
-  Stream<T?> liveAt<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required String id,
-  }) {
-    final controller = StreamController<T?>();
-    if (id.isNotEmpty) {
-      var isEncryptor = encryptor != null;
-      child(id).onValue.listen((i) async {
-        var data = i.snapshot.value;
-        if (i.snapshot.exists && data is Map<String, dynamic>) {
-          var v = isEncryptor ? await encryptor.output(data) : data;
-          controller.add(builder(v));
-        } else {
-          controller.add(null);
-        }
-      });
-    }
-    return controller.stream;
-  }
-
-  Future<bool> setAt<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required T data,
-    bool withPriority = false,
-  }) async {
-    var isEncryptor = encryptor != null;
-    var ref = child(data.id);
-    if (isEncryptor) {
-      var raw = await encryptor.input(data.source);
-      if (raw.isNotEmpty) {
-        if (withPriority) {
-          return ref.setWithPriority(raw, data.timeMills).then((value) {
-            return true;
-          });
-        } else {
-          return ref.set(raw).then((value) {
-            return true;
-          });
-        }
+      if (finder.$1) {
+        return response.withResult(finder.$2);
       } else {
-        return Future.error("Encryption error!");
+        return response.withException(finder.$3, status: finder.$4);
       }
     } else {
-      if (withPriority) {
-        return ref.setWithPriority(data.source, data.timeMills).then((value) {
-          return true;
-        });
-      } else {
-        return ref.set(data.source).then((value) {
-          return true;
-        });
-      }
+      return response.withStatus(Status.networkError);
     }
-  }
-
-  Future<bool> setAll<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required List<T> data,
-    bool withPriority = false,
-  }) async {
-    var counter = 0;
-    for (var i in data) {
-      if (await setAt(
-        builder: builder,
-        encryptor: encryptor,
-        data: i,
-        withPriority: withPriority,
-      )) counter++;
-    }
-    return data.length == counter;
-  }
-
-  Future<bool> updateAt<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required Map<String, dynamic> data,
-  }) async {
-    var isEncryptor = encryptor != null;
-    var id = data.id;
-    if (id != null && id.isNotEmpty) {
-      var v = isEncryptor ? await encryptor.input(data) : data;
-      if (v.isNotEmpty) {
-        return child(id).update(v).then((value) {
-          return true;
-        });
-      } else {
-        return Future.error("Encryption error!");
-      }
-    } else {
-      return Future.error("Id isn't valid!");
-    }
-  }
-
-  Future<bool> deleteAt<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required T data,
-  }) {
-    return child(data.id).remove().then((value) {
-      return true;
-    });
-  }
-
-  Future<bool> deleteAll<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required List<T> data,
-  }) async {
-    var counter = 0;
-    for (var i in data) {
-      if (await deleteAt(
-        builder: builder,
-        encryptor: encryptor,
-        data: i,
-      )) counter++;
-    }
-    return data.length == counter;
-  }
-}
-
-extension _RealtimeQueryExtension on rdb.Query {
-  Future<List<T>> getAll<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    bool onlyUpdates = false,
-  }) async {
-    var isEncryptor = encryptor != null;
-    List<T> result = [];
-    return get().then((_) async {
-      if (_.children.isNotEmpty) {
-        for (var i in _.children) {
-          var data = i.value;
-          if (i.exists) {
-            var v = isEncryptor ? await encryptor.output(data) : data;
-            result.add(builder(v));
-          }
-        }
-      }
-      return result;
-    });
-  }
-
-  Stream<List<T>> livesAll<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    bool onlyUpdates = false,
-  }) {
-    final controller = StreamController<List<T>>();
-    var isEncryptor = encryptor != null;
-    List<T> result = [];
-    onValue.listen((_) async {
-      result.clear();
-      var value = _.snapshot.children;
-      if (value.isNotEmpty) {
-        for (var i in value) {
-          var data = i.value;
-          if (i.exists) {
-            var v = isEncryptor ? await encryptor.output(data) : data;
-            result.add(builder(v));
-          }
-        }
-      }
-      controller.add(result);
-    });
-    return controller.stream;
   }
 }

@@ -15,76 +15,76 @@ class LocalDataController<T extends Entity> extends DataController<T> {
 
   /// Use for check current data
   @override
-  void isAvailable<R>(
+  Future<DataResponse<T>> isAvailable<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    _change(() => handler.isAvailable(id, builder: source));
+    return _change(() => handler.isAvailable(id, builder: source));
   }
 
   /// Use for create single data
   @override
-  void create<R>(
+  Future<DataResponse<T>> create<R>(
     T data, {
     OnDataSourceBuilder<R>? source,
   }) {
-    _change(() => handler.insert(data, builder: source));
+    return _change(() => handler.insert(data, builder: source));
   }
 
   /// Use for create multiple data
   @override
-  void creates<R>(
+  Future<DataResponse<T>> creates<R>(
     List<T> data, {
     OnDataSourceBuilder<R>? source,
   }) {
-    _change(() => handler.inserts(data, builder: source));
+    return _change(() => handler.inserts(data, builder: source));
   }
 
   /// Use for update single data
   @override
-  void update<R>({
+  Future<DataResponse<T>> update<R>({
     required String id,
     required Map<String, dynamic> data,
     OnDataSourceBuilder<R>? source,
   }) {
-    _change(() => handler.update(id, data, builder: source));
+    return _change(() => handler.update(id, data, builder: source));
   }
 
   @override
-  void delete<R>(
+  Future<DataResponse<T>> delete<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    _change(() => handler.delete(id, builder: source));
+    return _change(() => handler.delete(id, builder: source));
   }
 
   @override
-  void clear<R>({
+  Future<DataResponse<T>> clear<R>({
     OnDataSourceBuilder<R>? source,
   }) async {
-    _change(() => handler.clear(builder: source));
+    return _change(() => handler.clear(builder: source));
   }
 
   @override
-  void get<R>(
+  Future<DataResponse<T>> get<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   }) {
-    _change(() => handler.get(id, builder: source));
+    return _change(() => handler.get(id, builder: source));
   }
 
   @override
-  void gets<R>({
+  Future<DataResponse<T>> gets<R>({
     OnDataSourceBuilder<R>? source,
   }) {
-    _change(() => handler.gets(builder: source));
+    return _change(() => handler.gets(builder: source));
   }
 
   @override
-  void getUpdates<R>({
+  Future<DataResponse<T>> getUpdates<R>({
     OnDataSourceBuilder<R>? source,
   }) {
-    _change(() => handler.getUpdates(builder: source));
+    return _change(() => handler.getUpdates(builder: source));
   }
 
   @override
@@ -100,5 +100,15 @@ class LocalDataController<T extends Entity> extends DataController<T> {
     OnDataSourceBuilder<R>? source,
   }) {
     return handler.lives(builder: source);
+  }
+
+  @override
+  Future<DataResponse<T>> query<R>({
+    OnDataSourceBuilder<R>? builder,
+    List<Query> queries = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
+  }) {
+    return _change(() => handler.gets(builder: builder));
   }
 }

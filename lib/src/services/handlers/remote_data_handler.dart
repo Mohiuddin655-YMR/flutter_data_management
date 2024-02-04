@@ -1,5 +1,8 @@
 import 'package:flutter_andomie/core.dart';
 
+import '../../core/configs.dart';
+import '../../core/typedefs.dart';
+import '../../utils/response.dart';
 import '../repositories/remote_data_repository.dart';
 import 'data_handler.dart';
 
@@ -12,5 +15,13 @@ abstract class RemoteDataHandler<T extends Entity> extends DataHandler<T> {
 
   RemoteDataHandler({
     required this.repository,
+  });
+
+  /// Use for fetch data by query
+  Future<DataResponse<T>> query<R>({
+    OnDataSourceBuilder<R>? builder,
+    List<Query> queries = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
   });
 }

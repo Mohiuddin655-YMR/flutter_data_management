@@ -1,5 +1,6 @@
 import 'package:flutter_andomie/core.dart';
 
+import '../../core/configs.dart';
 import '../../core/typedefs.dart';
 import '../../utils/response.dart';
 import 'data_source.dart';
@@ -104,9 +105,14 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
     OnDataSourceBuilder<R>? builder,
   });
 
-  Future<Map<String, dynamic>> input(dynamic data) => encryptor.input(data);
-
-  Future<Map<String, dynamic>> output(dynamic data) => encryptor.output(data);
+  /// Use for fetch data by query
+  Future<DataResponse<T>> query<R>({
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? builder,
+    List<Query> queries = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
+  });
 }
 
 extension EncryptorExtension on Encryptor? {

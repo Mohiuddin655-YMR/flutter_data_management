@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_andomie/core.dart';
 
+import '../../core/configs.dart';
 import '../../core/typedefs.dart';
 import '../../data/handlers/local_data_handler.dart';
 import '../../data/handlers/remote_data_handler.dart';
@@ -116,49 +117,49 @@ abstract class DataController<T extends Entity>
   }
 
   // Use for check current data
-  void isAvailable<R>(
+  Future<DataResponse<T>> isAvailable<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   });
 
   // Use for create single data
-  void create<R>(
+  Future<DataResponse<T>> create<R>(
     T data, {
     OnDataSourceBuilder<R>? source,
   });
 
   // Use for create multiple data
-  void creates<R>(
+  Future<DataResponse<T>> creates<R>(
     List<T> data, {
     OnDataSourceBuilder<R>? source,
   });
 
   // Use for update single data
-  void update<R>({
+  Future<DataResponse<T>> update<R>({
     required String id,
     required Map<String, dynamic> data,
     OnDataSourceBuilder<R>? source,
   });
 
-  void delete<R>(
+  Future<DataResponse<T>> delete<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   });
 
-  void clear<R>({
+  Future<DataResponse<T>> clear<R>({
     OnDataSourceBuilder<R>? source,
   });
 
-  void get<R>(
+  Future<DataResponse<T>> get<R>(
     String id, {
     OnDataSourceBuilder<R>? source,
   });
 
-  void gets<R>({
+  Future<DataResponse<T>> gets<R>({
     OnDataSourceBuilder<R>? source,
   });
 
-  void getUpdates<R>({
+  Future<DataResponse<T>> getUpdates<R>({
     OnDataSourceBuilder<R>? source,
   });
 
@@ -171,21 +172,34 @@ abstract class DataController<T extends Entity>
     OnDataSourceBuilder<R>? source,
   });
 
-  void notify(
+  Future<DataResponse<T>> query<R>({
+    OnDataSourceBuilder<R>? builder,
+    List<Query> queries = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
+  });
+
+  DataResponse<T> notify(
     DataResponse<T> value, [
     bool forceNotify = false,
   ]) {
     this.value = value;
     if (forceNotify) notifyListeners();
+    return value;
   }
 
-  void _change<R>(Future<DataResponse<T>> Function() callback) async {
+  Future<DataResponse<T>> _change<R>(
+    Future<DataResponse<T>> Function() callback,
+  ) async {
     notify(value.copy(loading: true, status: Status.loading));
     try {
       var result = await callback();
-      notify(value.from(result));
+      return notify(value.from(result));
     } catch (_) {
-      notify(value.copy(exception: _.toString(), status: Status.failure));
+      return notify(value.copy(
+        exception: _.toString(),
+        status: Status.failure,
+      ));
     }
   }
 }

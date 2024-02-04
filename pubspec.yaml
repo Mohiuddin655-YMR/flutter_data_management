@@ -1,6 +1,6 @@
 name: data_management
 description: Collection of service with advanced style and controlling system.
-version: 0.1.4
+version: 0.1.5
 repository: https://github.com/P-YMR/flutter_data_management.git
 
 environment:
@@ -13,6 +13,7 @@ dependencies:
   flutter_andomie: ^0.5.14
   firebase_database: ^10.4.0
   cloud_firestore: ^4.14.0
+  cloud_firestore_platform_interface: ^6.1.4
   dio: ^5.4.0
 
 dev_dependencies:

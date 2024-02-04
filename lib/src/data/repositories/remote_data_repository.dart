@@ -1,5 +1,6 @@
 import 'package:flutter_andomie/utils/entities/entities.dart';
 
+import '../../core/configs.dart';
 import '../../core/typedefs.dart';
 import '../../services/repositories/remote_data_repository.dart';
 import '../../utils/response.dart';
@@ -254,6 +255,36 @@ class RemoteDataRepositoryImpl<T extends Entity>
         yield* source.lives(
           isConnected: connected,
           builder: builder,
+        );
+      }
+    }
+  }
+
+  /// Use for fetch data by query
+  @override
+  Future<DataResponse<T>> query<R>({
+    OnDataSourceBuilder<R>? builder,
+    List<Query> queries = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
+  }) async {
+    if (isCacheMode && isLocal) {
+      return backup!.gets(
+        builder: builder,
+      );
+    } else {
+      var connected = await isConnected;
+      if (!connected && isLocal) {
+        return backup!.gets(
+          builder: builder,
+        );
+      } else {
+        return source.query(
+          isConnected: connected,
+          builder: builder,
+          queries: queries,
+          sorts: sorts,
+          options: options,
         );
       }
     }

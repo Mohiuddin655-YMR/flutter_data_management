@@ -1,3 +1,7 @@
+## 0.1.5
+
+* Add query function
+
 ## 0.1.4
 
 * Add base use case to use directly

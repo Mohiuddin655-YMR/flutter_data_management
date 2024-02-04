@@ -1,5 +1,6 @@
 import 'package:flutter_andomie/utils.dart';
 
+import '../../core/configs.dart';
 import '../../core/typedefs.dart';
 import '../../services/handlers/remote_data_handler.dart';
 import '../../services/sources/local_data_source.dart';
@@ -113,5 +114,20 @@ class RemoteDataHandlerImpl<T extends Entity> extends RemoteDataHandler<T> {
     OnDataSourceBuilder<R>? builder,
   }) {
     return repository.lives(builder: builder);
+  }
+
+  @override
+  Future<DataResponse<T>> query<R>({
+    OnDataSourceBuilder<R>? builder,
+    List<Query> queries = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
+  }) {
+    return repository.query(
+      builder: builder,
+      queries: queries,
+      sorts: sorts,
+      options: options,
+    );
   }
 }
