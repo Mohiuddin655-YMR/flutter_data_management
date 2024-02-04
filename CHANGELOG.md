@@ -1,3 +1,7 @@
+## 0.1.6
+
+* Remove entity extensions
+
 ## 0.1.5
 
 * Add query function
