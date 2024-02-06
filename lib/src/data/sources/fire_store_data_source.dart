@@ -6,23 +6,28 @@ import 'package:flutter_andomie/core.dart';
 
 import '../../core/configs.dart';
 import '../../core/typedefs.dart';
+import '../../models/checker.dart';
+import '../../models/updating_info.dart';
 import '../../services/sources/remote_data_source.dart';
 import '../../utils/response.dart';
 
-part '../helpers/firestore_collection_extension.dart';
-part '../helpers/firestore_collection_finder.dart';
-part '../helpers/firestore_query_config.dart';
-part '../helpers/firestore_query_extension.dart';
-part '../helpers/firestore_query_finder.dart';
+part '../base/firestore/firestore_collection_extension.dart';
+part '../base/firestore/firestore_collection_finder.dart';
+part '../base/firestore/firestore_query_config.dart';
+part '../base/firestore/firestore_query_extension.dart';
+part '../base/firestore/firestore_query_finder.dart';
 
 ///
 /// You can use base class [Data] without [Entity]
 ///
-abstract class FireStoreDataSource<T extends Entity>
+
+typedef FS = fdb.DocumentSnapshot;
+
+abstract class FirestoreDataSource<T extends Entity>
     extends RemoteDataSource<T> {
   final String path;
 
-  FireStoreDataSource({
+  FirestoreDataSource({
     required this.path,
     super.encryptor,
   });
@@ -51,286 +56,548 @@ abstract class FireStoreDataSource<T extends Entity>
     }
   }
 
-  /// Use for check current data
+  /// Method to check data by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.checkById(
+  ///   'userId123',
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
   @override
-  Future<DataResponse<T>> isAvailable<R>(
+  Future<DataResponse<T>> checkById<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = DataResponse<T>();
     if (isConnected) {
-      if (id.isValid) {
-        var finder = await _source(builder).findById(
+      if (id.isNotEmpty) {
+        var finder = await _source(builder).checkById(
           builder: build,
           encryptor: encryptor,
           id: id,
         );
-        return response.withAvailable(
-          !finder.$1,
-          data: finder.$2,
-          message: finder.$4,
-          status: finder.$5,
+        return DataResponse(
+          data: finder.$1?.$1,
+          snapshot: finder.$1?.$2,
+          exception: finder.$2,
+          status: finder.$3,
         );
       } else {
-        return response.withStatus(Status.invalidId);
+        return DataResponse(status: Status.invalidId);
       }
     } else {
-      return response.withStatus(Status.networkError);
+      return DataResponse(status: Status.networkError);
     }
   }
 
-  /// Use for create single data
-  @override
-  Future<DataResponse<T>> insert<R>(
-    T data, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
-  }) async {
-    final response = DataResponse<T>();
-    if (isConnected) {
-      if (data.id.isValid) {
-        final finder = await _source(builder).setByOnce(
-          builder: build,
-          encryptor: encryptor,
-          data: data,
-        );
-        return response.modify(
-          successful: finder.$1,
-          error: !finder.$1,
-          result: finder.$3,
-          ignores: finder.$2 != null ? [finder.$2!] : null,
-          message: finder.$4,
-          status: finder.$5,
-        );
-      } else {
-        return response.withStatus(Status.invalidId);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
-  }
-
-  /// Use for create multiple data
-  @override
-  Future<DataResponse<T>> inserts<R>(
-    List<T> data, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
-  }) async {
-    final response = DataResponse<T>();
-    if (isConnected) {
-      if (data.isValid) {
-        final finder = await _source(builder).setByMultiple(
-          builder: build,
-          encryptor: encryptor,
-          data: data,
-        );
-        return response.modify(
-          error: !finder.$1,
-          successful: finder.$1,
-          ignores: finder.$3,
-          result: finder.$4,
-          message: finder.$5,
-          status: finder.$6,
-        );
-      } else {
-        return response.withStatus(Status.invalidId);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
-  }
-
-  /// Use for update single data
-  @override
-  Future<DataResponse<T>> update<R>(
-    String id,
-    Map<String, dynamic> data, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
-  }) async {
-    final response = DataResponse<T>();
-    if (isConnected) {
-      if (id.isValid) {
-        final finder = await _source(builder).updateById(
-          builder: build,
-          encryptor: encryptor,
-          id: id,
-          data: data,
-        );
-        return response.modify(
-          successful: finder.$1,
-          error: !finder.$1,
-          backups: finder.$2 != null ? [finder.$2!] : null,
-          result: finder.$3,
-          message: finder.$4,
-          status: finder.$5,
-        );
-      } else {
-        return response.withStatus(Status.invalidId);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
-  }
-
-  /// Use for delete single data
-  @override
-  Future<DataResponse<T>> delete<R>(
-    String id, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
-  }) async {
-    final response = DataResponse<T>();
-    if (isConnected) {
-      if (id.isValid) {
-        var finder = await _source(builder).deleteById(
-          builder: build,
-          encryptor: encryptor,
-          id: id,
-        );
-        if (finder.$1) {
-          return response
-              .withBackup(finder.$2)
-              .withResult(finder.$3, status: finder.$5);
-        } else {
-          return response.withException(finder.$4, status: finder.$5);
-        }
-      } else {
-        return response.withStatus(Status.invalidId);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
-  }
-
-  /// Use for delete all data
+  /// Method to clear data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.clear(
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
   @override
   Future<DataResponse<T>> clear<R>({
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = DataResponse<T>();
     if (isConnected) {
-      var finder = await _source(builder).clearBy(
+      var finder = await _source(builder).clear(
         builder: build,
         encryptor: encryptor,
       );
-      if (finder.$1) {
-        return response.withBackups(finder.$2, status: finder.$4);
-      } else {
-        return response.withException(finder.$3, status: finder.$4);
-      }
+      return DataResponse(
+        backups: finder.$1,
+        exception: finder.$2,
+        status: finder.$3,
+      );
     } else {
-      return response.withStatus(Status.networkError);
+      return DataResponse(status: Status.networkError);
     }
   }
 
-  /// Use for fetch single data
+  /// Method to create data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// T newData = //...;
+  /// repository.create(
+  ///   newData,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
   @override
-  Future<DataResponse<T>> get<R>(
+  Future<DataResponse<T>> create<R>(
+    T data, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? builder,
+  }) async {
+    if (isConnected) {
+      if (data.id.isValid) {
+        final finder = await _source(builder).create(
+          builder: build,
+          encryptor: encryptor,
+          data: data,
+        );
+        return DataResponse(exception: finder.$1, status: finder.$2);
+      } else {
+        return DataResponse(status: Status.invalidId);
+      }
+    } else {
+      return DataResponse(status: Status.networkError);
+    }
+  }
+
+  /// Method to create multiple data entries with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<T> newDataList = //...;
+  /// repository.creates(
+  ///   newDataList,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  @override
+  Future<DataResponse<T>> creates<R>(
+    List<T> data, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? builder,
+  }) async {
+    if (isConnected) {
+      if (data.isValid) {
+        final finder = await _source(builder).creates(
+          builder: build,
+          encryptor: encryptor,
+          data: data,
+        );
+        return DataResponse(exception: finder.$1, status: finder.$2);
+      } else {
+        return DataResponse(status: Status.invalidId);
+      }
+    } else {
+      return DataResponse(status: Status.networkError);
+    }
+  }
+
+  /// Method to delete data by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.deleteById(
+  ///   'userId123',
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  @override
+  Future<DataResponse<T>> deleteById<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = DataResponse<T>();
+    if (isConnected) {
+      if (id.isNotEmpty) {
+        var finder = await _source(builder).deleteById(
+          builder: build,
+          encryptor: encryptor,
+          id: id,
+        );
+        return DataResponse(exception: finder.$1, status: finder.$2);
+      } else {
+        return DataResponse(status: Status.invalidId);
+      }
+    } else {
+      return DataResponse(status: Status.networkError);
+    }
+  }
+
+  /// Method to delete data by multiple IDs with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<String> idsToDelete = ['userId1', 'userId2'];
+  /// repository.deleteByIds(
+  ///   idsToDelete,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  @override
+  Future<DataResponse<T>> deleteByIds<R>(
+    List<String> ids, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? builder,
+  }) async {
+    if (isConnected) {
+      if (ids.isNotEmpty) {
+        var finder = await _source(builder).deleteByIds(
+          builder: build,
+          encryptor: encryptor,
+          ids: ids,
+        );
+        return DataResponse(exception: finder.$1, status: finder.$2);
+      } else {
+        return DataResponse(status: Status.invalidId);
+      }
+    } else {
+      return DataResponse(status: Status.networkError);
+    }
+  }
+
+  /// Method to get data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.get(
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  @override
+  Future<DataResponse<T>> get<R>({
+    bool isConnected = false,
+    bool forUpdates = false,
+    OnDataSourceBuilder<R>? builder,
+  }) async {
+    if (isConnected) {
+      var finder = await _query(builder).getAll(
+        builder: build,
+        encryptor: encryptor,
+        onlyUpdates: forUpdates,
+      );
+      return DataResponse(
+        result: finder.$1?.$1,
+        snapshot: finder.$1?.$2,
+        exception: finder.$2,
+        status: finder.$3,
+      );
+    } else {
+      return DataResponse(status: Status.networkError);
+    }
+  }
+
+  /// Method to get data by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.getById(
+  ///   'userId123',
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  @override
+  Future<DataResponse<T>> getById<R>(
+    String id, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? builder,
+  }) async {
     if (isConnected) {
       var finder = await _source(builder).getById(
         builder: build,
         encryptor: encryptor,
         id: id,
       );
-      if (finder.$1) {
-        return response.withData(finder.$2).withResult(finder.$3);
-      } else {
-        return response.withException(finder.$4, status: finder.$5);
-      }
+      return DataResponse(
+        data: finder.$1?.$1,
+        snapshot: finder.$1?.$2,
+        message: finder.$2,
+        status: finder.$3,
+      );
     } else {
-      return response.withStatus(Status.networkError);
+      return DataResponse(status: Status.networkError);
     }
   }
 
-  /// Use for fetch all data
+  /// Method to get data by multiple IDs with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<String> idsToRetrieve = ['userId1', 'userId2'];
+  /// repository.getByIds(
+  ///   idsToRetrieve,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
   @override
-  Future<DataResponse<T>> gets<R>({
+  Future<DataResponse<T>> getByIds<R>(
+    List<String> ids, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
     bool forUpdates = false,
+    OnDataSourceBuilder<R>? builder,
   }) async {
-    final response = DataResponse<T>();
     if (isConnected) {
-      var finder = await _query(builder).getBy(
+      var finder = await _source(builder).getByIds(
+        builder: build,
+        encryptor: encryptor,
+        ids: ids,
+      );
+      return DataResponse(
+        result: finder.$1?.$1,
+        snapshot: finder.$1?.$2,
+        message: finder.$2,
+        status: finder.$3,
+      );
+    } else {
+      return DataResponse(status: Status.networkError);
+    }
+  }
+
+  /// Method to get data by query with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<Query> queries = [Query.field('name', 'John')];
+  /// repository.getByQuery(
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  ///   queries: queries,
+  /// );
+  /// ```
+  @override
+  Future<DataResponse<T>> getByQuery<R>({
+    bool isConnected = false,
+    bool forUpdates = false,
+    OnDataSourceBuilder<R>? builder,
+    List<Query> queries = const [],
+    List<Selection> selections = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
+  }) async {
+    if (isConnected) {
+      var finder = await _query(builder).queryBy(
         builder: build,
         encryptor: encryptor,
         onlyUpdates: forUpdates,
+        queries: queries,
+        selections: selections,
+        sorts: sorts,
+        options: options,
       );
-      if (finder.$1) {
-        return response.withResult(finder.$2);
-      } else {
-        return response.withException(finder.$3, status: finder.$4);
-      }
+      return DataResponse(
+        result: finder.$1?.$1,
+        snapshot: finder.$1?.$2,
+        exception: finder.$2,
+        status: finder.$3,
+      );
     } else {
-      return response.withStatus(Status.networkError);
+      return DataResponse(status: Status.networkError);
     }
   }
 
-  /// Use for fetch all recent updated data
+  /// Stream method to listen for data changes with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.listen(
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
   @override
-  Future<DataResponse<T>> getUpdates<R>({
+  Stream<DataResponse<T>> listen<R>({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
-  }) {
-    return gets(
-      isConnected: isConnected,
-      forUpdates: true,
-      builder: builder,
-    );
-  }
-
-  /// Use for fetch single observable data when data update
-  @override
-  Stream<DataResponse<T>> live<R>(
-    String id, {
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
-  }) {
-    final controller = StreamController<DataResponse<T>>();
-    final response = DataResponse<T>();
-    if (isConnected) {
-      try {
-        _source(builder)
-            .liveById(builder: build, encryptor: encryptor, id: id)
-            .listen((finder) {
-          if (finder.$1) {
-            controller.add(response.withData(finder.$2));
-          } else {
-            controller.add(
-              response.withData(null, message: finder.$4, status: finder.$5),
-            );
-          }
-        });
-      } on fdb.FirebaseException catch (_) {
-        controller.add(response.withException(
-          _.message,
-          status: Status.failure,
-        ));
-      }
-    } else {
-      controller.add(response.withStatus(Status.networkError));
-    }
-    return controller.stream;
-  }
-
-  /// Use for fetch all observable data when data update
-  @override
-  Stream<DataResponse<T>> lives<R>({
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
     bool forUpdates = false,
+    OnDataSourceBuilder<R>? builder,
   }) {
     final controller = StreamController<DataResponse<T>>();
-    final response = DataResponse<T>();
     if (isConnected) {
       try {
         _query(builder)
@@ -340,51 +607,367 @@ abstract class FireStoreDataSource<T extends Entity>
           onlyUpdates: forUpdates,
         )
             .listen((finder) {
-          if (finder.$1) {
-            controller.add(response.withResult(finder.$2));
-          } else {
-            controller.add(
-              response.withResult(null, message: finder.$3, status: finder.$4),
-            );
-          }
+          controller.add(DataResponse(
+            result: finder.$1?.$1,
+            snapshot: finder.$1?.$2,
+            exception: finder.$2,
+            status: finder.$3,
+          ));
         });
       } on fdb.FirebaseException catch (_) {
-        controller.add(response.withException(
-          _.message,
+        controller.add(DataResponse(
+          exception: _.message,
           status: Status.failure,
         ));
       }
     } else {
-      controller.add(response.withStatus(Status.networkError));
+      controller.add(DataResponse(status: Status.networkError));
     }
     return controller.stream;
   }
 
-  /// Use for fetch data by query
+  /// Stream method to listen for data changes by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.listenById(
+  ///   'userId123',
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
   @override
-  Future<DataResponse<T>> query<R>({
+  Stream<DataResponse<T>> listenById<R>(
+    String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
-    List<Query> queries = const [],
-    List<Sorting> sorts = const [],
-    PagingOptions options = const FirestorePagingOptions.empty(),
-  }) async {
-    final response = DataResponse<T>();
+  }) {
+    final controller = StreamController<DataResponse<T>>();
     if (isConnected) {
-      var finder = await _query(builder).getByPaging(
-        builder: build,
-        encryptor: encryptor,
-        queries: queries,
-        sorts: sorts,
-        options: options,
-      );
-      if (finder.$1) {
-        return response.withResult(finder.$2);
-      } else {
-        return response.withException(finder.$3, status: finder.$4);
+      try {
+        _source(builder)
+            .liveById(builder: build, encryptor: encryptor, id: id)
+            .listen((finder) {
+          controller.add(DataResponse(
+            data: finder.$1?.$1,
+            snapshot: finder.$1?.$2,
+            message: finder.$2,
+            status: finder.$3,
+          ));
+        });
+      } on fdb.FirebaseException catch (_) {
+        controller.add(DataResponse(
+          exception: _.message,
+          status: Status.failure,
+        ));
       }
     } else {
-      return response.withStatus(Status.networkError);
+      controller.add(DataResponse(status: Status.networkError));
+    }
+    return controller.stream;
+  }
+
+  /// Stream method to listen for data changes by multiple IDs with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<String> idsToListen = ['userId1', 'userId2'];
+  /// repository.listenByIds(
+  ///   idsToListen,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  @override
+  Stream<DataResponse<T>> listenByIds<R>(
+    List<String> ids, {
+    bool isConnected = false,
+    bool forUpdates = false,
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    final controller = StreamController<DataResponse<T>>();
+    if (isConnected) {
+      try {
+        _source(builder)
+            .liveByIds(builder: build, encryptor: encryptor, ids: ids)
+            .listen((finder) {
+          controller.add(DataResponse(
+            result: finder.$1?.$1,
+            snapshot: finder.$1?.$2,
+            message: finder.$2,
+            status: finder.$3,
+          ));
+        });
+      } on fdb.FirebaseException catch (_) {
+        controller.add(DataResponse(
+          exception: _.message,
+          status: Status.failure,
+        ));
+      }
+    } else {
+      controller.add(DataResponse(status: Status.networkError));
+    }
+    return controller.stream;
+  }
+
+  /// Stream method to listen for data changes by query with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<Query> queries = [Query.field('name', 'John')];
+  /// repository.listenByQuery(
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  ///   queries: queries,
+  /// );
+  /// ```
+  @override
+  Stream<DataResponse<T>> listenByQuery<R>({
+    bool isConnected = false,
+    bool forUpdates = false,
+    OnDataSourceBuilder<R>? builder,
+    List<Query> queries = const [],
+    List<Selection> selections = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
+  }) {
+    final controller = StreamController<DataResponse<T>>();
+    if (isConnected) {
+      try {
+        _query(builder)
+            .liveByQuery(
+          builder: build,
+          encryptor: encryptor,
+          onlyUpdates: forUpdates,
+          queries: queries,
+          selections: selections,
+          sorts: sorts,
+          options: options,
+        )
+            .listen((finder) {
+          controller.add(DataResponse(
+            result: finder.$1?.$1,
+            snapshot: finder.$1?.$2,
+            exception: finder.$2,
+            status: finder.$3,
+          ));
+        });
+      } on fdb.FirebaseException catch (_) {
+        controller.add(DataResponse(
+          exception: _.message,
+          status: Status.failure,
+        ));
+      }
+    } else {
+      controller.add(DataResponse(status: Status.networkError));
+    }
+    return controller.stream;
+  }
+
+  /// Method to check data by query with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// Checker checker = Checker(field: 'status', value: 'active');
+  /// repository.search(
+  ///   checker,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  @override
+  Future<DataResponse<T>> search<R>(
+    Checker checker, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? builder,
+  }) async {
+    if (isConnected) {
+      var finder = await _source(builder).searchBy(
+        builder: build,
+        encryptor: encryptor,
+        checker: checker,
+      );
+      return DataResponse(
+        result: finder.$1?.$1,
+        snapshot: finder.$1?.$2,
+        exception: finder.$2,
+        status: finder.$3,
+      );
+    } else {
+      return DataResponse(status: Status.networkError);
+    }
+  }
+
+  /// Method to update data by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.updateById(
+  ///   'userId123',
+  ///   {'status': 'inactive'},
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  @override
+  Future<DataResponse<T>> updateById<R>(
+    String id,
+    Map<String, dynamic> data, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? builder,
+  }) async {
+    if (isConnected) {
+      if (id.isNotEmpty) {
+        final finder = await _source(builder).updateById(
+          builder: build,
+          encryptor: encryptor,
+          id: id,
+          data: data,
+        );
+        return DataResponse(exception: finder.$1, status: finder.$2);
+      } else {
+        return DataResponse(status: Status.invalidId);
+      }
+    } else {
+      return DataResponse(status: Status.networkError);
+    }
+  }
+
+  /// Method to update data by multiple IDs with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<UpdatingInfo> updates = [
+  ///   UpdatingInfo('userId1', {'status': 'inactive'}),
+  ///   UpdatingInfo('userId2', {'status': 'active'}),
+  /// ];
+  /// repository.updateByIds(
+  ///   updates,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  @override
+  Future<DataResponse<T>> updateByIds<R>(
+    List<UpdatingInfo> updates, {
+    bool isConnected = false,
+    OnDataSourceBuilder<R>? builder,
+  }) async {
+    if (isConnected) {
+      if (updates.isNotEmpty) {
+        final finder = await _source(builder).updateByIds(
+          builder: build,
+          encryptor: encryptor,
+          data: updates,
+        );
+        return DataResponse(exception: finder.$1, status: finder.$2);
+      } else {
+        return DataResponse(status: Status.invalidId);
+      }
+    } else {
+      return DataResponse(status: Status.networkError);
     }
   }
 }

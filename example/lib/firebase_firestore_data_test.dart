@@ -41,7 +41,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
               children: [
                 ElevatedButton(
                   child: const Text("Availability"),
-                  onPressed: () => controller.isAvailable("1"),
+                  onPressed: () => controller.checkById("1"),
                 ),
                 ElevatedButton(
                   child: const Text("Insert"),
@@ -54,7 +54,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
                 ElevatedButton(
                   child: const Text("Update"),
                   onPressed: () {
-                    controller.update(
+                    controller.updateById(
                       id: p1.id,
                       data: p1
                           .copyWith(
@@ -66,7 +66,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
                   },
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.delete("1"),
+                  onPressed: () => controller.deleteById("1"),
                   child: const Text("Delete"),
                 ),
                 ElevatedButton(
@@ -74,11 +74,11 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
                   child: const Text("Clear"),
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.get("1"),
+                  onPressed: () => controller.getById("1"),
                   child: const Text("Get"),
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.gets(),
+                  onPressed: () => controller.get(),
                   child: const Text("Gets"),
                 ),
               ],
@@ -105,7 +105,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
               color: Colors.grey.withAlpha(50),
               margin: const EdgeInsets.symmetric(vertical: 24),
               child: StreamBuilder(
-                  stream: controller.live("1"),
+                  stream: controller.listenById("1"),
                   builder: (context, snapshot) {
                     var value = snapshot.data ?? DataResponse();
                     return Text(
@@ -121,7 +121,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
               color: Colors.grey.withAlpha(50),
               margin: const EdgeInsets.symmetric(vertical: 24),
               child: StreamBuilder(
-                stream: controller.lives(),
+                stream: controller.listen(),
                 builder: (context, snapshot) {
                   var value = snapshot.data ?? DataResponse();
                   return Text(
@@ -141,7 +141,7 @@ class _FirebaseFireStoreDataTestState extends State<FirebaseFireStoreDataTest> {
 /// Step - 2
 /// When you use remote database (ex. Firebase Firestore, Firebase Realtime, Api, Encrypted Api data)
 /// Use for remote data => insert, update, delete, get, gets, live, lives, clear
-class RemoteProductDataSource extends FireStoreDataSource<Product> {
+class RemoteProductDataSource extends FirestoreDataSource<Product> {
   RemoteProductDataSource({
     super.path = "products",
     super.encryptor = const DataEncryptor(),
@@ -206,9 +206,10 @@ class Product extends Data {
 
   @override
   Map<String, dynamic> get source {
-    return super.source..addAll({
-      "name": name ?? "Name",
-      "price": price,
-    });
+    return super.source
+      ..addAll({
+        "name": name ?? "Name",
+        "price": price,
+      });
   }
 }

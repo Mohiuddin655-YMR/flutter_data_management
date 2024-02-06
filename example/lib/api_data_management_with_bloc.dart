@@ -24,12 +24,12 @@ class Application extends StatelessWidget {
           child: DataControllers(
             controllers: [
               /// Create data controller by data source
-              RemoteDataController<Post>.fromSource(
+              RemoteDataController<Post>(RemoteDataRepositoryImpl(
                 source: PostDataSource(),
 
                 /// (Optional) if you need to backup your data when network unavailable
                 backup: PostBackupSource(),
-              ),
+              )),
             ],
             child: const ApiDataTest(),
           ),
@@ -79,7 +79,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
               children: [
                 ElevatedButton(
                   child: const Text("Availability"),
-                  onPressed: () => controller.isAvailable("1"),
+                  onPressed: () => controller.checkById("1"),
                 ),
                 ElevatedButton(
                   child: const Text("Insert"),
@@ -92,7 +92,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
                 ElevatedButton(
                   child: const Text("Update"),
                   onPressed: () {
-                    controller.update(
+                    controller.updateById(
                       id: "1",
                       data: p1
                           .copyWith(
@@ -104,7 +104,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
                   },
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.delete("1"),
+                  onPressed: () => controller.deleteById("1"),
                   child: const Text("Delete"),
                 ),
                 ElevatedButton(
@@ -112,11 +112,11 @@ class _ApiDataTestState extends State<ApiDataTest> {
                   child: const Text("Clear"),
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.get("1"),
+                  onPressed: () => controller.getById("1"),
                   child: const Text("Get"),
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.gets(),
+                  onPressed: () => controller.get(),
                   child: const Text("Gets"),
                 ),
               ],
@@ -143,7 +143,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
               color: Colors.grey.withAlpha(50),
               margin: const EdgeInsets.symmetric(vertical: 24),
               child: StreamBuilder(
-                  stream: controller.live("1"),
+                  stream: controller.listenById("1"),
                   builder: (context, snapshot) {
                     var value = snapshot.data ?? DataResponse();
                     return Text(
@@ -159,7 +159,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
               color: Colors.grey.withAlpha(50),
               margin: const EdgeInsets.symmetric(vertical: 24),
               child: StreamBuilder(
-                stream: controller.lives(),
+                stream: controller.listen(),
                 builder: (context, snapshot) {
                   var value = snapshot.data ?? DataResponse();
                   return Text(
@@ -173,22 +173,6 @@ class _ApiDataTestState extends State<ApiDataTest> {
         ),
       ),
     );
-  }
-}
-
-/// Step - 4 (Optional)
-/// If you need to use any custom data managing system then you can create the class
-/// or use directly "RemoteDataHandlerImpl<Post>"
-class PostHandler extends RemoteDataHandlerImpl<Post> {
-  final PostRepository postRepository;
-
-  PostHandler({
-    required this.postRepository,
-  }) : super(repository: postRepository);
-
-  /// OPTIONAL FUNCTION
-  Future<DataResponse<Post>> fetchInnerData() {
-    return postRepository.fetchInnerData();
   }
 }
 
@@ -209,13 +193,13 @@ class PostRepository extends RemoteDataRepositoryImpl<Post> {
     }
 
     if (isCacheMode && isLocal) {
-      return backup!.gets(builder: builder);
+      return backup!.get(builder: builder);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return backup!.gets(builder: builder);
+        return backup!.get(builder: builder);
       } else {
-        return source.gets(
+        return source.get(
           isConnected: connected,
           builder: builder,
         );

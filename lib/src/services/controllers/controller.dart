@@ -3,13 +3,13 @@ import 'package:flutter_andomie/core.dart';
 
 import '../../core/configs.dart';
 import '../../core/typedefs.dart';
-import '../../data/handlers/local_data_handler.dart';
-import '../../data/handlers/remote_data_handler.dart';
+import '../../data/repositories/local_data_repository.dart';
+import '../../data/repositories/remote_data_repository.dart';
+import '../../models/checker.dart';
+import '../../models/updating_info.dart';
 import '../../utils/errors.dart';
 import '../../utils/response.dart';
 import '../../widgets/provider.dart';
-import '../handlers/local_data_handler.dart';
-import '../handlers/remote_data_handler.dart';
 import '../repositories/local_data_repository.dart';
 import '../repositories/remote_data_repository.dart';
 import '../sources/local_data_source.dart';
@@ -18,44 +18,128 @@ import '../sources/remote_data_source.dart';
 part '../../../src/data/controllers/local_data_controller.dart';
 part '../../../src/data/controllers/remote_data_controller.dart';
 
+/// A generic data controller that extends [ValueNotifier<DataResponse<T>>].
+/// This controller is designed to manage and notify the state of data responses for entities of type [T].
+///
+/// Example:
+///
+/// ### A data source for handling cached data operations.
+///
+/// - Make a local data source class for handle cart json data
+///
+/// ```dart
+/// class LocalCartDataSource extends LocalDataSourceImpl<Cart> {
+///   // Implement local data source operations for add to cart entities.
+/// }
+///
+/// ```dart
+/// DataController<Cart> cartController = DataController.fromLocalRepository(
+///   repository: LocalDataRepository<Cart>.create(source: LocalCartDataSource()),
+/// );
+/// ```
+///
+/// ### A data source for handling remote database operations.
+///
+/// Example:
+///
+/// - Make a remote data source class for handle user json data
+///
+/// ```dart
+/// class RemoteUserDataSource extends FirestoreDataSource {
+///   // Implement Firestore data source operations for User entities.
+/// }
+/// ```
+/// ```dart
+/// DataController userController = DataController.fromRemoteRepository(
+///   repository: RemoteDataRepository.create(source: RemoteUserDataSource()),
+/// );
+/// ```
 abstract class DataController<T extends Entity>
     extends ValueNotifier<DataResponse<T>> {
+  /// Protected constructor for creating a [DataController] with an initial [DataResponse].
   DataController._() : super(DataResponse<T>());
 
+  /// Factory method to obtain a [DataController] from a [BuildContext].
+  ///
+  /// Parameters:
+  /// - [context]: The BuildContext from which to retrieve the DataController.
+  ///
+  /// Example:
+  /// ```dart
+  /// DataController userController = DataController.of(context);
+  /// ```
   factory DataController.of(BuildContext context) {
     return DataControllers.of<DataController<T>>(context);
   }
 
-  factory DataController.fromLocalHandler({
-    required LocalDataHandler<T> handler,
-  }) {
-    return DataController._local(handler: handler);
-  }
-
+  /// Factory method to create a [DataController] associated with a local data repository.
+  ///
+  /// Parameters:
+  /// - [repository]: The local data repository.
+  ///
+  /// Example:
+  /// ```dart
+  /// DataController userController = DataController.fromLocalRepository(
+  ///   repository: LocalDataRepository(source: LocalDatabaseDataSource()),
+  /// );
+  /// ```
   factory DataController.fromLocalRepository({
     required LocalDataRepository<T> repository,
   }) {
     return DataController._local(repository: repository);
   }
 
+  /// Factory method to create a [DataController] associated with a local data source.
+  ///
+  /// Parameters:
+  /// - [source]: The local data source.
+  ///
+  /// Example:
+  /// ```dart
+  /// DataController userController = DataController.fromLocalSource(
+  ///   source: LocalDatabaseDataSource(),
+  /// );
+  /// ```
   factory DataController.fromLocalSource({
     required LocalDataSource<T> source,
   }) {
     return DataController._local(source: source);
   }
 
-  factory DataController.fromRemoteHandler({
-    required RemoteDataHandler<T> handler,
-  }) {
-    return DataController._remote(handler: handler);
-  }
-
+  /// Factory method to create a [DataController] associated with a remote data repository.
+  ///
+  /// Parameters:
+  /// - [repository]: The remote data repository.
+  ///
+  /// Example:
+  /// ```dart
+  /// DataController userController = DataController.fromRemoteRepository(
+  ///   repository: RemoteDataRepository(source: RemoteApiDataSource()),
+  /// );
+  /// ```
   factory DataController.fromRemoteRepository({
     required RemoteDataRepository<T> repository,
   }) {
     return DataController._remote(repository: repository);
   }
 
+  /// Factory method to create a [DataController] associated with a remote data source.
+  ///
+  /// Parameters:
+  /// - [source]: The remote data source.
+  /// - [connectivity]: An optional connectivity provider for checking network connectivity.
+  /// - [backup]: An optional local backup data source.
+  /// - [isCacheMode]: Flag indicating whether the controller should operate in cache mode.
+  ///
+  /// Example:
+  /// ```dart
+  /// DataController userController = DataController.fromRemoteSource(
+  ///   source: RemoteApiDataSource(),
+  ///   backup: LocalDatabaseDataSource(),
+  ///   connectivity: ConnectivityProvider(),
+  ///   isCacheMode: true,
+  /// );
+  /// ```
   factory DataController.fromRemoteSource({
     required RemoteDataSource<T> source,
     ConnectivityProvider? connectivity,
@@ -71,41 +155,29 @@ abstract class DataController<T extends Entity>
   }
 
   factory DataController._local({
-    LocalDataHandler<T>? handler,
     LocalDataRepository<T>? repository,
     LocalDataSource<T>? source,
   }) {
-    if (handler != null) {
-      return LocalDataController(handler);
-    } else if (repository != null) {
-      return LocalDataController(
-        LocalDataHandlerImpl<T>(repository: repository),
-      );
+    if (repository != null) {
+      return LocalDataController(repository);
     } else if (source != null) {
-      return LocalDataController(
-        LocalDataHandlerImpl<T>.fromSource(source),
-      );
+      return LocalDataController(LocalDataRepositoryImpl<T>(source: source));
     } else {
       throw const DataException("Data controller not initialized!");
     }
   }
 
   factory DataController._remote({
-    RemoteDataHandler<T>? handler,
     RemoteDataRepository<T>? repository,
     RemoteDataSource<T>? source,
     LocalDataSource<T>? backup,
     ConnectivityProvider? connectivity,
     bool isCacheMode = false,
   }) {
-    if (handler != null) {
-      return RemoteDataController(handler);
-    } else if (repository != null) {
-      return RemoteDataController(
-        RemoteDataHandlerImpl<T>(repository: repository),
-      );
+    if (repository != null) {
+      return RemoteDataController(repository);
     } else if (source != null) {
-      return RemoteDataController(RemoteDataHandlerImpl<T>.fromSource(
+      return RemoteDataController(RemoteDataRepositoryImpl<T>(
         source: source,
         backup: backup,
         connectivity: connectivity,
@@ -116,70 +188,7 @@ abstract class DataController<T extends Entity>
     }
   }
 
-  // Use for check current data
-  Future<DataResponse<T>> isAvailable<R>(
-    String id, {
-    OnDataSourceBuilder<R>? source,
-  });
-
-  // Use for create single data
-  Future<DataResponse<T>> create<R>(
-    T data, {
-    OnDataSourceBuilder<R>? source,
-  });
-
-  // Use for create multiple data
-  Future<DataResponse<T>> creates<R>(
-    List<T> data, {
-    OnDataSourceBuilder<R>? source,
-  });
-
-  // Use for update single data
-  Future<DataResponse<T>> update<R>({
-    required String id,
-    required Map<String, dynamic> data,
-    OnDataSourceBuilder<R>? source,
-  });
-
-  Future<DataResponse<T>> delete<R>(
-    String id, {
-    OnDataSourceBuilder<R>? source,
-  });
-
-  Future<DataResponse<T>> clear<R>({
-    OnDataSourceBuilder<R>? source,
-  });
-
-  Future<DataResponse<T>> get<R>(
-    String id, {
-    OnDataSourceBuilder<R>? source,
-  });
-
-  Future<DataResponse<T>> gets<R>({
-    OnDataSourceBuilder<R>? source,
-  });
-
-  Future<DataResponse<T>> getUpdates<R>({
-    OnDataSourceBuilder<R>? source,
-  });
-
-  Stream<Response<T>> live<R>(
-    String id, {
-    OnDataSourceBuilder<R>? source,
-  });
-
-  Stream<Response<T>> lives<R>({
-    OnDataSourceBuilder<R>? source,
-  });
-
-  Future<DataResponse<T>> query<R>({
-    OnDataSourceBuilder<R>? builder,
-    List<Query> queries = const [],
-    List<Sorting> sorts = const [],
-    PagingOptions options = const PagingOptionsImpl(),
-  });
-
-  DataResponse<T> notify(
+  DataResponse<T> emit(
     DataResponse<T> value, [
     bool forceNotify = false,
   ]) {
@@ -188,18 +197,615 @@ abstract class DataController<T extends Entity>
     return value;
   }
 
-  Future<DataResponse<T>> _change<R>(
+  Future<DataResponse<T>> notifier<R>(
     Future<DataResponse<T>> Function() callback,
   ) async {
-    notify(value.copy(loading: true, status: Status.loading));
+    emit(value.copy(loading: true, status: Status.loading));
     try {
       var result = await callback();
-      return notify(value.from(result));
+      return emit(value.from(result));
     } catch (_) {
-      return notify(value.copy(
+      return emit(value.copy(
         exception: _.toString(),
         status: Status.failure,
       ));
     }
+  }
+
+  /// Method to check data by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.checkById(
+  ///   'userId123',
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Future<DataResponse<T>> checkById<R>(
+    String id, {
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('checkById method is not implemented');
+  }
+
+  /// Method to clear data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.clear(
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Future<DataResponse<T>> clear<R>({
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('clear method is not implemented');
+  }
+
+  /// Method to create data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// T newData = //...;
+  /// repository.create(
+  ///   newData,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Future<DataResponse<T>> create<R>(
+    T data, {
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('create method is not implemented');
+  }
+
+  /// Method to create multiple data entries with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<T> newDataList = //...;
+  /// repository.creates(
+  ///   newDataList,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Future<DataResponse<T>> creates<R>(
+    List<T> data, {
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('creates method is not implemented');
+  }
+
+  /// Method to delete data by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.deleteById(
+  ///   'userId123',
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Future<DataResponse<T>> deleteById<R>(
+    String id, {
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('deleteById method is not implemented');
+  }
+
+  /// Method to delete data by multiple IDs with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<String> idsToDelete = ['userId1', 'userId2'];
+  /// repository.deleteByIds(
+  ///   idsToDelete,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Future<DataResponse<T>> deleteByIds<R>(
+    List<String> ids, {
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('deleteByIds method is not implemented');
+  }
+
+  /// Method to get data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.get(
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Future<DataResponse<T>> get<R>({
+    bool forUpdates = false,
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('get method is not implemented');
+  }
+
+  /// Method to get data by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.getById(
+  ///   'userId123',
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Future<DataResponse<T>> getById<R>(
+    String id, {
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('getById method is not implemented');
+  }
+
+  /// Method to get data by multiple IDs with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<String> idsToRetrieve = ['userId1', 'userId2'];
+  /// repository.getByIds(
+  ///   idsToRetrieve,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Future<DataResponse<T>> getByIds<R>(
+    List<String> ids, {
+    bool forUpdates = false,
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('getByIds method is not implemented');
+  }
+
+  /// Method to get data by query with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<Query> queries = [Query.field('name', 'John')];
+  /// repository.getByQuery(
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  ///   queries: queries,
+  /// );
+  /// ```
+  Future<DataResponse<T>> getByQuery<R>({
+    OnDataSourceBuilder<R>? builder,
+    bool forUpdates = false,
+    List<Query> queries = const [],
+    List<Selection> selections = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
+  }) {
+    throw const DataException('getByQuery method is not implemented');
+  }
+
+  /// Stream method to listen for data changes with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.listen(
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Stream<DataResponse<T>> listen<R>({
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('listen method is not implemented');
+  }
+
+  /// Stream method to listen for data changes by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.listenById(
+  ///   'userId123',
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Stream<DataResponse<T>> listenById<R>(
+    String id, {
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('listenById method is not implemented');
+  }
+
+  /// Stream method to listen for data changes by multiple IDs with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<String> idsToListen = ['userId1', 'userId2'];
+  /// repository.listenByIds(
+  ///   idsToListen,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Stream<DataResponse<T>> listenByIds<R>(
+    List<String> ids, {
+    bool forUpdates = false,
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('listenByIds method is not implemented');
+  }
+
+  /// Stream method to listen for data changes by query with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<Query> queries = [Query.field('name', 'John')];
+  /// repository.listenByQuery(
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  ///   queries: queries,
+  /// );
+  /// ```
+  Stream<DataResponse<T>> listenByQuery<R>({
+    OnDataSourceBuilder<R>? builder,
+    bool forUpdates = false,
+    List<Query> queries = const [],
+    List<Selection> selections = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
+  }) {
+    throw const DataException('listenByQuery method is not implemented');
+  }
+
+  /// Method to check data by query with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// Checker checker = Checker(field: 'status', value: 'active');
+  /// repository.search(
+  ///   checker,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Future<DataResponse<T>> search<R>(
+    Checker checker, {
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('checkByQuery method is not implemented');
+  }
+
+  /// Method to update data by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.updateById(
+  ///   'userId123',
+  ///   {'status': 'inactive'},
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Future<DataResponse<T>> updateById<R>({
+    required String id,
+    required Map<String, dynamic> data,
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('updateById method is not implemented');
+  }
+
+  /// Method to update data by multiple IDs with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<UpdatingInfo> updates = [
+  ///   UpdatingInfo('userId1', {'status': 'inactive'}),
+  ///   UpdatingInfo('userId2', {'status': 'active'}),
+  /// ];
+  /// repository.updateByIds(
+  ///   updates,
+  ///   builder: (dataSource) {
+  ///     // Using Purpose: Build the data source path or URL based on the data source type.
+  ///     if (dataSource is Map<String, dynamic>) {
+  ///       // For Local database
+  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
+  ///     } else if (dataSource is CollectionReference) {
+  ///       // For Firestore database
+  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
+  ///     } else if (dataSource is DatabaseReference) {
+  ///       // For Realtime database
+  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
+  ///     } else if (dataSource is String) {
+  ///       // For Api endpoint
+  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
+  ///     } else {
+  ///       // Back to default source from use case
+  ///       return null;
+  ///     }
+  ///   },
+  /// );
+  /// ```
+  Future<DataResponse<T>> updateByIds<R>(
+    List<UpdatingInfo> updates, {
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    throw const DataException('updateByIds method is not implemented');
   }
 }

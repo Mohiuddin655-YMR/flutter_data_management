@@ -8,15 +8,18 @@ import '../../core/typedefs.dart';
 import '../../services/sources/remote_data_source.dart';
 import '../../utils/response.dart';
 
-part '../helpers/api_base_config.dart';
-part '../helpers/api_data_finder.dart';
-part '../helpers/api_extension.dart';
-part '../helpers/api_path_extension.dart';
-part '../helpers/api_query_config.dart';
+part '../base/api/api_base_config.dart';
+part '../base/api/api_data_finder.dart';
+part '../base/api/api_extension.dart';
+part '../base/api/api_path_extension.dart';
+part '../base/api/api_query_config.dart';
 
 ///
 /// You can use base class [Data] without [Entity]
 ///
+
+typedef AS = String;
+
 abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   final Api api;
   final String _path;
@@ -43,7 +46,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for check current data
   @override
-  Future<DataResponse<T>> isAvailable<R>(
+  Future<DataResponse<T>> checkById<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
@@ -51,7 +54,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
     final response = DataResponse<T>();
     if (isConnected) {
       if (id.isValid) {
-        var finder = await database._findById(
+        var finder = await database.getById(
           api: api,
           builder: build,
           encryptor: encryptor,
@@ -74,7 +77,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for create single data
   @override
-  Future<DataResponse<T>> insert<R>(
+  Future<DataResponse<T>> create<R>(
     T data, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
@@ -82,7 +85,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
     final response = DataResponse<T>();
     if (isConnected) {
       if (data.id.isValid) {
-        final finder = await database._setByOnce(
+        final finder = await database.insert(
           api: api,
           builder: build,
           encryptor: encryptor,
@@ -107,7 +110,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for create multiple data
   @override
-  Future<DataResponse<T>> inserts<R>(
+  Future<DataResponse<T>> creates<R>(
     List<T> data, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
@@ -115,7 +118,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
     final response = DataResponse<T>();
     if (isConnected) {
       if (data.isValid) {
-        final finder = await database._setByMultiple(
+        final finder = await database.inserts(
           api: api,
           builder: build,
           encryptor: encryptor,
@@ -140,7 +143,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for update single data
   @override
-  Future<DataResponse<T>> update<R>(
+  Future<DataResponse<T>> updateById<R>(
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
@@ -149,7 +152,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
     final response = DataResponse<T>();
     if (isConnected) {
       if (id.isValid) {
-        final finder = await database._updateById(
+        final finder = await database.update(
           api: api,
           builder: build,
           encryptor: encryptor,
@@ -175,7 +178,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for delete single data
   @override
-  Future<DataResponse<T>> delete<R>(
+  Future<DataResponse<T>> deleteById<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
@@ -183,7 +186,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
     final response = DataResponse<T>();
     if (isConnected) {
       if (id.isValid) {
-        var finder = await database._deleteById(
+        var finder = await database.deleteById(
           api: api,
           builder: build,
           encryptor: encryptor,
@@ -214,7 +217,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   }) async {
     final response = DataResponse<T>();
     if (isConnected) {
-      var finder = await database._clearBy(
+      var finder = await database.clear(
         api: api,
         builder: build,
         encryptor: encryptor,
@@ -234,14 +237,14 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for fetch single data
   @override
-  Future<DataResponse<T>> get<R>(
+  Future<DataResponse<T>> getById<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
   }) async {
     final response = DataResponse<T>();
     if (isConnected) {
-      var finder = await database._findById(
+      var finder = await database.getById(
         api: api,
         builder: build,
         encryptor: encryptor,
@@ -260,14 +263,14 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for fetch all data
   @override
-  Future<DataResponse<T>> gets<R>({
+  Future<DataResponse<T>> get<R>({
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
     bool forUpdates = false,
   }) async {
     final response = DataResponse<T>();
     if (isConnected) {
-      var finder = await database._getBy(
+      var finder = await database.gets(
         api: api,
         builder: build,
         encryptor: encryptor,
@@ -283,22 +286,76 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
     }
   }
 
-  /// Use for fetch all recent updated data
+  /// Use for fetch data by paging
   @override
-  Future<DataResponse<T>> getUpdates<R>({
+  Future<DataResponse<T>> getByQuery<R>({
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
+    bool forUpdates = false,
+    List<Query> queries = const [],
+    List<Selection> selections = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const ApiPagingOptions.empty(),
+  }) async {
+    final response = DataResponse<T>();
+    if (isConnected) {
+      var finder = await database.getsByQuery(
+        api: api,
+        builder: build,
+        encryptor: encryptor,
+        path: _source(builder),
+        queries: queries,
+        sorts: sorts,
+        options: options,
+      );
+      if (finder.$1) {
+        return response.withResult(finder.$2);
+      } else {
+        return response.withException(finder.$3, status: finder.$4);
+      }
+    } else {
+      return response.withStatus(Status.networkError);
+    }
+  }
+
+  /// Use for fetch query observable data when changes
+  @override
+  Stream<DataResponse<T>> listenByQuery<R>({
+    OnDataSourceBuilder<R>? builder,
+    bool isConnected = false,
+    bool forUpdates = false,
+    List<Query> queries = const [],
+    List<Selection> selections = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
   }) {
-    return gets(
-      isConnected: isConnected,
-      forUpdates: true,
-      builder: builder,
-    );
+    final controller = StreamController<DataResponse<T>>();
+    final response = DataResponse<T>();
+    if (isConnected) {
+      database
+          .getsByQueryRealtime(
+              api: api,
+              builder: build,
+              encryptor: encryptor,
+              path: _source(builder))
+          .listen((finder) {
+        if (finder.$1) {
+          controller.add(response.withResult(finder.$2));
+        } else {
+          controller.add(
+            response.withResult(null, message: finder.$3, status: finder.$4),
+          );
+        }
+      });
+    } else {
+      controller.add(response.withStatus(Status.networkError));
+    }
+    return controller.stream;
   }
 
   /// Use for fetch single observable data when data update
   @override
-  Stream<DataResponse<T>> live<R>(
+  Stream<DataResponse<T>> listenById<R>(
     String id, {
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
@@ -307,7 +364,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
     final response = DataResponse<T>();
     if (isConnected) {
       database
-          ._liveById(
+          .getByRealtime(
               api: api,
               builder: build,
               encryptor: encryptor,
@@ -330,7 +387,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for fetch all observable data when data update
   @override
-  Stream<DataResponse<T>> lives<R>({
+  Stream<DataResponse<T>> listen<R>({
     bool isConnected = false,
     OnDataSourceBuilder<R>? builder,
     bool forUpdates = false,
@@ -339,7 +396,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
     final response = DataResponse<T>();
     if (isConnected) {
       database
-          ._liveBy(
+          .getsByQueryRealtime(
               api: api,
               builder: build,
               encryptor: encryptor,
@@ -357,35 +414,5 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
       controller.add(response.withStatus(Status.networkError));
     }
     return controller.stream;
-  }
-
-  /// Use for fetch data by paging
-  @override
-  Future<DataResponse<T>> query<R>({
-    bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
-    List<Query> queries = const [],
-    List<Sorting> sorts = const [],
-    PagingOptions options = const ApiPagingOptions.empty(),
-  }) async {
-    final response = DataResponse<T>();
-    if (isConnected) {
-      var finder = await database._queryBy(
-        api: api,
-        builder: build,
-        encryptor: encryptor,
-        path: _source(builder),
-        queries: queries,
-        sorts: sorts,
-        options: options,
-      );
-      if (finder.$1) {
-        return response.withResult(finder.$2);
-      } else {
-        return response.withException(finder.$3, status: finder.$4);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
   }
 }

@@ -1,9 +1,22 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_andomie/core.dart';
 
 ///
 /// You can use base class [Data] without [Entity]
 ///
 class DataResponse<T extends Entity> extends Response<T> {
+  bool get isExisted => data != null || result.isNotEmpty;
+
+  dynamic get lastSnapshot {
+    if (snapshot is List<DocumentSnapshot<Object?>>) {
+      return (snapshot as List<DocumentSnapshot<Object?>>).lastOrNull;
+    } else if (snapshot is List<DocumentSnapshot<Object?>>) {
+      return (snapshot as List<DocumentSnapshot<Object?>>).lastOrNull;
+    } else {
+      return null;
+    }
+  }
+
   DataResponse({
     super.requestCode,
     super.available,

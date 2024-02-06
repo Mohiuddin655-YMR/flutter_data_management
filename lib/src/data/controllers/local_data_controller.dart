@@ -4,111 +4,106 @@ part of '../../services/controllers/controller.dart';
 /// You can use [Data] without [Entity]
 ///
 class LocalDataController<T extends Entity> extends DataController<T> {
-  final LocalDataHandler<T> handler;
+  final LocalDataRepository<T> repository;
 
-  LocalDataController(this.handler) : super._();
-
-  LocalDataController.fromSource({
-    required LocalDataSource<T> source,
-  })  : handler = LocalDataHandlerImpl<T>.fromSource(source),
-        super._();
+  LocalDataController(this.repository) : super._();
 
   /// Use for check current data
   @override
-  Future<DataResponse<T>> isAvailable<R>(
+  Future<DataResponse<T>> checkById<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return _change(() => handler.isAvailable(id, builder: source));
+    return notifier(() => repository.checkById(id, builder: builder));
   }
 
   /// Use for create single data
   @override
   Future<DataResponse<T>> create<R>(
     T data, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return _change(() => handler.insert(data, builder: source));
+    return notifier(() => repository.create(data, builder: builder));
   }
 
   /// Use for create multiple data
   @override
   Future<DataResponse<T>> creates<R>(
     List<T> data, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return _change(() => handler.inserts(data, builder: source));
+    return notifier(() => repository.creates(data, builder: builder));
   }
 
   /// Use for update single data
   @override
-  Future<DataResponse<T>> update<R>({
+  Future<DataResponse<T>> updateById<R>({
     required String id,
     required Map<String, dynamic> data,
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return _change(() => handler.update(id, data, builder: source));
+    return notifier(() => repository.updateById(id, data, builder: builder));
   }
 
   @override
-  Future<DataResponse<T>> delete<R>(
+  Future<DataResponse<T>> deleteById<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return _change(() => handler.delete(id, builder: source));
+    return notifier(() => repository.deleteById(id, builder: builder));
   }
 
   @override
   Future<DataResponse<T>> clear<R>({
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) async {
-    return _change(() => handler.clear(builder: source));
+    return notifier(() => repository.clear(builder: builder));
   }
 
   @override
-  Future<DataResponse<T>> get<R>(
+  Future<DataResponse<T>> getById<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return _change(() => handler.get(id, builder: source));
+    return notifier(() => repository.getById(id, builder: builder));
   }
 
   @override
-  Future<DataResponse<T>> gets<R>({
-    OnDataSourceBuilder<R>? source,
+  Future<DataResponse<T>> get<R>({
+    bool forUpdates = false,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return _change(() => handler.gets(builder: source));
+    return notifier(() {
+      return repository.get(builder: builder, forUpdates: forUpdates);
+    });
   }
 
   @override
-  Future<DataResponse<T>> getUpdates<R>({
-    OnDataSourceBuilder<R>? source,
-  }) {
-    return _change(() => handler.getUpdates(builder: source));
-  }
-
-  @override
-  Stream<Response<T>> live<R>(
+  Stream<DataResponse<T>> listenById<R>(
     String id, {
-    OnDataSourceBuilder<R>? source,
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return handler.live(id, builder: source);
+    return repository.listenById(id, builder: builder);
   }
 
   @override
-  Stream<Response<T>> lives<R>({
-    OnDataSourceBuilder<R>? source,
+  Stream<DataResponse<T>> listen<R>({
+    OnDataSourceBuilder<R>? builder,
   }) {
-    return handler.lives(builder: source);
+    return repository.listen(builder: builder);
   }
 
   @override
-  Future<DataResponse<T>> query<R>({
+  Future<DataResponse<T>> getByQuery<R>({
+    bool forUpdates = false,
     OnDataSourceBuilder<R>? builder,
     List<Query> queries = const [],
+    List<Selection> selections = const [],
     List<Sorting> sorts = const [],
     PagingOptions options = const PagingOptionsImpl(),
   }) {
-    return _change(() => handler.gets(builder: builder));
+    return notifier(() {
+      return repository.get(builder: builder, forUpdates: forUpdates);
+    });
   }
 }

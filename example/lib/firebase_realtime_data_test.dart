@@ -39,7 +39,7 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
               children: [
                 ElevatedButton(
                   child: const Text("Availability"),
-                  onPressed: () => controller.isAvailable("1"),
+                  onPressed: () => controller.checkById("1"),
                 ),
                 ElevatedButton(
                   child: const Text("Insert"),
@@ -52,14 +52,14 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
                 ElevatedButton(
                   child: const Text("Update"),
                   onPressed: () {
-                    controller.update(
+                    controller.updateById(
                       id: p1.id,
                       data: p1.copyWith(name: "Mr. X (Updated)").source,
                     );
                   },
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.delete("1"),
+                  onPressed: () => controller.deleteById("1"),
                   child: const Text("Delete"),
                 ),
                 ElevatedButton(
@@ -67,11 +67,11 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
                   child: const Text("Clear"),
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.get("1"),
+                  onPressed: () => controller.getById("1"),
                   child: const Text("Get"),
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.gets(),
+                  onPressed: () => controller.get(),
                   child: const Text("Gets"),
                 ),
               ],
@@ -98,7 +98,7 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
               color: Colors.grey.withAlpha(50),
               margin: const EdgeInsets.symmetric(vertical: 24),
               child: StreamBuilder(
-                  stream: controller.live("1"),
+                  stream: controller.listenById("1"),
                   builder: (context, snapshot) {
                     var value = snapshot.data ?? DataResponse();
                     return Text(
@@ -114,7 +114,7 @@ class _FirebaseRealtimeDataTestState extends State<FirebaseRealtimeDataTest> {
               color: Colors.grey.withAlpha(50),
               margin: const EdgeInsets.symmetric(vertical: 24),
               child: StreamBuilder(
-                stream: controller.lives(),
+                stream: controller.listen(),
                 builder: (context, snapshot) {
                   var value = snapshot.data ?? DataResponse();
                   return Text(
@@ -194,8 +194,9 @@ class User extends Data {
 
   @override
   Map<String, dynamic> get source {
-    return super.source..addAll({
-      "name": name ?? "Name",
-    });
+    return super.source
+      ..addAll({
+        "name": name ?? "Name",
+      });
   }
 }

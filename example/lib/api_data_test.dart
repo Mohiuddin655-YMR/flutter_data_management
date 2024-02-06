@@ -39,7 +39,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
               children: [
                 ElevatedButton(
                   child: const Text("Availability"),
-                  onPressed: () => controller.isAvailable("1"),
+                  onPressed: () => controller.checkById("1"),
                 ),
                 ElevatedButton(
                   child: const Text("Insert"),
@@ -52,7 +52,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
                 ElevatedButton(
                   child: const Text("Update"),
                   onPressed: () {
-                    controller.update(
+                    controller.updateById(
                       id: "1",
                       data: p1
                           .copyWith(
@@ -64,7 +64,7 @@ class _ApiDataTestState extends State<ApiDataTest> {
                   },
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.delete("1"),
+                  onPressed: () => controller.deleteById("1"),
                   child: const Text("Delete"),
                 ),
                 ElevatedButton(
@@ -72,11 +72,11 @@ class _ApiDataTestState extends State<ApiDataTest> {
                   child: const Text("Clear"),
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.get("1"),
+                  onPressed: () => controller.getById("1"),
                   child: const Text("Get"),
                 ),
                 ElevatedButton(
-                  onPressed: () => controller.gets(),
+                  onPressed: () => controller.get(),
                   child: const Text("Gets"),
                 ),
               ],
@@ -213,11 +213,12 @@ class Post extends Data {
 
   @override
   Map<String, dynamic> get source {
-    return super.source..addAll({
-      "id": idInt,
-      "userId": idInt,
-      "title": title ?? "Title",
-      "body": body,
-    });
+    return super.source
+      ..addAll({
+        "id": idInt,
+        "userId": idInt,
+        "title": title ?? "Title",
+        "body": body,
+      });
   }
 }

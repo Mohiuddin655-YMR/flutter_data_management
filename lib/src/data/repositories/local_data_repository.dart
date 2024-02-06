@@ -1,5 +1,6 @@
 import 'package:flutter_andomie/utils/entities/entities.dart';
 
+import '../../core/configs.dart';
 import '../../core/typedefs.dart';
 import '../../services/repositories/local_data_repository.dart';
 import '../../utils/response.dart';
@@ -10,52 +11,8 @@ import '../../utils/response.dart';
 class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
   LocalDataRepositoryImpl({
     required super.source,
+    super.connectivity,
   });
-
-  /// Use for check current data
-  @override
-  Future<DataResponse<T>> isAvailable<R>(
-    String id, {
-    OnDataSourceBuilder<R>? builder,
-  }) {
-    return source.isAvailable(id, builder: builder);
-  }
-
-  /// Use for create single data
-  @override
-  Future<DataResponse<T>> insert<R>(
-    T data, {
-    OnDataSourceBuilder<R>? builder,
-  }) {
-    return source.insert(data, builder: builder);
-  }
-
-  /// Use for create multiple data
-  @override
-  Future<DataResponse<T>> inserts<R>(
-    List<T> data, {
-    OnDataSourceBuilder<R>? builder,
-  }) {
-    return source.inserts(data, builder: builder);
-  }
-
-  /// Use for update single data
-  @override
-  Future<DataResponse<T>> update<R>(
-    String id,
-    Map<String, dynamic> data, {
-    OnDataSourceBuilder<R>? builder,
-  }) {
-    return source.update(id, data, builder: builder);
-  }
-
-  @override
-  Future<DataResponse<T>> delete<R>(
-    String id, {
-    OnDataSourceBuilder<R>? builder,
-  }) {
-    return source.delete(id, builder: builder);
-  }
 
   @override
   Future<DataResponse<T>> clear<R>({
@@ -65,39 +22,115 @@ class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
   }
 
   @override
-  Future<DataResponse<T>> get<R>(
+  Future<DataResponse<T>> deleteById<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
-    return source.get(id, builder: builder);
+    return source.deleteById(id, builder: builder);
   }
 
+  /// Use for create single data
   @override
-  Future<DataResponse<T>> gets<R>({
+  Future<DataResponse<T>> create<R>(
+    T data, {
     OnDataSourceBuilder<R>? builder,
   }) {
-    return source.gets(builder: builder);
+    return source.create(data, builder: builder);
   }
 
+  /// Use for create multiple data
   @override
-  Future<DataResponse<T>> getUpdates<R>({
+  Future<DataResponse<T>> creates<R>(
+    List<T> data, {
     OnDataSourceBuilder<R>? builder,
   }) {
-    return source.getUpdates(builder: builder);
+    return source.creates(data, builder: builder);
   }
 
+  /// Use for check current data
   @override
-  Stream<DataResponse<T>> live<R>(
+  Future<DataResponse<T>> checkById<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
-    return source.live(id, builder: builder);
+    return source.checkById(id, builder: builder);
   }
 
   @override
-  Stream<DataResponse<T>> lives<R>({
+  Future<DataResponse<T>> getById<R>(
+    String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
-    return source.lives(builder: builder);
+    return source.getById(id, builder: builder);
+  }
+
+  @override
+  Stream<DataResponse<T>> listenById<R>(
+    String id, {
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    return source.listenById(id, builder: builder);
+  }
+
+  @override
+  Future<DataResponse<T>> get<R>({
+    bool forUpdates = false,
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    return source.get(builder: builder);
+  }
+
+  @override
+  Future<DataResponse<T>> getByQuery<R>({
+    OnDataSourceBuilder<R>? builder,
+    bool forUpdates = false,
+    List<Query> queries = const [],
+    List<Selection> selections = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
+  }) {
+    return source.getByQuery(
+      builder: builder,
+      forUpdates: forUpdates,
+      queries: queries,
+      sorts: sorts,
+      options: options,
+    );
+  }
+
+  @override
+  Stream<DataResponse<T>> listenByQuery<R>({
+    OnDataSourceBuilder<R>? builder,
+    bool forUpdates = false,
+    List<Query> queries = const [],
+    List<Selection> selections = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
+  }) {
+    return source.listenByQuery(
+      builder: builder,
+      forUpdates: forUpdates,
+      queries: queries,
+      sorts: sorts,
+      options: options,
+    );
+  }
+
+  @override
+  Stream<DataResponse<T>> listen<R>({
+    bool forUpdates = false,
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    return source.listen(builder: builder);
+  }
+
+  /// Use for update single data
+  @override
+  Future<DataResponse<T>> updateById<R>(
+    String id,
+    Map<String, dynamic> data, {
+    OnDataSourceBuilder<R>? builder,
+  }) {
+    return source.updateById(id, data, builder: builder);
   }
 }

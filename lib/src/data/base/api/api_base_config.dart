@@ -1,4 +1,4 @@
-part of '../sources/api_data_source.dart';
+part of '../../sources/api_data_source.dart';
 
 class Api {
   final bool autoGenerateId;

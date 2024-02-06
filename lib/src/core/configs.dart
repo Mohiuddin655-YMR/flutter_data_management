@@ -1,16 +1,10 @@
-/// You can use like
-/// * [ApiPagingOptions]
-/// * [FirestorePagingOptions]
-/// * [RealtimePagingOptions]
-abstract class PagingOptions {
-  final Object? snapshot;
+class PagingOptions {
   final bool fetchFromLast;
   final int? fetchingSize;
   final int? initialFetchingSize;
 
   const PagingOptions({
     int? initialFetchSize,
-    this.snapshot,
     this.fetchFromLast = false,
     this.fetchingSize,
   }) : initialFetchingSize = initialFetchSize ?? fetchingSize;
@@ -38,4 +32,14 @@ abstract class Query {
   final Object? field;
 
   const Query([this.field]);
+}
+
+/// You can use like
+/// * [ApiQuerySelection]
+/// * [FirestoreQuerySelection]
+/// * [RealtimeQuerySelection]
+abstract class Selection {
+  final Object? value;
+
+  const Selection(this.value);
 }

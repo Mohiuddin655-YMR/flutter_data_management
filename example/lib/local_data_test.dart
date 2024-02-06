@@ -56,7 +56,7 @@ class _LocalDataTestState extends State<LocalDataTest> {
                   children: [
                     ElevatedButton(
                       child: const Text("Availability"),
-                      onPressed: () => controller.isAvailable("1"),
+                      onPressed: () => controller.checkById("1"),
                     ),
                     ElevatedButton(
                       child: const Text("Insert"),
@@ -68,14 +68,14 @@ class _LocalDataTestState extends State<LocalDataTest> {
                     ),
                     ElevatedButton(
                       child: const Text("Update"),
-                      onPressed: () => controller.update(
+                      onPressed: () => controller.updateById(
                         id: c1.id,
                         data: c1.copyWith(quantity: 1).source,
                       ),
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        controller.delete("1");
+                        controller.deleteById("1");
                       },
                       child: const Text("Delete"),
                     ),
@@ -87,13 +87,13 @@ class _LocalDataTestState extends State<LocalDataTest> {
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        controller.get("1");
+                        controller.getById("1");
                       },
                       child: const Text("Get"),
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        controller.gets();
+                        controller.get();
                       },
                       child: const Text("Gets"),
                     ),
@@ -117,7 +117,7 @@ class _LocalDataTestState extends State<LocalDataTest> {
                   color: Colors.grey.withAlpha(50),
                   margin: const EdgeInsets.symmetric(vertical: 24),
                   child: StreamBuilder(
-                      stream: controller.live("1"),
+                      stream: controller.listenById("1"),
                       builder: (context, snapshot) {
                         var value = snapshot.data ?? DataResponse();
                         return Text(
@@ -133,7 +133,7 @@ class _LocalDataTestState extends State<LocalDataTest> {
                   color: Colors.grey.withAlpha(50),
                   margin: const EdgeInsets.symmetric(vertical: 24),
                   child: StreamBuilder(
-                    stream: controller.lives(),
+                    stream: controller.listen(),
                     builder: (context, snapshot) {
                       var value = snapshot.data ?? DataResponse<Cart>();
                       return Text(
@@ -191,10 +191,11 @@ class Cart extends Data {
 
   @override
   Map<String, dynamic> get source {
-    return super.source..addAll({
-      "quantity": quantity,
-      "product": product?.source,
-    });
+    return super.source
+      ..addAll({
+        "quantity": quantity,
+        "product": product?.source,
+      });
   }
 
   Cart copyWith({

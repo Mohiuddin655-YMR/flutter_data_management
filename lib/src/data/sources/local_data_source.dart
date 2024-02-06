@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_andomie/core.dart';
 
+import '../../core/configs.dart';
 import '../../core/typedefs.dart';
 import '../../services/sources/local_data_source.dart';
 import '../../utils/response.dart';
@@ -28,7 +29,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for check current data
   @override
-  Future<DataResponse<T>> isAvailable<R>(
+  Future<DataResponse<T>> checkById<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) async {
@@ -52,7 +53,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for create single data
   @override
-  Future<DataResponse<T>> insert<R>(
+  Future<DataResponse<T>> create<R>(
     T data, {
     OnDataSourceBuilder<R>? builder,
   }) async {
@@ -82,7 +83,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for create multiple data
   @override
-  Future<DataResponse<T>> inserts<R>(
+  Future<DataResponse<T>> creates<R>(
     List<T> data, {
     OnDataSourceBuilder<R>? builder,
   }) async {
@@ -112,7 +113,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for update single data
   @override
-  Future<DataResponse<T>> update<R>(
+  Future<DataResponse<T>> updateById<R>(
     String id,
     Map<String, dynamic> data, {
     OnDataSourceBuilder<R>? builder,
@@ -144,7 +145,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for delete single data
   @override
-  Future<DataResponse<T>> delete<R>(
+  Future<DataResponse<T>> deleteById<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) async {
@@ -194,7 +195,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for fetch single data
   @override
-  Future<DataResponse<T>> get<R>(
+  Future<DataResponse<T>> getById<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) async {
@@ -217,7 +218,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for fetch all data
   @override
-  Future<DataResponse<T>> gets<R>({
+  Future<DataResponse<T>> get<R>({
     OnDataSourceBuilder<R>? builder,
     bool forUpdates = false,
   }) async {
@@ -237,17 +238,9 @@ abstract class LocalDataSourceImpl<T extends Entity>
     }
   }
 
-  /// Use for fetch all recent updated data
-  @override
-  Future<DataResponse<T>> getUpdates<R>({
-    OnDataSourceBuilder<R>? builder,
-  }) {
-    return gets(builder: builder, forUpdates: true);
-  }
-
   /// Use for fetch single observable data when data update
   @override
-  Stream<DataResponse<T>> live<R>(
+  Stream<DataResponse<T>> listenById<R>(
     String id, {
     OnDataSourceBuilder<R>? builder,
   }) {
@@ -256,7 +249,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
     try {
       if (id.isNotEmpty) {
         Timer.periodic(const Duration(milliseconds: 500), (timer) async {
-          final I = await get(id, builder: builder);
+          final I = await getById(id, builder: builder);
           var result = I.data;
           if (result.isValid) {
             controller.add(response.withData(result));
@@ -277,14 +270,14 @@ abstract class LocalDataSourceImpl<T extends Entity>
 
   /// Use for fetch all observable data when data update
   @override
-  Stream<DataResponse<T>> lives<R>({
+  Stream<DataResponse<T>> listen<R>({
     OnDataSourceBuilder<R>? builder,
   }) {
     final controller = StreamController<DataResponse<T>>();
     final response = DataResponse<T>();
     try {
       Timer.periodic(const Duration(milliseconds: 500), (timer) async {
-        final I = await gets(builder: builder);
+        final I = await get(builder: builder);
         var result = I.result;
         if (result.isValid) {
           controller.add(response.withResult(result));
@@ -298,5 +291,31 @@ abstract class LocalDataSourceImpl<T extends Entity>
       controller.add(response.withException(_, status: Status.failure));
     }
     return controller.stream;
+  }
+
+  /// Use for fetch all specifics data
+  @override
+  Future<DataResponse<T>> getByQuery<R>({
+    OnDataSourceBuilder<R>? builder,
+    bool forUpdates = false,
+    List<Query> queries = const [],
+    List<Selection> selections = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
+  }) {
+    return get(builder: builder, forUpdates: forUpdates);
+  }
+
+  /// Use for fetch query observable data when changes
+  @override
+  Stream<DataResponse<T>> listenByQuery<R>({
+    OnDataSourceBuilder<R>? builder,
+    bool forUpdates = false,
+    List<Query> queries = const [],
+    List<Selection> selections = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptionsImpl(),
+  }) {
+    return listen(builder: builder);
   }
 }

@@ -1,4 +1,4 @@
-part of '../sources/api_data_source.dart';
+part of '../../sources/api_data_source.dart';
 
 extension _ApiExtension on dio.Dio {
   Future<T?> _getAt<T extends Entity>({
