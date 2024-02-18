@@ -1,7 +1,7 @@
 import 'package:flutter_andomie/core.dart';
 
 typedef OnDataBuilder<T extends Entity> = T Function(dynamic);
-typedef OnDataSourceBuilder<R> = R? Function(R parent);
+typedef OnDataSourceBuilder = String Function(String path);
 typedef OnValueBuilder<T> = T Function(dynamic value);
 
 typedef GetResponse<T extends Entity, S extends Object> = (

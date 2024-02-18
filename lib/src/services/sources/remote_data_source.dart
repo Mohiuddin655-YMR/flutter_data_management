@@ -88,10 +88,10 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> checkById<R>(
+  Future<DataResponse<T>> checkById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('checkById method is not implemented');
   }
@@ -103,29 +103,14 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// repository.clear(
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> clear<R>({
+  Future<DataResponse<T>> clear({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('clear method is not implemented');
   }
@@ -139,30 +124,15 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   ///   newData,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> create<R>(
+  Future<DataResponse<T>> create(
     T data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('create method is not implemented');
   }
@@ -176,30 +146,15 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   ///   newDataList,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> creates<R>(
+  Future<DataResponse<T>> creates(
     List<T> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('creates method is not implemented');
   }
@@ -212,30 +167,15 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   ///   'userId123',
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> deleteById<R>(
+  Future<DataResponse<T>> deleteById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('deleteById method is not implemented');
   }
@@ -249,30 +189,15 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   ///   idsToDelete,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> deleteByIds<R>(
+  Future<DataResponse<T>> deleteByIds(
     List<String> ids, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('deleteByIds method is not implemented');
   }
@@ -284,30 +209,15 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// repository.get(
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> get<R>({
+  Future<DataResponse<T>> get({
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('get method is not implemented');
   }
@@ -320,30 +230,15 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   ///   'userId123',
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> getById<R>(
+  Future<DataResponse<T>> getById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('getById method is not implemented');
   }
@@ -357,31 +252,16 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   ///   idsToRetrieve,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> getByIds<R>(
+  Future<DataResponse<T>> getByIds(
     List<String> ids, {
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('getByIds method is not implemented');
   }
@@ -394,31 +274,16 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// repository.getByQuery(
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   ///   queries: queries,
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> getByQuery<R>({
+  Future<DataResponse<T>> getByQuery({
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
@@ -434,30 +299,15 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// repository.listen(
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listen<R>({
+  Stream<DataResponse<T>> listen({
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('listen method is not implemented');
   }
@@ -470,30 +320,15 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   ///   'userId123',
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listenById<R>(
+  Stream<DataResponse<T>> listenById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('listenById method is not implemented');
   }
@@ -507,31 +342,16 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   ///   idsToListen,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listenByIds<R>(
+  Stream<DataResponse<T>> listenByIds(
     List<String> ids, {
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('listenByIds method is not implemented');
   }
@@ -544,31 +364,16 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// repository.listenByQuery(
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   ///   queries: queries,
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listenByQuery<R>({
+  Stream<DataResponse<T>> listenByQuery({
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
@@ -586,30 +391,15 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   ///   checker,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> search<R>(
+  Future<DataResponse<T>> search(
     Checker checker, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('checkByQuery method is not implemented');
   }
@@ -623,31 +413,16 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   ///   {'status': 'inactive'},
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> updateById<R>(
+  Future<DataResponse<T>> updateById(
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('updateById method is not implemented');
   }
@@ -664,30 +439,15 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   ///   updates,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> updateByIds<R>(
+  Future<DataResponse<T>> updateByIds(
     List<UpdatingInfo> updates, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     throw const DataException('updateByIds method is not implemented');
   }

@@ -18,8 +18,8 @@ class RemoteDataRepositoryImpl<T extends Entity>
   });
 
   @override
-  Future<DataResponse<T>> clear<R>({
-    OnDataSourceBuilder<R>? builder,
+  Future<DataResponse<T>> clear({
+    OnDataSourceBuilder? builder,
   }) async {
     if (isCacheMode && isLocal) {
       return backup!.clear(builder: builder);
@@ -37,9 +37,9 @@ class RemoteDataRepositoryImpl<T extends Entity>
   }
 
   @override
-  Future<DataResponse<T>> deleteById<R>(
+  Future<DataResponse<T>> deleteById(
     String id, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isCacheMode && isLocal) {
       return backup!.deleteById(id, builder: builder);
@@ -59,9 +59,9 @@ class RemoteDataRepositoryImpl<T extends Entity>
 
   /// Use for create single data
   @override
-  Future<DataResponse<T>> create<R>(
+  Future<DataResponse<T>> create(
     T data, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isCacheMode && isLocal) {
       return backup!.create(data, builder: builder);
@@ -81,9 +81,9 @@ class RemoteDataRepositoryImpl<T extends Entity>
 
   /// Use for create multiple data
   @override
-  Future<DataResponse<T>> creates<R>(
+  Future<DataResponse<T>> creates(
     List<T> data, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isCacheMode && isLocal) {
       return backup!.creates(data, builder: builder);
@@ -103,9 +103,9 @@ class RemoteDataRepositoryImpl<T extends Entity>
 
   /// Use for check current data
   @override
-  Future<DataResponse<T>> checkById<R>(
+  Future<DataResponse<T>> checkById(
     String id, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isCacheMode && isLocal) {
       return backup!.checkById(id, builder: builder);
@@ -127,9 +127,9 @@ class RemoteDataRepositoryImpl<T extends Entity>
   }
 
   @override
-  Future<DataResponse<T>> getById<R>(
+  Future<DataResponse<T>> getById(
     String id, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isCacheMode && isLocal) {
       return backup!.getById(id, builder: builder);
@@ -148,9 +148,9 @@ class RemoteDataRepositoryImpl<T extends Entity>
   }
 
   @override
-  Stream<DataResponse<T>> listenById<R>(
+  Stream<DataResponse<T>> listenById(
     String id, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async* {
     if (isCacheMode && isLocal) {
       yield* backup!.listenById(id, builder: builder);
@@ -172,9 +172,9 @@ class RemoteDataRepositoryImpl<T extends Entity>
   }
 
   @override
-  Future<DataResponse<T>> get<R>({
+  Future<DataResponse<T>> get({
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isCacheMode && isLocal) {
       return backup!.get(
@@ -196,8 +196,8 @@ class RemoteDataRepositoryImpl<T extends Entity>
   }
 
   @override
-  Future<DataResponse<T>> getByQuery<R>({
-    OnDataSourceBuilder<R>? builder,
+  Future<DataResponse<T>> getByQuery({
+    OnDataSourceBuilder? builder,
     bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
@@ -235,8 +235,8 @@ class RemoteDataRepositoryImpl<T extends Entity>
   }
 
   @override
-  Stream<DataResponse<T>> listenByQuery<R>({
-    OnDataSourceBuilder<R>? builder,
+  Stream<DataResponse<T>> listenByQuery({
+    OnDataSourceBuilder? builder,
     bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
@@ -275,9 +275,9 @@ class RemoteDataRepositoryImpl<T extends Entity>
   }
 
   @override
-  Stream<DataResponse<T>> listen<R>({
+  Stream<DataResponse<T>> listen({
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async* {
     if (isCacheMode && isLocal) {
       yield* backup!.listen(builder: builder);
@@ -298,10 +298,10 @@ class RemoteDataRepositoryImpl<T extends Entity>
 
   /// Use for update single data
   @override
-  Future<DataResponse<T>> updateById<R>(
+  Future<DataResponse<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isCacheMode && isLocal) {
       return backup!.updateById(id, data, builder: builder);

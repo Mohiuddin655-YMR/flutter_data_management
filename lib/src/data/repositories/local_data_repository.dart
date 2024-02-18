@@ -15,74 +15,74 @@ class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
   });
 
   @override
-  Future<DataResponse<T>> clear<R>({
-    OnDataSourceBuilder<R>? builder,
+  Future<DataResponse<T>> clear({
+    OnDataSourceBuilder? builder,
   }) {
     return source.clear(builder: builder);
   }
 
   @override
-  Future<DataResponse<T>> deleteById<R>(
+  Future<DataResponse<T>> deleteById(
     String id, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return source.deleteById(id, builder: builder);
   }
 
   /// Use for create single data
   @override
-  Future<DataResponse<T>> create<R>(
+  Future<DataResponse<T>> create(
     T data, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return source.create(data, builder: builder);
   }
 
   /// Use for create multiple data
   @override
-  Future<DataResponse<T>> creates<R>(
+  Future<DataResponse<T>> creates(
     List<T> data, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return source.creates(data, builder: builder);
   }
 
   /// Use for check current data
   @override
-  Future<DataResponse<T>> checkById<R>(
+  Future<DataResponse<T>> checkById(
     String id, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return source.checkById(id, builder: builder);
   }
 
   @override
-  Future<DataResponse<T>> getById<R>(
+  Future<DataResponse<T>> getById(
     String id, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return source.getById(id, builder: builder);
   }
 
   @override
-  Stream<DataResponse<T>> listenById<R>(
+  Stream<DataResponse<T>> listenById(
     String id, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return source.listenById(id, builder: builder);
   }
 
   @override
-  Future<DataResponse<T>> get<R>({
+  Future<DataResponse<T>> get({
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return source.get(builder: builder);
   }
 
   @override
-  Future<DataResponse<T>> getByQuery<R>({
-    OnDataSourceBuilder<R>? builder,
+  Future<DataResponse<T>> getByQuery({
+    OnDataSourceBuilder? builder,
     bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
@@ -99,8 +99,8 @@ class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
   }
 
   @override
-  Stream<DataResponse<T>> listenByQuery<R>({
-    OnDataSourceBuilder<R>? builder,
+  Stream<DataResponse<T>> listenByQuery({
+    OnDataSourceBuilder? builder,
     bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
@@ -117,19 +117,19 @@ class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
   }
 
   @override
-  Stream<DataResponse<T>> listen<R>({
+  Stream<DataResponse<T>> listen({
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return source.listen(builder: builder);
   }
 
   /// Use for update single data
   @override
-  Future<DataResponse<T>> updateById<R>(
+  Future<DataResponse<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return source.updateById(id, data, builder: builder);
   }

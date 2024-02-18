@@ -34,22 +34,16 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   dio.Dio get database => _db ??= dio.Dio(api._options);
 
-  String _source<R>(OnDataSourceBuilder<R>? source) {
-    final root = _path;
-    dynamic current = source?.call(root as R);
-    if (current is String) {
-      return current;
-    } else {
-      return root;
-    }
+  String _source(OnDataSourceBuilder? source) {
+    return source?.call(_path) ?? _path;
   }
 
   /// Use for check current data
   @override
-  Future<DataResponse<T>> checkById<R>(
+  Future<DataResponse<T>> checkById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     final response = DataResponse<T>();
     if (isConnected) {
@@ -77,10 +71,10 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for create single data
   @override
-  Future<DataResponse<T>> create<R>(
+  Future<DataResponse<T>> create(
     T data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     final response = DataResponse<T>();
     if (isConnected) {
@@ -110,10 +104,10 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for create multiple data
   @override
-  Future<DataResponse<T>> creates<R>(
+  Future<DataResponse<T>> creates(
     List<T> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     final response = DataResponse<T>();
     if (isConnected) {
@@ -143,11 +137,11 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for update single data
   @override
-  Future<DataResponse<T>> updateById<R>(
+  Future<DataResponse<T>> updateById(
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     final response = DataResponse<T>();
     if (isConnected) {
@@ -178,10 +172,10 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for delete single data
   @override
-  Future<DataResponse<T>> deleteById<R>(
+  Future<DataResponse<T>> deleteById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     final response = DataResponse<T>();
     if (isConnected) {
@@ -211,9 +205,9 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for delete all data
   @override
-  Future<DataResponse<T>> clear<R>({
+  Future<DataResponse<T>> clear({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     final response = DataResponse<T>();
     if (isConnected) {
@@ -237,10 +231,10 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for fetch single data
   @override
-  Future<DataResponse<T>> getById<R>(
+  Future<DataResponse<T>> getById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     final response = DataResponse<T>();
     if (isConnected) {
@@ -263,9 +257,9 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for fetch all data
   @override
-  Future<DataResponse<T>> get<R>({
+  Future<DataResponse<T>> get({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
     bool forUpdates = false,
   }) async {
     final response = DataResponse<T>();
@@ -288,9 +282,9 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for fetch data by paging
   @override
-  Future<DataResponse<T>> getByQuery<R>({
+  Future<DataResponse<T>> getByQuery({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
     bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
@@ -320,8 +314,8 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for fetch query observable data when changes
   @override
-  Stream<DataResponse<T>> listenByQuery<R>({
-    OnDataSourceBuilder<R>? builder,
+  Stream<DataResponse<T>> listenByQuery({
+    OnDataSourceBuilder? builder,
     bool isConnected = false,
     bool forUpdates = false,
     List<Query> queries = const [],
@@ -355,10 +349,10 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for fetch single observable data when data update
   @override
-  Stream<DataResponse<T>> listenById<R>(
+  Stream<DataResponse<T>> listenById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     final controller = StreamController<DataResponse<T>>();
     final response = DataResponse<T>();
@@ -387,9 +381,9 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   /// Use for fetch all observable data when data update
   @override
-  Stream<DataResponse<T>> listen<R>({
+  Stream<DataResponse<T>> listen({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
     bool forUpdates = false,
   }) {
     final controller = StreamController<DataResponse<T>>();

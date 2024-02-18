@@ -7,9 +7,13 @@ import 'package:flutter_andomie/core.dart';
 import '../../core/configs.dart';
 
 part '../base/realtime/realtime_collection_extension.dart';
+
 part '../base/realtime/realtime_collection_finder.dart';
+
 part '../base/realtime/realtime_query_config.dart';
+
 part '../base/realtime/realtime_query_extension.dart';
+
 part '../base/realtime/realtime_query_finder.dart';
 
 ///
@@ -31,24 +35,8 @@ abstract class RealtimeDataSource<T extends Entity>
 
   rdb.FirebaseDatabase get database => _db ??= rdb.FirebaseDatabase.instance;
 
-  rdb.DatabaseReference _source<R>(OnDataSourceBuilder<R>? source) {
-    final parent = database.ref(path);
-    dynamic current = source?.call(parent as R);
-    if (current is rdb.DatabaseReference) {
-      return current;
-    } else {
-      return parent;
-    }
-  }
-
-  rdb.Query _query<R>(OnDataSourceBuilder<R>? source) {
-    final parent = database.ref(path);
-    dynamic current = source?.call(parent as R);
-    if (current is rdb.Query || current is rdb.DatabaseReference) {
-      return current;
-    } else {
-      return parent;
-    }
+  rdb.DatabaseReference _source(OnDataSourceBuilder? source) {
+    return database.ref(source?.call(path) ?? path);
   }
 
   /// Method to check data by ID with optional data source builder.
@@ -59,30 +47,15 @@ abstract class RealtimeDataSource<T extends Entity>
   ///   'userId123',
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> checkById<R>(
+  Future<DataResponse<T>> checkById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
@@ -112,29 +85,14 @@ abstract class RealtimeDataSource<T extends Entity>
   /// repository.clear(
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> clear<R>({
+  Future<DataResponse<T>> clear({
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isConnected) {
       var finder = await _source(builder).clear(
@@ -160,30 +118,15 @@ abstract class RealtimeDataSource<T extends Entity>
   ///   newData,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> create<R>(
+  Future<DataResponse<T>> create(
     T data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isConnected) {
       if (data.id.isValid) {
@@ -210,30 +153,15 @@ abstract class RealtimeDataSource<T extends Entity>
   ///   newDataList,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> creates<R>(
+  Future<DataResponse<T>> creates(
     List<T> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isConnected) {
       if (data.isValid) {
@@ -259,30 +187,15 @@ abstract class RealtimeDataSource<T extends Entity>
   ///   'userId123',
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> deleteById<R>(
+  Future<DataResponse<T>> deleteById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
@@ -309,30 +222,15 @@ abstract class RealtimeDataSource<T extends Entity>
   ///   idsToDelete,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> deleteByIds<R>(
+  Future<DataResponse<T>> deleteByIds(
     List<String> ids, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isConnected) {
       if (ids.isNotEmpty) {
@@ -357,33 +255,18 @@ abstract class RealtimeDataSource<T extends Entity>
   /// repository.get(
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> get<R>({
+  Future<DataResponse<T>> get({
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isConnected) {
-      var finder = await _query(builder).getAll(
+      var finder = await _source(builder).getAll(
         builder: build,
         encryptor: encryptor,
         onlyUpdates: forUpdates,
@@ -407,30 +290,15 @@ abstract class RealtimeDataSource<T extends Entity>
   ///   'userId123',
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> getById<R>(
+  Future<DataResponse<T>> getById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isConnected) {
       var finder = await _source(builder).getById(
@@ -458,31 +326,16 @@ abstract class RealtimeDataSource<T extends Entity>
   ///   idsToRetrieve,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> getByIds<R>(
+  Future<DataResponse<T>> getByIds(
     List<String> ids, {
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isConnected) {
       var finder = await _source(builder).getByIds(
@@ -509,38 +362,23 @@ abstract class RealtimeDataSource<T extends Entity>
   /// repository.getByQuery(
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   ///   queries: queries,
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> getByQuery<R>({
+  Future<DataResponse<T>> getByQuery({
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
     PagingOptions options = const PagingOptionsImpl(),
   }) async {
     if (isConnected) {
-      var finder = await _query(builder).queryBy(
+      var finder = await _source(builder).queryBy(
         builder: build,
         encryptor: encryptor,
         onlyUpdates: forUpdates,
@@ -567,35 +405,20 @@ abstract class RealtimeDataSource<T extends Entity>
   /// repository.listen(
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listen<R>({
+  Stream<DataResponse<T>> listen({
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     final controller = StreamController<DataResponse<T>>();
     if (isConnected) {
       try {
-        _query(builder)
+        _source(builder)
             .liveBy(
           builder: build,
           encryptor: encryptor,
@@ -629,30 +452,15 @@ abstract class RealtimeDataSource<T extends Entity>
   ///   'userId123',
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listenById<R>(
+  Stream<DataResponse<T>> listenById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     final controller = StreamController<DataResponse<T>>();
     if (isConnected) {
@@ -688,31 +496,16 @@ abstract class RealtimeDataSource<T extends Entity>
   ///   idsToListen,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listenByIds<R>(
+  Stream<DataResponse<T>> listenByIds(
     List<String> ids, {
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     final controller = StreamController<DataResponse<T>>();
     if (isConnected) {
@@ -747,31 +540,16 @@ abstract class RealtimeDataSource<T extends Entity>
   /// repository.listenByQuery(
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   ///   queries: queries,
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listenByQuery<R>({
+  Stream<DataResponse<T>> listenByQuery({
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
@@ -780,7 +558,7 @@ abstract class RealtimeDataSource<T extends Entity>
     final controller = StreamController<DataResponse<T>>();
     if (isConnected) {
       try {
-        _query(builder)
+        _source(builder)
             .liveByQuery(
           builder: build,
           encryptor: encryptor,
@@ -819,30 +597,15 @@ abstract class RealtimeDataSource<T extends Entity>
   ///   checker,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> search<R>(
+  Future<DataResponse<T>> search(
     Checker checker, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isConnected) {
       var finder = await _source(builder).searchBy(
@@ -870,31 +633,16 @@ abstract class RealtimeDataSource<T extends Entity>
   ///   {'status': 'inactive'},
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> updateById<R>(
+  Future<DataResponse<T>> updateById(
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
@@ -925,30 +673,15 @@ abstract class RealtimeDataSource<T extends Entity>
   ///   updates,
   ///   builder: (dataSource) {
   ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     if (dataSource is Map<String, dynamic>) {
-  ///       // For Local database
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
+  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
   ///   },
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> updateByIds<R>(
+  Future<DataResponse<T>> updateByIds(
     List<UpdatingInfo> updates, {
     bool isConnected = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) async {
     if (isConnected) {
       if (updates.isNotEmpty) {

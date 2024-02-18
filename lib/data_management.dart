@@ -18,7 +18,6 @@ export 'src/services/repositories/remote_data_repository.dart';
 export 'src/services/sources/data_source.dart';
 export 'src/services/sources/local_data_source.dart';
 export 'src/services/sources/remote_data_source.dart';
-export 'src/services/use_cases/base.dart';
 export 'src/utils/encryptor.dart';
 export 'src/utils/errors.dart';
 export 'src/utils/response.dart';

@@ -10,92 +10,92 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
 
   /// Use for check current data
   @override
-  Future<DataResponse<T>> checkById<R>(
+  Future<DataResponse<T>> checkById(
     String id, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return notifier(() => repository.checkById(id, builder: builder));
   }
 
   /// Use for create single data
   @override
-  Future<DataResponse<T>> create<R>(
+  Future<DataResponse<T>> create(
     T data, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return notifier(() => repository.create(data, builder: builder));
   }
 
   /// Use for create multiple data
   @override
-  Future<DataResponse<T>> creates<R>(
+  Future<DataResponse<T>> creates(
     List<T> data, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return notifier(() => repository.creates(data, builder: builder));
   }
 
   /// Use for update single data
   @override
-  Future<DataResponse<T>> updateById<R>({
+  Future<DataResponse<T>> updateById({
     required String id,
     required Map<String, dynamic> data,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return notifier(() => repository.updateById(id, data, builder: builder));
   }
 
   @override
-  Future<DataResponse<T>> deleteById<R>(
+  Future<DataResponse<T>> deleteById(
     String id, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return notifier(() => repository.deleteById(id, builder: builder));
   }
 
   @override
-  Future<DataResponse<T>> clear<R>({
-    OnDataSourceBuilder<R>? builder,
+  Future<DataResponse<T>> clear({
+    OnDataSourceBuilder? builder,
   }) async {
     return notifier(() => repository.clear(builder: builder));
   }
 
   @override
-  Future<DataResponse<T>> getById<R>(
+  Future<DataResponse<T>> getById(
     String id, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return notifier(() => repository.getById(id, builder: builder));
   }
 
   @override
-  Future<DataResponse<T>> get<R>({
+  Future<DataResponse<T>> get({
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return notifier(() => repository.get(builder: builder));
   }
 
   @override
-  Stream<DataResponse<T>> listenById<R>(
+  Stream<DataResponse<T>> listenById(
     String id, {
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return repository.listenById(id, builder: builder);
   }
 
   @override
-  Stream<DataResponse<T>> listen<R>({
+  Stream<DataResponse<T>> listen({
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
   }) {
     return repository.listen(builder: builder);
   }
 
   @override
-  Future<DataResponse<T>> getByQuery<R>({
+  Future<DataResponse<T>> getByQuery({
     bool forUpdates = false,
-    OnDataSourceBuilder<R>? builder,
+    OnDataSourceBuilder? builder,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
