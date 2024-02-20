@@ -1,7 +1,6 @@
 import 'package:flutter_andomie/core.dart';
 
 import '../../core/configs.dart';
-import '../../core/typedefs.dart';
 import '../../models/checker.dart';
 import '../../models/updating_info.dart';
 import '../../utils/errors.dart';
@@ -41,15 +40,12 @@ abstract class DataRepository<T extends Entity> {
   /// ```dart
   /// repository.checkById(
   ///   'userId123',
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Future<DataResponse<T>> checkById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('checkById method is not implemented');
   }
@@ -59,14 +55,11 @@ abstract class DataRepository<T extends Entity> {
   /// Example:
   /// ```dart
   /// repository.clear(
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Future<DataResponse<T>> clear({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('clear method is not implemented');
   }
@@ -78,15 +71,12 @@ abstract class DataRepository<T extends Entity> {
   /// T newData = //...;
   /// repository.create(
   ///   newData,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Future<DataResponse<T>> create(
     T data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('create method is not implemented');
   }
@@ -98,15 +88,12 @@ abstract class DataRepository<T extends Entity> {
   /// List<T> newDataList = //...;
   /// repository.creates(
   ///   newDataList,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Future<DataResponse<T>> creates(
     List<T> data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('creates method is not implemented');
   }
@@ -117,15 +104,12 @@ abstract class DataRepository<T extends Entity> {
   /// ```dart
   /// repository.deleteById(
   ///   'userId123',
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Future<DataResponse<T>> deleteById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('deleteById method is not implemented');
   }
@@ -137,15 +121,12 @@ abstract class DataRepository<T extends Entity> {
   /// List<String> idsToDelete = ['userId1', 'userId2'];
   /// repository.deleteByIds(
   ///   idsToDelete,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Future<DataResponse<T>> deleteByIds(
     List<String> ids, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('deleteByIds method is not implemented');
   }
@@ -155,15 +136,12 @@ abstract class DataRepository<T extends Entity> {
   /// Example:
   /// ```dart
   /// repository.get(
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Future<DataResponse<T>> get({
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('get method is not implemented');
   }
@@ -174,15 +152,12 @@ abstract class DataRepository<T extends Entity> {
   /// ```dart
   /// repository.getById(
   ///   'userId123',
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Future<DataResponse<T>> getById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('getById method is not implemented');
   }
@@ -194,16 +169,13 @@ abstract class DataRepository<T extends Entity> {
   /// List<String> idsToRetrieve = ['userId1', 'userId2'];
   /// repository.getByIds(
   ///   idsToRetrieve,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Future<DataResponse<T>> getByIds(
     List<String> ids, {
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('getByIds method is not implemented');
   }
@@ -214,15 +186,12 @@ abstract class DataRepository<T extends Entity> {
   /// ```dart
   /// List<Query> queries = [Query.field('name', 'John')];
   /// repository.getByQuery(
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   ///   queries: queries,
   /// );
   /// ```
   Future<DataResponse<T>> getByQuery({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
     bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
@@ -237,15 +206,12 @@ abstract class DataRepository<T extends Entity> {
   /// Example:
   /// ```dart
   /// repository.listen(
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Stream<DataResponse<T>> listen({
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('listen method is not implemented');
   }
@@ -256,15 +222,12 @@ abstract class DataRepository<T extends Entity> {
   /// ```dart
   /// repository.listenById(
   ///   'userId123',
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Stream<DataResponse<T>> listenById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('listenById method is not implemented');
   }
@@ -276,16 +239,13 @@ abstract class DataRepository<T extends Entity> {
   /// List<String> idsToListen = ['userId1', 'userId2'];
   /// repository.listenByIds(
   ///   idsToListen,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Stream<DataResponse<T>> listenByIds(
     List<String> ids, {
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('listenByIds method is not implemented');
   }
@@ -296,15 +256,12 @@ abstract class DataRepository<T extends Entity> {
   /// ```dart
   /// List<Query> queries = [Query.field('name', 'John')];
   /// repository.listenByQuery(
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   ///   queries: queries,
   /// );
   /// ```
   Stream<DataResponse<T>> listenByQuery({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
     bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
@@ -321,15 +278,12 @@ abstract class DataRepository<T extends Entity> {
   /// Checker checker = Checker(field: 'status', value: 'active');
   /// repository.search(
   ///   checker,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Future<DataResponse<T>> search(
     Checker checker, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('checkByQuery method is not implemented');
   }
@@ -341,16 +295,13 @@ abstract class DataRepository<T extends Entity> {
   /// repository.updateById(
   ///   'userId123',
   ///   {'status': 'inactive'},
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Future<DataResponse<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('updateById method is not implemented');
   }
@@ -365,15 +316,12 @@ abstract class DataRepository<T extends Entity> {
   /// ];
   /// repository.updateByIds(
   ///   updates,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   Future<DataResponse<T>> updateByIds(
     List<UpdatingInfo> updates, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     throw const DataException('updateByIds method is not implemented');
   }

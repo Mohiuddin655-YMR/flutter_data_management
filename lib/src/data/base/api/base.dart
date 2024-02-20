@@ -17,7 +17,7 @@ class Api {
     this.request = ApiRequest.get,
   });
 
-  String _parent(String parent) => "$baseUrl/$parent";
+  String _parent(String path) => "$baseUrl/$path";
 
   dio.BaseOptions get _options {
     return dio.BaseOptions(

@@ -187,21 +187,20 @@ class PostRepository extends RemoteDataRepositoryImpl<Post> {
   /// OPTIONAL FUNCTION
   Future<DataResponse<Post>> fetchInnerData() async {
     /// Build custom path with builder function
-    String builder(String parent) {
-      /// CUSTOMIZE PARENT PATH
-      return "$parent/inner_post";
-    }
+    FieldParams params = const Params({
+      "post_id": "1234",
+    });
 
     if (isCacheMode && isLocal) {
-      return backup!.get(builder: builder);
+      return backup!.get(params: params);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return backup!.get(builder: builder);
+        return backup!.get(params: params);
       } else {
         return source.get(
           isConnected: connected,
-          builder: builder,
+          params: params,
         );
       }
     }
@@ -213,7 +212,7 @@ class PostRepository extends RemoteDataRepositoryImpl<Post> {
 /// Use for remote data => insert, update, delete, get, gets, live, lives, clear
 class PostDataSource extends ApiDataSource<Post> {
   PostDataSource({
-    super.path = "posts",
+    super.path = "posts/{post_id}/inner_post",
     super.api = const Api(
       baseUrl: "https://jsonplaceholder.typicode.com",
       status: ApiStatus(ok: 200),

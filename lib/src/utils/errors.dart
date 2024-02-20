@@ -1,3 +1,5 @@
+import 'dart:async';
+
 class DataException {
   final String? _exp;
 
@@ -9,6 +11,14 @@ class DataException {
     } else {
       return "DataProvider not initialization.";
     }
+  }
+
+  static Future<T> future<T>(Object? error, StackTrace stackTrace) {
+    throw DataException("$error");
+  }
+
+  static void stream<T>(Object? error, StackTrace stackTrace) {
+    throw DataException("$error");
   }
 
   @override

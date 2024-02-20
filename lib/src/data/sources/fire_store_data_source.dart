@@ -2,28 +2,18 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart' as fdb;
 import 'package:cloud_firestore_platform_interface/cloud_firestore_platform_interface.dart';
+import 'package:data_management/core.dart';
 import 'package:flutter_andomie/core.dart';
 
-import '../../core/configs.dart';
-import '../../core/typedefs.dart';
-import '../../models/checker.dart';
-import '../../models/updating_info.dart';
-import '../../services/sources/remote_data_source.dart';
-import '../../utils/response.dart';
-
-part '../base/firestore/firestore_collection_extension.dart';
-part '../base/firestore/firestore_collection_finder.dart';
-part '../base/firestore/firestore_query_config.dart';
-part '../base/firestore/firestore_query_extension.dart';
-part '../base/firestore/firestore_query_finder.dart';
+part '../base/firestore/config.dart';
+part '../base/firestore/extension.dart';
+part '../base/firestore/finder.dart';
 
 ///
 /// You can use base class [Data] without [Entity]
 ///
 
-typedef FS = fdb.DocumentSnapshot;
-
-typedef PathBuilder = String Function(String path);
+typedef _FS = fdb.DocumentSnapshot;
 
 abstract class FirestoreDataSource<T extends Entity>
     extends RemoteDataSource<T> {
@@ -38,8 +28,8 @@ abstract class FirestoreDataSource<T extends Entity>
 
   fdb.FirebaseFirestore get database => _db ??= fdb.FirebaseFirestore.instance;
 
-  fdb.CollectionReference _source(OnDataSourceBuilder? source) {
-    return database.collection(source?.call(path) ?? path);
+  fdb.CollectionReference _source(FieldParams? params) {
+    return database.collection(params.generate(path));
   }
 
   /// Method to check data by ID with optional data source builder.
@@ -48,21 +38,18 @@ abstract class FirestoreDataSource<T extends Entity>
   /// ```dart
   /// repository.checkById(
   ///   'userId123',
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
   Future<DataResponse<T>> checkById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
-        var finder = await _source(builder).checkById(
+        var finder = await _source(params).checkById(
           builder: build,
           encryptor: encryptor,
           id: id,
@@ -86,19 +73,16 @@ abstract class FirestoreDataSource<T extends Entity>
   /// Example:
   /// ```dart
   /// repository.clear(
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
   Future<DataResponse<T>> clear({
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isConnected) {
-      var finder = await _source(builder).clear(
+      var finder = await _source(params).clear(
         builder: build,
         encryptor: encryptor,
       );
@@ -119,21 +103,18 @@ abstract class FirestoreDataSource<T extends Entity>
   /// T newData = //...;
   /// repository.create(
   ///   newData,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
   Future<DataResponse<T>> create(
     T data, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isConnected) {
       if (data.id.isValid) {
-        final finder = await _source(builder).create(
+        final finder = await _source(params).create(
           builder: build,
           encryptor: encryptor,
           data: data,
@@ -154,21 +135,18 @@ abstract class FirestoreDataSource<T extends Entity>
   /// List<T> newDataList = //...;
   /// repository.creates(
   ///   newDataList,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
   Future<DataResponse<T>> creates(
     List<T> data, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isConnected) {
       if (data.isValid) {
-        final finder = await _source(builder).creates(
+        final finder = await _source(params).creates(
           builder: build,
           encryptor: encryptor,
           data: data,
@@ -188,21 +166,18 @@ abstract class FirestoreDataSource<T extends Entity>
   /// ```dart
   /// repository.deleteById(
   ///   'userId123',
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
   Future<DataResponse<T>> deleteById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
-        var finder = await _source(builder).deleteById(
+        var finder = await _source(params).deleteById(
           builder: build,
           encryptor: encryptor,
           id: id,
@@ -223,21 +198,18 @@ abstract class FirestoreDataSource<T extends Entity>
   /// List<String> idsToDelete = ['userId1', 'userId2'];
   /// repository.deleteByIds(
   ///   idsToDelete,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
   Future<DataResponse<T>> deleteByIds(
     List<String> ids, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isConnected) {
       if (ids.isNotEmpty) {
-        var finder = await _source(builder).deleteByIds(
+        var finder = await _source(params).deleteByIds(
           builder: build,
           encryptor: encryptor,
           ids: ids,
@@ -256,20 +228,17 @@ abstract class FirestoreDataSource<T extends Entity>
   /// Example:
   /// ```dart
   /// repository.get(
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
   Future<DataResponse<T>> get({
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isConnected) {
-      var finder = await _source(builder).getAll(
+      var finder = await _source(params).fetch(
         builder: build,
         encryptor: encryptor,
         onlyUpdates: forUpdates,
@@ -291,20 +260,17 @@ abstract class FirestoreDataSource<T extends Entity>
   /// ```dart
   /// repository.getById(
   ///   'userId123',
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
   Future<DataResponse<T>> getById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isConnected) {
-      var finder = await _source(builder).getById(
+      var finder = await _source(params).fetchById(
         builder: build,
         encryptor: encryptor,
         id: id,
@@ -327,10 +293,7 @@ abstract class FirestoreDataSource<T extends Entity>
   /// List<String> idsToRetrieve = ['userId1', 'userId2'];
   /// repository.getByIds(
   ///   idsToRetrieve,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
@@ -338,10 +301,10 @@ abstract class FirestoreDataSource<T extends Entity>
     List<String> ids, {
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isConnected) {
-      var finder = await _source(builder).getByIds(
+      var finder = await _source(params).fetchByIds(
         builder: build,
         encryptor: encryptor,
         ids: ids,
@@ -363,10 +326,7 @@ abstract class FirestoreDataSource<T extends Entity>
   /// ```dart
   /// List<Query> queries = [Query.field('name', 'John')];
   /// repository.getByQuery(
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   ///   queries: queries,
   /// );
   /// ```
@@ -374,14 +334,14 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<DataResponse<T>> getByQuery({
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
     PagingOptions options = const PagingOptionsImpl(),
   }) async {
     if (isConnected) {
-      var finder = await _source(builder).queryBy(
+      var finder = await _source(params).query(
         builder: build,
         encryptor: encryptor,
         onlyUpdates: forUpdates,
@@ -406,23 +366,20 @@ abstract class FirestoreDataSource<T extends Entity>
   /// Example:
   /// ```dart
   /// repository.listen(
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
   Stream<DataResponse<T>> listen({
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     final controller = StreamController<DataResponse<T>>();
     if (isConnected) {
       try {
-        _source(builder)
-            .liveBy(
+        _source(params)
+            .listen(
           builder: build,
           encryptor: encryptor,
           onlyUpdates: forUpdates,
@@ -435,9 +392,9 @@ abstract class FirestoreDataSource<T extends Entity>
             status: finder.$3,
           ));
         });
-      } on fdb.FirebaseException catch (_) {
+      } catch (_) {
         controller.add(DataResponse(
-          exception: _.message,
+          exception: "$_",
           status: Status.failure,
         ));
       }
@@ -453,22 +410,19 @@ abstract class FirestoreDataSource<T extends Entity>
   /// ```dart
   /// repository.listenById(
   ///   'userId123',
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
   Stream<DataResponse<T>> listenById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     final controller = StreamController<DataResponse<T>>();
     if (isConnected) {
       try {
-        _source(builder)
+        _source(params)
             .liveById(builder: build, encryptor: encryptor, id: id)
             .listen((finder) {
           controller.add(DataResponse(
@@ -478,9 +432,9 @@ abstract class FirestoreDataSource<T extends Entity>
             status: finder.$3,
           ));
         });
-      } on fdb.FirebaseException catch (_) {
+      } catch (_) {
         controller.add(DataResponse(
-          exception: _.message,
+          exception: "$_",
           status: Status.failure,
         ));
       }
@@ -497,10 +451,7 @@ abstract class FirestoreDataSource<T extends Entity>
   /// List<String> idsToListen = ['userId1', 'userId2'];
   /// repository.listenByIds(
   ///   idsToListen,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
@@ -508,12 +459,12 @@ abstract class FirestoreDataSource<T extends Entity>
     List<String> ids, {
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     final controller = StreamController<DataResponse<T>>();
     if (isConnected) {
       try {
-        _source(builder)
+        _source(params)
             .liveByIds(builder: build, encryptor: encryptor, ids: ids)
             .listen((finder) {
           controller.add(DataResponse(
@@ -523,9 +474,9 @@ abstract class FirestoreDataSource<T extends Entity>
             status: finder.$3,
           ));
         });
-      } on fdb.FirebaseException catch (_) {
+      } catch (_) {
         controller.add(DataResponse(
-          exception: _.message,
+          exception: "$_",
           status: Status.failure,
         ));
       }
@@ -541,10 +492,7 @@ abstract class FirestoreDataSource<T extends Entity>
   /// ```dart
   /// List<Query> queries = [Query.field('name', 'John')];
   /// repository.listenByQuery(
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   ///   queries: queries,
   /// );
   /// ```
@@ -552,7 +500,7 @@ abstract class FirestoreDataSource<T extends Entity>
   Stream<DataResponse<T>> listenByQuery({
     bool isConnected = false,
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
@@ -561,8 +509,8 @@ abstract class FirestoreDataSource<T extends Entity>
     final controller = StreamController<DataResponse<T>>();
     if (isConnected) {
       try {
-        _source(builder)
-            .liveByQuery(
+        _source(params)
+            .listenByQuery(
           builder: build,
           encryptor: encryptor,
           onlyUpdates: forUpdates,
@@ -579,9 +527,9 @@ abstract class FirestoreDataSource<T extends Entity>
             status: finder.$3,
           ));
         });
-      } on fdb.FirebaseException catch (_) {
+      } catch (_) {
         controller.add(DataResponse(
-          exception: _.message,
+          exception: "$_",
           status: Status.failure,
         ));
       }
@@ -598,20 +546,17 @@ abstract class FirestoreDataSource<T extends Entity>
   /// Checker checker = Checker(field: 'status', value: 'active');
   /// repository.search(
   ///   checker,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
   Future<DataResponse<T>> search(
     Checker checker, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isConnected) {
-      var finder = await _source(builder).searchBy(
+      var finder = await _source(params).search(
         builder: build,
         encryptor: encryptor,
         checker: checker,
@@ -634,10 +579,7 @@ abstract class FirestoreDataSource<T extends Entity>
   /// repository.updateById(
   ///   'userId123',
   ///   {'status': 'inactive'},
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
@@ -645,11 +587,11 @@ abstract class FirestoreDataSource<T extends Entity>
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
-        final finder = await _source(builder).updateById(
+        final finder = await _source(params).updateById(
           builder: build,
           encryptor: encryptor,
           id: id,
@@ -674,21 +616,18 @@ abstract class FirestoreDataSource<T extends Entity>
   /// ];
   /// repository.updateByIds(
   ///   updates,
-  ///   builder: (dataSource) {
-  ///     // Using Purpose: Build the data source path or URL based on the data source type.
-  ///     return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
   Future<DataResponse<T>> updateByIds(
     List<UpdatingInfo> updates, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isConnected) {
       if (updates.isNotEmpty) {
-        final finder = await _source(builder).updateByIds(
+        final finder = await _source(params).updateByIds(
           builder: build,
           encryptor: encryptor,
           data: updates,

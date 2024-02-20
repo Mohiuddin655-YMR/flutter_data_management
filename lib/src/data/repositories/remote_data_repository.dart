@@ -1,7 +1,6 @@
 import 'package:flutter_andomie/utils/entities/entities.dart';
 
 import '../../core/configs.dart';
-import '../../core/typedefs.dart';
 import '../../services/repositories/remote_data_repository.dart';
 import '../../utils/response.dart';
 
@@ -19,18 +18,18 @@ class RemoteDataRepositoryImpl<T extends Entity>
 
   @override
   Future<DataResponse<T>> clear({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.clear(builder: builder);
+      return backup!.clear(params: params);
     } else {
       var connected = await isConnected;
       var response = await source.clear(
         isConnected: connected,
-        builder: builder,
+        params: params,
       );
       if (response.isSuccessful && isLocal) {
-        await backup!.clear(builder: builder);
+        await backup!.clear(params: params);
       }
       return response;
     }
@@ -39,19 +38,19 @@ class RemoteDataRepositoryImpl<T extends Entity>
   @override
   Future<DataResponse<T>> deleteById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.deleteById(id, builder: builder);
+      return backup!.deleteById(id, params: params);
     } else {
       var connected = await isConnected;
       var response = await source.deleteById(
         id,
         isConnected: connected,
-        builder: builder,
+        params: params,
       );
       if (response.isSuccessful && isLocal) {
-        await backup!.deleteById(id, builder: builder);
+        await backup!.deleteById(id, params: params);
       }
       return response;
     }
@@ -61,19 +60,19 @@ class RemoteDataRepositoryImpl<T extends Entity>
   @override
   Future<DataResponse<T>> create(
     T data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.create(data, builder: builder);
+      return backup!.create(data, params: params);
     } else {
       var connected = await isConnected;
       var response = await source.create(
         data,
         isConnected: connected,
-        builder: builder,
+        params: params,
       );
       if (response.isSuccessful && isLocal) {
-        await backup!.create(data, builder: builder);
+        await backup!.create(data, params: params);
       }
       return response;
     }
@@ -83,19 +82,19 @@ class RemoteDataRepositoryImpl<T extends Entity>
   @override
   Future<DataResponse<T>> creates(
     List<T> data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.creates(data, builder: builder);
+      return backup!.creates(data, params: params);
     } else {
       var connected = await isConnected;
       var response = await source.creates(
         data,
         isConnected: connected,
-        builder: builder,
+        params: params,
       );
       if (response.isSuccessful && isLocal) {
-        await backup!.creates(data, builder: builder);
+        await backup!.creates(data, params: params);
       }
       return response;
     }
@@ -105,22 +104,22 @@ class RemoteDataRepositoryImpl<T extends Entity>
   @override
   Future<DataResponse<T>> checkById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.checkById(id, builder: builder);
+      return backup!.checkById(id, params: params);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
         return backup!.checkById(
           id,
-          builder: builder,
+          params: params,
         );
       } else {
         return source.checkById(
           id,
           isConnected: connected,
-          builder: builder,
+          params: params,
         );
       }
     }
@@ -129,19 +128,19 @@ class RemoteDataRepositoryImpl<T extends Entity>
   @override
   Future<DataResponse<T>> getById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.getById(id, builder: builder);
+      return backup!.getById(id, params: params);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
-        return backup!.getById(id, builder: builder);
+        return backup!.getById(id, params: params);
       } else {
         return source.getById(
           id,
           isConnected: connected,
-          builder: builder,
+          params: params,
         );
       }
     }
@@ -150,22 +149,22 @@ class RemoteDataRepositoryImpl<T extends Entity>
   @override
   Stream<DataResponse<T>> listenById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async* {
     if (isCacheMode && isLocal) {
-      yield* backup!.listenById(id, builder: builder);
+      yield* backup!.listenById(id, params: params);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
         yield* backup!.listenById(
           id,
-          builder: builder,
+          params: params,
         );
       } else {
         yield* source.listenById(
           id,
           isConnected: connected,
-          builder: builder,
+          params: params,
         );
       }
     }
@@ -174,22 +173,22 @@ class RemoteDataRepositoryImpl<T extends Entity>
   @override
   Future<DataResponse<T>> get({
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isCacheMode && isLocal) {
       return backup!.get(
-        builder: builder,
+        params: params,
       );
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
         return backup!.get(
-          builder: builder,
+          params: params,
         );
       } else {
         return source.get(
           isConnected: connected,
-          builder: builder,
+          params: params,
         );
       }
     }
@@ -197,7 +196,7 @@ class RemoteDataRepositoryImpl<T extends Entity>
 
   @override
   Future<DataResponse<T>> getByQuery({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
     bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
@@ -206,7 +205,7 @@ class RemoteDataRepositoryImpl<T extends Entity>
   }) async {
     if (isCacheMode && isLocal) {
       return backup!.getByQuery(
-        builder: builder,
+        params: params,
         forUpdates: forUpdates,
         queries: queries,
         sorts: sorts,
@@ -216,7 +215,7 @@ class RemoteDataRepositoryImpl<T extends Entity>
       var connected = await isConnected;
       if (!connected && isLocal) {
         return backup!.getByQuery(
-          builder: builder,
+          params: params,
           forUpdates: forUpdates,
           queries: queries,
           sorts: sorts,
@@ -224,7 +223,7 @@ class RemoteDataRepositoryImpl<T extends Entity>
         );
       } else {
         return source.getByQuery(
-          builder: builder,
+          params: params,
           forUpdates: forUpdates,
           queries: queries,
           sorts: sorts,
@@ -236,7 +235,7 @@ class RemoteDataRepositoryImpl<T extends Entity>
 
   @override
   Stream<DataResponse<T>> listenByQuery({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
     bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
@@ -245,7 +244,7 @@ class RemoteDataRepositoryImpl<T extends Entity>
   }) async* {
     if (isCacheMode && isLocal) {
       yield* backup!.listenByQuery(
-        builder: builder,
+        params: params,
         forUpdates: forUpdates,
         queries: queries,
         sorts: sorts,
@@ -255,7 +254,7 @@ class RemoteDataRepositoryImpl<T extends Entity>
       var connected = await isConnected;
       if (!connected && isLocal) {
         yield* backup!.listenByQuery(
-          builder: builder,
+          params: params,
           forUpdates: forUpdates,
           queries: queries,
           sorts: sorts,
@@ -263,7 +262,7 @@ class RemoteDataRepositoryImpl<T extends Entity>
         );
       } else {
         yield* source.listenByQuery(
-          builder: builder,
+          params: params,
           isConnected: connected,
           forUpdates: forUpdates,
           queries: queries,
@@ -277,20 +276,20 @@ class RemoteDataRepositoryImpl<T extends Entity>
   @override
   Stream<DataResponse<T>> listen({
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async* {
     if (isCacheMode && isLocal) {
-      yield* backup!.listen(builder: builder);
+      yield* backup!.listen(params: params);
     } else {
       var connected = await isConnected;
       if (!connected && isLocal) {
         yield* backup!.listen(
-          builder: builder,
+          params: params,
         );
       } else {
         yield* source.listen(
           isConnected: connected,
-          builder: builder,
+          params: params,
         );
       }
     }
@@ -301,20 +300,20 @@ class RemoteDataRepositoryImpl<T extends Entity>
   Future<DataResponse<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     if (isCacheMode && isLocal) {
-      return backup!.updateById(id, data, builder: builder);
+      return backup!.updateById(id, data, params: params);
     } else {
       var connected = await isConnected;
       var response = await source.updateById(
         id,
         data,
         isConnected: connected,
-        builder: builder,
+        params: params,
       );
       if (response.isSuccessful && isLocal) {
-        await backup!.updateById(id, data, builder: builder);
+        await backup!.updateById(id, data, params: params);
       }
       return response;
     }

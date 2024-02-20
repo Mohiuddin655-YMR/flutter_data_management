@@ -1,14 +1,14 @@
 part of '../../sources/realtime_data_source.dart';
 
 extension _RealtimeReferenceFinder on rdb.DatabaseReference {
-  Future<GetFinder<T, RS>> checkById<T extends Entity>({
+  Future<CheckFinder<T, _RS>> checkById<T extends Entity>({
     required LocalDataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
     if (id.isNotEmpty) {
       try {
-        return getAt<T>(
+        return _checkById<T>(
           builder: builder,
           encryptor: encryptor,
           id: id,
@@ -32,9 +32,9 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     Encryptor? encryptor,
   }) async {
     try {
-      return fetch<T>(builder: builder, encryptor: encryptor).then((value) {
+      return _fetch<T>(builder: builder, encryptor: encryptor).then((value) {
         if ((value.$1 ?? []).isNotEmpty) {
-          return deleteAts(
+          return _deleteByIds(
             builder: builder,
             encryptor: encryptor,
             ids: (value.$1 ?? []).map((e) => e.id).toList(),
@@ -44,8 +44,8 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
             } else {
               return (null, "Database error!", Status.error);
             }
-          }).onError((e, s) {
-            return (null, "$e", Status.failure);
+          }).onError((_, __) {
+            return (null, "$_", Status.failure);
           });
         } else {
           return (null, null, Status.notFound);
@@ -63,7 +63,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }) async {
     if (data.id.isNotEmpty) {
       try {
-        return setAt(
+        return _add(
           builder: builder,
           encryptor: encryptor,
           data: data,
@@ -73,8 +73,8 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
           } else {
             return ("Database error!", Status.error);
           }
-        }).onError((e, s) {
-          return ("$e", Status.error);
+        }).onError((_, __) {
+          return ("$_", Status.error);
         });
       } catch (_) {
         return ("$_", Status.failure);
@@ -91,7 +91,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }) async {
     if (data.isNotEmpty) {
       try {
-        return setAll(
+        return _adds(
           builder: builder,
           encryptor: encryptor,
           data: data,
@@ -101,8 +101,8 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
           } else {
             return ("Database error!", Status.error);
           }
-        }).onError((e, s) {
-          return ("$e", Status.failure);
+        }).onError((_, __) {
+          return ("$_", Status.failure);
         });
       } catch (_) {
         return ("$_", Status.failure);
@@ -119,7 +119,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }) async {
     if (id.isNotEmpty) {
       try {
-        return deleteAt(
+        return _deleteById(
           builder: builder,
           encryptor: encryptor,
           id: id,
@@ -129,8 +129,8 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
           } else {
             return ("Database error!", Status.error);
           }
-        }).onError((e, s) {
-          return ("$e", Status.failure);
+        }).onError((_, __) {
+          return ("$_", Status.failure);
         });
       } catch (_) {
         return ("$_", Status.failure);
@@ -147,7 +147,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }) async {
     if (ids.isNotEmpty) {
       try {
-        return deleteAts<T>(
+        return _deleteByIds<T>(
           builder: builder,
           encryptor: encryptor,
           ids: ids,
@@ -168,14 +168,36 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Future<GetFinder<T, RS>> getById<T extends Entity>({
+  Future<GetsFinder<T, _RS>> fetch<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+  }) async {
+    try {
+      return _fetch<T>(
+        builder: builder,
+        encryptor: encryptor,
+        onlyUpdates: onlyUpdates,
+      ).then((value) {
+        if ((value.$1 ?? []).isNotEmpty) {
+          return (value, null, Status.ok);
+        } else {
+          return (value, null, Status.notFound);
+        }
+      });
+    } catch (_) {
+      return (null, "$_", Status.failure);
+    }
+  }
+
+  Future<GetFinder<T, _RS>> fetchById<T extends Entity>({
     required LocalDataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
     if (id.isNotEmpty) {
       try {
-        return getAt<T>(
+        return _fetchById<T>(
           builder: builder,
           encryptor: encryptor,
           id: id,
@@ -194,14 +216,14 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Future<GetsFinder<T, RS>> getByIds<T extends Entity>({
+  Future<GetsFinder<T, _RS>> fetchByIds<T extends Entity>({
     required LocalDataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
     if (ids.isNotEmpty) {
       try {
-        return getAts<T>(
+        return _fetchByIds<T>(
           builder: builder,
           encryptor: encryptor,
           ids: ids,
@@ -220,15 +242,39 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Stream<GetFinder<T, RS>> liveById<T extends Entity>({
+  Stream<GetsFinder<T, _RS>> listen<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+  }) {
+    final controller = StreamController<GetsFinder<T, _RS>>();
+    try {
+      _listen<T>(
+        builder: builder,
+        encryptor: encryptor,
+        onlyUpdates: onlyUpdates,
+      ).listen((value) {
+        if ((value.$1 ?? []).isNotEmpty) {
+          controller.add((value, null, Status.ok));
+        } else {
+          controller.add((value, null, Status.notFound));
+        }
+      });
+    } catch (_) {
+      controller.add((null, "$_", Status.failure));
+    }
+    return controller.stream;
+  }
+
+  Stream<GetFinder<T, _RS>> liveById<T extends Entity>({
     required LocalDataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) {
-    final controller = StreamController<GetFinder<T, RS>>();
+    final controller = StreamController<GetFinder<T, _RS>>();
     if (id.isNotEmpty) {
       try {
-        liveAt<T>(
+        _listenById<T>(
           builder: builder,
           encryptor: encryptor,
           id: id,
@@ -250,15 +296,15 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     return controller.stream;
   }
 
-  Stream<GetsFinder<T, RS>> liveByIds<T extends Entity>({
+  Stream<GetsFinder<T, _RS>> liveByIds<T extends Entity>({
     required LocalDataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) {
-    final controller = StreamController<GetsFinder<T, RS>>();
+    final controller = StreamController<GetsFinder<T, _RS>>();
     if (ids.isNotEmpty) {
       try {
-        liveAts<T>(
+        _listenByIds<T>(
           builder: builder,
           encryptor: encryptor,
           ids: ids,
@@ -278,6 +324,90 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
       controller.add((null, null, Status.invalidId));
     }
     return controller.stream;
+  }
+
+  Stream<GetsFinder<T, _RS>> listenByQuery<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+    List<Query> queries = const [],
+    List<Selection> selections = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptions(),
+  }) {
+    final controller = StreamController<GetsFinder<T, _RS>>();
+    try {
+      _listenByQuery<T>(
+        builder: builder,
+        encryptor: encryptor,
+        onlyUpdates: onlyUpdates,
+        queries: queries,
+        selections: selections,
+        sorts: sorts,
+        options: options,
+      ).listen((value) {
+        if ((value.$1 ?? []).isNotEmpty) {
+          controller.add((value, null, Status.alreadyFound));
+        } else {
+          controller.add((value, null, Status.notFound));
+        }
+      });
+    } catch (_) {
+      controller.add((null, "$_", Status.failure));
+    }
+    return controller.stream;
+  }
+
+  Future<GetsFinder<T, _RS>> query<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+    List<Query> queries = const [],
+    List<Selection> selections = const [],
+    List<Sorting> sorts = const [],
+    PagingOptions options = const PagingOptions(),
+  }) async {
+    try {
+      return _query<T>(
+        builder: builder,
+        encryptor: encryptor,
+        onlyUpdates: onlyUpdates,
+        queries: queries,
+        selections: selections,
+        sorts: sorts,
+        options: options,
+      ).then((value) {
+        if ((value.$1 ?? []).isNotEmpty) {
+          return (value, null, Status.ok);
+        } else {
+          return (value, null, Status.notFound);
+        }
+      });
+    } catch (_) {
+      return (null, "$_", Status.failure);
+    }
+  }
+
+  Future<GetsFinder<T, _RS>> search<T extends Entity>({
+    required LocalDataBuilder<T> builder,
+    Encryptor? encryptor,
+    required Checker checker,
+  }) async {
+    try {
+      return _search<T>(
+        builder: builder,
+        checker: checker,
+        encryptor: encryptor,
+      ).then((value) {
+        if ((value.$1 ?? []).isNotEmpty) {
+          return (value, null, Status.ok);
+        } else {
+          return (value, null, Status.notFound);
+        }
+      });
+    } catch (_) {
+      return (null, "$_", Status.failure);
+    }
   }
 
   Future<UpdatingFinder> updateById<T extends Entity>({
@@ -288,7 +418,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }) async {
     if (id.isNotEmpty) {
       try {
-        return updateAt(
+        return _updateById(
           builder: builder,
           encryptor: encryptor,
           data: data.withId(id),
@@ -298,8 +428,8 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
           } else {
             return ("Database error!", Status.error);
           }
-        }).onError((e, s) {
-          return ("$e", Status.failure);
+        }).onError((_, __) {
+          return ("$_", Status.failure);
         });
       } catch (_) {
         return ("$_", Status.failure);
@@ -316,7 +446,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }) async {
     if (data.isNotEmpty) {
       try {
-        return updateAts<T>(
+        return _updateByIds<T>(
           builder: builder,
           encryptor: encryptor,
           data: data,

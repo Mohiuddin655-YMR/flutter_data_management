@@ -1,34 +1,34 @@
 import 'dart:async';
 
 import 'package:data_management/core.dart';
-import 'package:firebase_database/firebase_database.dart' as rdb;
 import 'package:flutter_andomie/core.dart';
+import 'package:localstore/localstore.dart' as ldb;
 
-part '../base/realtime/config.dart';
-part '../base/realtime/extension.dart';
-part '../base/realtime/finder.dart';
+part '../base/local/config.dart';
+part '../base/local/extension.dart';
+part '../base/local/finder.dart';
 
 ///
 /// You can use base class [Data] without [Entity]
 ///
 
-typedef _RS = rdb.DataSnapshot;
+typedef _LS = dynamic;
 
-abstract class RealtimeDataSource<T extends Entity>
+abstract class FirestoreDataSource<T extends Entity>
     extends RemoteDataSource<T> {
   final String path;
 
-  RealtimeDataSource({
+  FirestoreDataSource({
     required this.path,
     super.encryptor,
   });
 
-  rdb.FirebaseDatabase? _db;
+  ldb.Localstore? _db;
 
-  rdb.FirebaseDatabase get database => _db ??= rdb.FirebaseDatabase.instance;
+  ldb.Localstore get database => _db ??= ldb.Localstore.instance;
 
-  rdb.DatabaseReference _source(FieldParams? params) {
-    return database.ref(params.generate(path));
+  ldb.CollectionRef _source(FieldParams? params) {
+    return database.collection(params.generate(path));
   }
 
   /// Method to check data by ID with optional data source builder.

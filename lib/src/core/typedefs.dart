@@ -1,9 +1,15 @@
 import 'package:flutter_andomie/core.dart';
 
+import 'configs.dart';
+
 typedef OnDataBuilder<T extends Entity> = T Function(dynamic);
-typedef OnDataSourceBuilder = String Function(String path);
+typedef OnDataSourceBuilder = FieldParams Function(FieldParams params);
 typedef OnValueBuilder<T> = T Function(dynamic value);
 
+typedef CheckResponse<T extends Entity, S extends Object> = (
+  T? data,
+  S? snapshot,
+);
 typedef GetResponse<T extends Entity, S extends Object> = (
   T? data,
   S? snapshot,
@@ -18,6 +24,11 @@ typedef ClearFinder<T extends Entity> = (
   Status? status,
 );
 
+typedef CheckFinder<T extends Entity, S extends Object> = (
+  GetResponse<T, S>? value,
+  String? error,
+  Status? status,
+);
 typedef CreationFinder = (String? error, Status? status);
 typedef DeletionFinder = (String? error, Status? status);
 typedef UpdatingFinder = (String? error, Status? status);

@@ -12,27 +12,27 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   @override
   Future<DataResponse<T>> checkById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return notifier(() => repository.checkById(id, builder: builder));
+    return notifier(() => repository.checkById(id, params: params));
   }
 
   /// Use for create single data
   @override
   Future<DataResponse<T>> create(
     T data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return notifier(() => repository.create(data, builder: builder));
+    return notifier(() => repository.create(data, params: params));
   }
 
   /// Use for create multiple data
   @override
   Future<DataResponse<T>> creates(
     List<T> data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return notifier(() => repository.creates(data, builder: builder));
+    return notifier(() => repository.creates(data, params: params));
   }
 
   /// Use for update single data
@@ -40,70 +40,70 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   Future<DataResponse<T>> updateById({
     required String id,
     required Map<String, dynamic> data,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return notifier(() => repository.updateById(id, data, builder: builder));
+    return notifier(() => repository.updateById(id, data, params: params));
   }
 
   @override
   Future<DataResponse<T>> deleteById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return notifier(() => repository.deleteById(id, builder: builder));
+    return notifier(() => repository.deleteById(id, params: params));
   }
 
   @override
   Future<DataResponse<T>> clear({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
-    return notifier(() => repository.clear(builder: builder));
+    return notifier(() => repository.clear(params: params));
   }
 
   @override
   Future<DataResponse<T>> getById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return notifier(() => repository.getById(id, builder: builder));
+    return notifier(() => repository.getById(id, params: params));
   }
 
   @override
   Future<DataResponse<T>> get({
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     return notifier(() {
-      return repository.get(builder: builder, forUpdates: forUpdates);
+      return repository.get(params: params, forUpdates: forUpdates);
     });
   }
 
   @override
   Stream<DataResponse<T>> listenById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return repository.listenById(id, builder: builder);
+    return repository.listenById(id, params: params);
   }
 
   @override
   Stream<DataResponse<T>> listen({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return repository.listen(builder: builder);
+    return repository.listen(params: params);
   }
 
   @override
   Future<DataResponse<T>> getByQuery({
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
     PagingOptions options = const PagingOptionsImpl(),
   }) {
     return notifier(() {
-      return repository.get(builder: builder, forUpdates: forUpdates);
+      return repository.get(params: params, forUpdates: forUpdates);
     });
   }
 }

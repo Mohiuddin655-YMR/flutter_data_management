@@ -1,7 +1,6 @@
 import 'package:flutter_andomie/utils/entities/entities.dart';
 
 import '../../core/configs.dart';
-import '../../core/typedefs.dart';
 import '../../services/repositories/local_data_repository.dart';
 import '../../utils/response.dart';
 
@@ -16,73 +15,73 @@ class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
 
   @override
   Future<DataResponse<T>> clear({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return source.clear(builder: builder);
+    return source.clear(params: params);
   }
 
   @override
   Future<DataResponse<T>> deleteById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return source.deleteById(id, builder: builder);
+    return source.deleteById(id, params: params);
   }
 
   /// Use for create single data
   @override
   Future<DataResponse<T>> create(
     T data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return source.create(data, builder: builder);
+    return source.create(data, params: params);
   }
 
   /// Use for create multiple data
   @override
   Future<DataResponse<T>> creates(
     List<T> data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return source.creates(data, builder: builder);
+    return source.creates(data, params: params);
   }
 
   /// Use for check current data
   @override
   Future<DataResponse<T>> checkById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return source.checkById(id, builder: builder);
+    return source.checkById(id, params: params);
   }
 
   @override
   Future<DataResponse<T>> getById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return source.getById(id, builder: builder);
+    return source.getById(id, params: params);
   }
 
   @override
   Stream<DataResponse<T>> listenById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return source.listenById(id, builder: builder);
+    return source.listenById(id, params: params);
   }
 
   @override
   Future<DataResponse<T>> get({
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return source.get(builder: builder);
+    return source.get(params: params);
   }
 
   @override
   Future<DataResponse<T>> getByQuery({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
     bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
@@ -90,7 +89,7 @@ class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
     PagingOptions options = const PagingOptionsImpl(),
   }) {
     return source.getByQuery(
-      builder: builder,
+      params: params,
       forUpdates: forUpdates,
       queries: queries,
       sorts: sorts,
@@ -100,7 +99,7 @@ class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
 
   @override
   Stream<DataResponse<T>> listenByQuery({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
     bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
@@ -108,7 +107,7 @@ class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
     PagingOptions options = const PagingOptionsImpl(),
   }) {
     return source.listenByQuery(
-      builder: builder,
+      params: params,
       forUpdates: forUpdates,
       queries: queries,
       sorts: sorts,
@@ -119,9 +118,9 @@ class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
   @override
   Stream<DataResponse<T>> listen({
     bool forUpdates = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return source.listen(builder: builder);
+    return source.listen(params: params);
   }
 
   /// Use for update single data
@@ -129,8 +128,8 @@ class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
   Future<DataResponse<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
-    return source.updateById(id, data, builder: builder);
+    return source.updateById(id, data, params: params);
   }
 }

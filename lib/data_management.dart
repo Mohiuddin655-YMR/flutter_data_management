@@ -1,5 +1,6 @@
 library data_management;
 
+export 'src/core/configs.dart';
 export 'src/core/extensions.dart';
 export 'src/core/typedefs.dart';
 export 'src/data/repositories/local_data_repository.dart';

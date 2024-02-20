@@ -1,24 +1,23 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:data_management/core.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter_andomie/core.dart';
 
-import '../../core/configs.dart';
-import '../../core/typedefs.dart';
-import '../../services/sources/remote_data_source.dart';
-import '../../utils/response.dart';
+part '../base/api/base.dart';
 
-part '../base/api/api_base_config.dart';
-part '../base/api/api_data_finder.dart';
-part '../base/api/api_extension.dart';
-part '../base/api/api_path_extension.dart';
-part '../base/api/api_query_config.dart';
+part '../base/api/config.dart';
+
+part '../base/api/extension.dart';
+
+part '../base/api/finder.dart';
 
 ///
 /// You can use base class [Data] without [Entity]
 ///
 
-typedef AS = String;
+typedef _AS = Object?;
 
 abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   final Api api;
@@ -34,379 +33,656 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   dio.Dio get database => _db ??= dio.Dio(api._options);
 
-  String _source(OnDataSourceBuilder? source) {
-    return source?.call(_path) ?? _path;
-  }
+  String _source(FieldParams? params) => params.generate(_path);
 
-  /// Use for check current data
+  /// Method to check data by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.checkById(
+  ///   'userId123',
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
   @override
   Future<DataResponse<T>> checkById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
-    final response = DataResponse<T>();
     if (isConnected) {
-      if (id.isValid) {
-        var finder = await database.getById(
-          api: api,
+      if (id.isNotEmpty) {
+        var finder = await database.checkById(
           builder: build,
           encryptor: encryptor,
-          path: _source(builder),
+          api: api,
+          endPoint: _source(params),
           id: id,
         );
-        return response.withAvailable(
-          !finder.$1,
-          data: finder.$2,
-          message: finder.$4,
-          status: finder.$5,
+        return DataResponse(
+          data: finder.$1?.$1,
+          snapshot: finder.$1?.$2,
+          exception: finder.$2,
+          status: finder.$3,
         );
       } else {
-        return response.withStatus(Status.invalidId);
+        return DataResponse(status: Status.invalidId);
       }
     } else {
-      return response.withStatus(Status.networkError);
+      return DataResponse(status: Status.networkError);
     }
   }
 
-  /// Use for create single data
+  /// Method to clear data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.clear(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  @override
+  Future<DataResponse<T>> clear({
+    bool isConnected = false,
+    FieldParams? params,
+  }) async {
+    if (isConnected) {
+      var finder = await database.clear(
+        builder: build,
+        encryptor: encryptor,
+        api: api,
+        endPoint: _source(params),
+      );
+      return DataResponse(
+        backups: finder.$1,
+        exception: finder.$2,
+        status: finder.$3,
+      );
+    } else {
+      return DataResponse(status: Status.networkError);
+    }
+  }
+
+  /// Method to create data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// T newData = //...;
+  /// repository.create(
+  ///   newData,
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
   @override
   Future<DataResponse<T>> create(
     T data, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
-    final response = DataResponse<T>();
     if (isConnected) {
       if (data.id.isValid) {
-        final finder = await database.insert(
-          api: api,
+        final finder = await database.create(
           builder: build,
           encryptor: encryptor,
-          path: _source(builder),
+          api: api,
+          endPoint: _source(params),
           data: data,
         );
-        return response.modify(
-          successful: finder.$1,
-          error: !finder.$1,
-          result: finder.$3,
-          feedback: finder.$2,
-          message: finder.$4,
-          status: finder.$5,
-        );
+        return DataResponse(exception: finder.$1, status: finder.$2);
       } else {
-        return response.withStatus(Status.invalidId);
+        return DataResponse(status: Status.invalidId);
       }
     } else {
-      return response.withStatus(Status.networkError);
+      return DataResponse(status: Status.networkError);
     }
   }
 
-  /// Use for create multiple data
+  /// Method to create multiple data entries with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<T> newDataList = //...;
+  /// repository.creates(
+  ///   newDataList,
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
   @override
   Future<DataResponse<T>> creates(
     List<T> data, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
-    final response = DataResponse<T>();
     if (isConnected) {
       if (data.isValid) {
-        final finder = await database.inserts(
-          api: api,
+        final finder = await database.creates(
           builder: build,
           encryptor: encryptor,
-          path: _source(builder),
+          api: api,
+          endPoint: _source(params),
           data: data,
         );
-        return response.modify(
-          error: !finder.$1,
-          successful: finder.$1,
-          ignores: finder.$3,
-          feedback: finder.$4,
-          message: finder.$5,
-          status: finder.$6,
-        );
+        return DataResponse(exception: finder.$1, status: finder.$2);
       } else {
-        return response.withStatus(Status.invalidId);
+        return DataResponse(status: Status.invalidId);
       }
     } else {
-      return response.withStatus(Status.networkError);
+      return DataResponse(status: Status.networkError);
     }
   }
 
-  /// Use for update single data
-  @override
-  Future<DataResponse<T>> updateById(
-    String id,
-    Map<String, dynamic> data, {
-    bool isConnected = false,
-    OnDataSourceBuilder? builder,
-  }) async {
-    final response = DataResponse<T>();
-    if (isConnected) {
-      if (id.isValid) {
-        final finder = await database.update(
-          api: api,
-          builder: build,
-          encryptor: encryptor,
-          path: _source(builder),
-          id: id,
-          data: data,
-        );
-        return response.modify(
-          successful: finder.$1,
-          error: !finder.$1,
-          backups: finder.$2 != null ? [finder.$2!] : null,
-          feedback: finder.$3,
-          message: finder.$4,
-          status: finder.$5,
-        );
-      } else {
-        return response.withStatus(Status.invalidId);
-      }
-    } else {
-      return response.withStatus(Status.networkError);
-    }
-  }
-
-  /// Use for delete single data
+  /// Method to delete data by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.deleteById(
+  ///   'userId123',
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
   @override
   Future<DataResponse<T>> deleteById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
-    final response = DataResponse<T>();
     if (isConnected) {
-      if (id.isValid) {
+      if (id.isNotEmpty) {
         var finder = await database.deleteById(
-          api: api,
           builder: build,
           encryptor: encryptor,
-          path: _source(builder),
+          api: api,
+          endPoint: _source(params),
           id: id,
         );
-        return response.modify(
-          successful: finder.$1,
-          error: !finder.$1,
-          backups: finder.$2 != null ? [finder.$2!] : null,
-          feedback: finder.$3,
-          message: finder.$4,
-          status: finder.$5,
-        );
+        return DataResponse(exception: finder.$1, status: finder.$2);
       } else {
-        return response.withStatus(Status.invalidId);
+        return DataResponse(status: Status.invalidId);
       }
     } else {
-      return response.withStatus(Status.networkError);
+      return DataResponse(status: Status.networkError);
     }
   }
 
-  /// Use for delete all data
+  /// Method to delete data by multiple IDs with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<String> idsToDelete = ['userId1', 'userId2'];
+  /// repository.deleteByIds(
+  ///   idsToDelete,
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
   @override
-  Future<DataResponse<T>> clear({
+  Future<DataResponse<T>> deleteByIds(
+    List<String> ids, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
-    final response = DataResponse<T>();
     if (isConnected) {
-      var finder = await database.clear(
-        api: api,
+      if (ids.isNotEmpty) {
+        var finder = await database.deleteByIds(
+          builder: build,
+          encryptor: encryptor,
+          api: api,
+          endPoint: _source(params),
+          ids: ids,
+        );
+        return DataResponse(exception: finder.$1, status: finder.$2);
+      } else {
+        return DataResponse(status: Status.invalidId);
+      }
+    } else {
+      return DataResponse(status: Status.networkError);
+    }
+  }
+
+  /// Method to get data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.get(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  @override
+  Future<DataResponse<T>> get({
+    bool isConnected = false,
+    bool forUpdates = false,
+    FieldParams? params,
+  }) async {
+    if (isConnected) {
+      var finder = await database.fetchAll(
         builder: build,
         encryptor: encryptor,
-        path: _source(builder),
+        api: api,
+        endPoint: _source(params),
+        onlyUpdates: forUpdates,
       );
-      return response.modify(
-        successful: finder.$1,
-        error: !finder.$1,
-        backups: finder.$2,
-        message: finder.$3,
-        status: finder.$4,
+      return DataResponse(
+        result: finder.$1?.$1,
+        snapshot: finder.$1?.$2,
+        exception: finder.$2,
+        status: finder.$3,
       );
     } else {
-      return response.withStatus(Status.networkError);
+      return DataResponse(status: Status.networkError);
     }
   }
 
-  /// Use for fetch single data
+  /// Method to get data by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.getById(
+  ///   'userId123',
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
   @override
   Future<DataResponse<T>> getById(
     String id, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
-    final response = DataResponse<T>();
     if (isConnected) {
-      var finder = await database.getById(
-        api: api,
+      var finder = await database.fetchById(
         builder: build,
         encryptor: encryptor,
-        path: _source(builder),
+        api: api,
+        endPoint: _source(params),
         id: id,
       );
-      if (finder.$1) {
-        return response.withData(finder.$2).withResult(finder.$3);
-      } else {
-        return response.withException(finder.$4, status: finder.$5);
-      }
+      return DataResponse(
+        data: finder.$1?.$1,
+        snapshot: finder.$1?.$2,
+        message: finder.$2,
+        status: finder.$3,
+      );
     } else {
-      return response.withStatus(Status.networkError);
+      return DataResponse(status: Status.networkError);
     }
   }
 
-  /// Use for fetch all data
+  /// Method to get data by multiple IDs with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<String> idsToRetrieve = ['userId1', 'userId2'];
+  /// repository.getByIds(
+  ///   idsToRetrieve,
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
   @override
-  Future<DataResponse<T>> get({
+  Future<DataResponse<T>> getByIds(
+    List<String> ids, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
     bool forUpdates = false,
+    FieldParams? params,
   }) async {
-    final response = DataResponse<T>();
     if (isConnected) {
-      var finder = await database.gets(
-        api: api,
+      var finder = await database.fetchByIds(
         builder: build,
         encryptor: encryptor,
-        path: _source(builder),
+        api: api,
+        endPoint: _source(params),
+        ids: ids,
       );
-      if (finder.$1) {
-        return response.withResult(finder.$2);
-      } else {
-        return response.withException(finder.$3, status: finder.$4);
-      }
+      return DataResponse(
+        result: finder.$1?.$1,
+        snapshot: finder.$1?.$2,
+        message: finder.$2,
+        status: finder.$3,
+      );
     } else {
-      return response.withStatus(Status.networkError);
+      return DataResponse(status: Status.networkError);
     }
   }
 
-  /// Use for fetch data by paging
+  /// Method to get data by query with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<Query> queries = [Query.field('name', 'John')];
+  /// repository.getByQuery(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  ///   queries: queries,
+  /// );
+  /// ```
   @override
   Future<DataResponse<T>> getByQuery({
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
     bool forUpdates = false,
+    FieldParams? params,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
-    PagingOptions options = const ApiPagingOptions.empty(),
+    PagingOptions options = const PagingOptionsImpl(),
   }) async {
-    final response = DataResponse<T>();
     if (isConnected) {
-      var finder = await database.getsByQuery(
-        api: api,
+      var finder = await database.query(
         builder: build,
         encryptor: encryptor,
-        path: _source(builder),
+        api: api,
+        endPoint: _source(params),
+        onlyUpdates: forUpdates,
         queries: queries,
+        selections: selections,
         sorts: sorts,
         options: options,
       );
-      if (finder.$1) {
-        return response.withResult(finder.$2);
-      } else {
-        return response.withException(finder.$3, status: finder.$4);
-      }
+      return DataResponse(
+        result: finder.$1?.$1,
+        snapshot: finder.$1?.$2,
+        exception: finder.$2,
+        status: finder.$3,
+      );
     } else {
-      return response.withStatus(Status.networkError);
+      return DataResponse(status: Status.networkError);
     }
   }
 
-  /// Use for fetch query observable data when changes
+  /// Stream method to listen for data changes with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.listen(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
   @override
-  Stream<DataResponse<T>> listenByQuery({
-    OnDataSourceBuilder? builder,
+  Stream<DataResponse<T>> listen({
     bool isConnected = false,
     bool forUpdates = false,
+    FieldParams? params,
+  }) {
+    final controller = StreamController<DataResponse<T>>();
+    if (isConnected) {
+      try {
+        database
+            .listen(
+          builder: build,
+          encryptor: encryptor,
+          api: api,
+          endPoint: _source(params),
+          onlyUpdates: forUpdates,
+        )
+            .listen((finder) {
+          controller.add(DataResponse(
+            result: finder.$1?.$1,
+            snapshot: finder.$1?.$2,
+            exception: finder.$2,
+            status: finder.$3,
+          ));
+        });
+      } catch (_) {
+        controller.add(DataResponse(
+          exception: "$_",
+          status: Status.failure,
+        ));
+      }
+    } else {
+      controller.add(DataResponse(status: Status.networkError));
+    }
+    return controller.stream;
+  }
+
+  /// Stream method to listen for data changes by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.listenById(
+  ///   'userId123',
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  @override
+  Stream<DataResponse<T>> listenById(
+    String id, {
+    bool isConnected = false,
+    FieldParams? params,
+  }) {
+    final controller = StreamController<DataResponse<T>>();
+    if (isConnected) {
+      try {
+        database
+            .liveById(
+          builder: build,
+          encryptor: encryptor,
+          api: api,
+          endPoint: _source(params),
+          id: id,
+        )
+            .listen((finder) {
+          controller.add(DataResponse(
+            data: finder.$1?.$1,
+            snapshot: finder.$1?.$2,
+            message: finder.$2,
+            status: finder.$3,
+          ));
+        });
+      } catch (_) {
+        controller.add(DataResponse(
+          exception: "$_",
+          status: Status.failure,
+        ));
+      }
+    } else {
+      controller.add(DataResponse(status: Status.networkError));
+    }
+    return controller.stream;
+  }
+
+  /// Stream method to listen for data changes by multiple IDs with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<String> idsToListen = ['userId1', 'userId2'];
+  /// repository.listenByIds(
+  ///   idsToListen,
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  @override
+  Stream<DataResponse<T>> listenByIds(
+    List<String> ids, {
+    bool isConnected = false,
+    bool forUpdates = false,
+    FieldParams? params,
+  }) {
+    final controller = StreamController<DataResponse<T>>();
+    if (isConnected) {
+      try {
+        database
+            .liveByIds(
+          builder: build,
+          encryptor: encryptor,
+          api: api,
+          endPoint: _source(params),
+          ids: ids,
+        )
+            .listen((finder) {
+          controller.add(DataResponse(
+            result: finder.$1?.$1,
+            snapshot: finder.$1?.$2,
+            message: finder.$2,
+            status: finder.$3,
+          ));
+        });
+      } catch (_) {
+        controller.add(DataResponse(
+          exception: "$_",
+          status: Status.failure,
+        ));
+      }
+    } else {
+      controller.add(DataResponse(status: Status.networkError));
+    }
+    return controller.stream;
+  }
+
+  /// Stream method to listen for data changes by query with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<Query> queries = [Query.field('name', 'John')];
+  /// repository.listenByQuery(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  ///   queries: queries,
+  /// );
+  /// ```
+  @override
+  Stream<DataResponse<T>> listenByQuery({
+    bool isConnected = false,
+    bool forUpdates = false,
+    FieldParams? params,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
     PagingOptions options = const PagingOptionsImpl(),
   }) {
     final controller = StreamController<DataResponse<T>>();
-    final response = DataResponse<T>();
     if (isConnected) {
-      database
-          .getsByQueryRealtime(
-              api: api,
-              builder: build,
-              encryptor: encryptor,
-              path: _source(builder))
-          .listen((finder) {
-        if (finder.$1) {
-          controller.add(response.withResult(finder.$2));
-        } else {
-          controller.add(
-            response.withResult(null, message: finder.$3, status: finder.$4),
-          );
-        }
-      });
+      try {
+        database
+            .listenByQuery(
+          builder: build,
+          encryptor: encryptor,
+          api: api,
+          endPoint: _source(params),
+          onlyUpdates: forUpdates,
+          queries: queries,
+          selections: selections,
+          sorts: sorts,
+          options: options,
+        )
+            .listen((finder) {
+          controller.add(DataResponse(
+            result: finder.$1?.$1,
+            snapshot: finder.$1?.$2,
+            exception: finder.$2,
+            status: finder.$3,
+          ));
+        });
+      } catch (_) {
+        controller.add(DataResponse(
+          exception: "$_",
+          status: Status.failure,
+        ));
+      }
     } else {
-      controller.add(response.withStatus(Status.networkError));
+      controller.add(DataResponse(status: Status.networkError));
     }
     return controller.stream;
   }
 
-  /// Use for fetch single observable data when data update
+  /// Method to check data by query with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// Checker checker = Checker(field: 'status', value: 'active');
+  /// repository.search(
+  ///   checker,
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
   @override
-  Stream<DataResponse<T>> listenById(
-    String id, {
+  Future<DataResponse<T>> search(
+    Checker checker, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
-  }) {
-    final controller = StreamController<DataResponse<T>>();
-    final response = DataResponse<T>();
+    FieldParams? params,
+  }) async {
     if (isConnected) {
-      database
-          .getByRealtime(
-              api: api,
-              builder: build,
-              encryptor: encryptor,
-              path: _source(builder),
-              id: id)
-          .listen((finder) {
-        if (finder.$1) {
-          controller.add(response.withData(finder.$2));
-        } else {
-          controller.add(
-            response.withData(null, message: finder.$4, status: finder.$5),
-          );
-        }
-      });
+      var finder = await database.search(
+        builder: build,
+        encryptor: encryptor,
+        api: api,
+        endPoint: _source(params),
+        checker: checker,
+      );
+      return DataResponse(
+        result: finder.$1?.$1,
+        snapshot: finder.$1?.$2,
+        exception: finder.$2,
+        status: finder.$3,
+      );
     } else {
-      controller.add(response.withStatus(Status.networkError));
+      return DataResponse(status: Status.networkError);
     }
-    return controller.stream;
   }
 
-  /// Use for fetch all observable data when data update
+  /// Method to update data by ID with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.updateById(
+  ///   'userId123',
+  ///   {'status': 'inactive'},
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
   @override
-  Stream<DataResponse<T>> listen({
+  Future<DataResponse<T>> updateById(
+    String id,
+    Map<String, dynamic> data, {
     bool isConnected = false,
-    OnDataSourceBuilder? builder,
-    bool forUpdates = false,
-  }) {
-    final controller = StreamController<DataResponse<T>>();
-    final response = DataResponse<T>();
+    FieldParams? params,
+  }) async {
     if (isConnected) {
-      database
-          .getsByQueryRealtime(
-              api: api,
-              builder: build,
-              encryptor: encryptor,
-              path: _source(builder))
-          .listen((finder) {
-        if (finder.$1) {
-          controller.add(response.withResult(finder.$2));
-        } else {
-          controller.add(
-            response.withResult(null, message: finder.$3, status: finder.$4),
-          );
-        }
-      });
+      if (id.isNotEmpty) {
+        final finder = await database.updateById(
+          builder: build,
+          encryptor: encryptor,
+          api: api,
+          endPoint: _source(params),
+          id: id,
+          data: data,
+        );
+        return DataResponse(exception: finder.$1, status: finder.$2);
+      } else {
+        return DataResponse(status: Status.invalidId);
+      }
     } else {
-      controller.add(response.withStatus(Status.networkError));
+      return DataResponse(status: Status.networkError);
     }
-    return controller.stream;
+  }
+
+  /// Method to update data by multiple IDs with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<UpdatingInfo> updates = [
+  ///   UpdatingInfo('userId1', {'status': 'inactive'}),
+  ///   UpdatingInfo('userId2', {'status': 'active'}),
+  /// ];
+  /// repository.updateByIds(
+  ///   updates,
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  @override
+  Future<DataResponse<T>> updateByIds(
+    List<UpdatingInfo> updates, {
+    bool isConnected = false,
+    FieldParams? params,
+  }) async {
+    if (isConnected) {
+      if (updates.isNotEmpty) {
+        final finder = await database.updateByIds(
+          builder: build,
+          encryptor: encryptor,
+          api: api,
+          endPoint: _source(params),
+          data: updates,
+        );
+        return DataResponse(exception: finder.$1, status: finder.$2);
+      } else {
+        return DataResponse(status: Status.invalidId);
+      }
+    } else {
+      return DataResponse(status: Status.networkError);
+    }
   }
 }

@@ -2,10 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_andomie/core.dart';
 
-import '../../core/configs.dart';
-import '../../core/typedefs.dart';
-import '../../services/sources/local_data_source.dart';
-import '../../utils/response.dart';
+import '../../../core.dart';
 
 ///
 /// You can use base class [Data] without [Entity]
@@ -17,21 +14,19 @@ abstract class LocalDataSourceImpl<T extends Entity>
     super.database,
   });
 
-  String _source(OnDataSourceBuilder? source) {
-    return source?.call(path) ?? path;
-  }
+  String _source(FieldParams? params) => params.generate(path);
 
   /// Use for check current data
   @override
   Future<DataResponse<T>> checkById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     final response = DataResponse<T>();
     if (id.isValid) {
       var finder = await database.findById(
         id: id,
-        path: _source(builder),
+        path: _source(params),
         builder: build,
       );
       return response.withAvailable(
@@ -49,14 +44,14 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<DataResponse<T>> create(
     T data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     final response = DataResponse<T>();
     try {
       if (data.id.isValid) {
         final finder = await database.setByData(
           data: data,
-          path: _source(builder),
+          path: _source(params),
           builder: build,
         );
         return response.modify(
@@ -79,14 +74,14 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<DataResponse<T>> creates(
     List<T> data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     final response = DataResponse<T>();
     try {
       if (data.isValid) {
         final finder = await database.setByList(
           data: data,
-          path: _source(builder),
+          path: _source(params),
           builder: build,
         );
         return response.modify(
@@ -110,7 +105,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   Future<DataResponse<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     final response = DataResponse<T>();
     try {
@@ -118,7 +113,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
         final finder = await database.updateByData(
           id: id,
           data: data,
-          path: _source(builder),
+          path: _source(params),
           builder: build,
         );
         return response.modify(
@@ -141,14 +136,14 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<DataResponse<T>> deleteById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     final response = DataResponse<T>();
     try {
       if (id.isValid) {
         var finder = await database.deleteById(
           id: id,
-          path: _source(builder),
+          path: _source(params),
           builder: build,
         );
         if (finder.$1) {
@@ -169,12 +164,12 @@ abstract class LocalDataSourceImpl<T extends Entity>
   /// Use for delete all data
   @override
   Future<DataResponse<T>> clear({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     final response = DataResponse<T>();
     try {
       var finder = await database.clearBy(
-        path: _source(builder),
+        path: _source(params),
         builder: build,
       );
       if (finder.$1) {
@@ -191,13 +186,13 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<DataResponse<T>> getById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) async {
     final response = DataResponse<T>();
     try {
       var finder = await database.findById(
         id: id,
-        path: _source(builder),
+        path: _source(params),
         builder: build,
       );
       if (finder.$1) {
@@ -213,13 +208,13 @@ abstract class LocalDataSourceImpl<T extends Entity>
   /// Use for fetch all data
   @override
   Future<DataResponse<T>> get({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
     bool forUpdates = false,
   }) async {
     final response = DataResponse<T>();
     try {
       var finder = await database.findBy(
-        path: _source(builder),
+        path: _source(params),
         builder: build,
       );
       if (finder.$1) {
@@ -236,14 +231,14 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Stream<DataResponse<T>> listenById(
     String id, {
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     final controller = StreamController<DataResponse<T>>();
     final response = DataResponse<T>();
     try {
       if (id.isNotEmpty) {
         Timer.periodic(const Duration(milliseconds: 500), (timer) async {
-          final I = await getById(id, builder: builder);
+          final I = await getById(id, params: params);
           var result = I.data;
           if (result.isValid) {
             controller.add(response.withData(result));
@@ -265,13 +260,13 @@ abstract class LocalDataSourceImpl<T extends Entity>
   /// Use for fetch all observable data when data update
   @override
   Stream<DataResponse<T>> listen({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
   }) {
     final controller = StreamController<DataResponse<T>>();
     final response = DataResponse<T>();
     try {
       Timer.periodic(const Duration(milliseconds: 500), (timer) async {
-        final I = await get(builder: builder);
+        final I = await get(params: params);
         var result = I.result;
         if (result.isValid) {
           controller.add(response.withResult(result));
@@ -290,26 +285,26 @@ abstract class LocalDataSourceImpl<T extends Entity>
   /// Use for fetch all specifics data
   @override
   Future<DataResponse<T>> getByQuery({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
     bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
     PagingOptions options = const PagingOptionsImpl(),
   }) {
-    return get(builder: builder, forUpdates: forUpdates);
+    return get(params: params, forUpdates: forUpdates);
   }
 
   /// Use for fetch query observable data when changes
   @override
   Stream<DataResponse<T>> listenByQuery({
-    OnDataSourceBuilder? builder,
+    FieldParams? params,
     bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
     PagingOptions options = const PagingOptionsImpl(),
   }) {
-    return listen(builder: builder);
+    return listen(params: params);
   }
 }
