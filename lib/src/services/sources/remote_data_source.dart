@@ -3,7 +3,6 @@ import 'package:flutter_andomie/core.dart';
 import '../../core/configs.dart';
 import '../../models/checker.dart';
 import '../../models/updating_info.dart';
-import '../../utils/errors.dart';
 import '../../utils/response.dart';
 import 'data_source.dart';
 
@@ -65,32 +64,15 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// ```dart
   /// repository.checkById(
   ///   'userId123',
-  ///   params: Params({"field1": "value1", "field2": "value2"}),se
-  ///       return dataSource["sub_collection_id"]["sub_collection_name"];
-  ///     } else if (dataSource is CollectionReference) {
-  ///       // For Firestore database
-  ///       return dataSource.doc("sub_collection_id").collection("sub_collection_name");
-  ///     } else if (dataSource is DatabaseReference) {
-  ///       // For Realtime database
-  ///       return dataSource.child("sub_collection_id").child("sub_collection_name");
-  ///     } else if (dataSource is String) {
-  ///       // For Api endpoint
-  ///       return "$dataSource/{sub_collection_id}/sub_collection_name";
-  ///     } else {
-  ///       // Back to default source from use case
-  ///       return null;
-  ///     }
-  ///   },
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
   @override
   Future<DataResponse<T>> checkById(
     String id, {
-    bool isConnected = false,
     FieldParams? params,
-  }) {
-    throw const DataException('checkById method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Method to clear data with optional data source builder.
   ///
@@ -102,11 +84,9 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// ```
   @override
   Future<DataResponse<T>> clear({
-    bool isConnected = false,
     FieldParams? params,
-  }) {
-    throw const DataException('clear method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Method to create data with optional data source builder.
   ///
@@ -121,11 +101,9 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<DataResponse<T>> create(
     T data, {
-    bool isConnected = false,
     FieldParams? params,
-  }) {
-    throw const DataException('create method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Method to create multiple data entries with optional data source builder.
   ///
@@ -140,11 +118,9 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<DataResponse<T>> creates(
     List<T> data, {
-    bool isConnected = false,
     FieldParams? params,
-  }) {
-    throw const DataException('creates method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Method to delete data by ID with optional data source builder.
   ///
@@ -158,11 +134,9 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<DataResponse<T>> deleteById(
     String id, {
-    bool isConnected = false,
     FieldParams? params,
-  }) {
-    throw const DataException('deleteById method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Method to delete data by multiple IDs with optional data source builder.
   ///
@@ -177,11 +151,9 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<DataResponse<T>> deleteByIds(
     List<String> ids, {
-    bool isConnected = false,
     FieldParams? params,
-  }) {
-    throw const DataException('deleteByIds method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Method to get data with optional data source builder.
   ///
@@ -193,12 +165,10 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// ```
   @override
   Future<DataResponse<T>> get({
-    bool isConnected = false,
     bool forUpdates = false,
     FieldParams? params,
-  }) {
-    throw const DataException('get method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Method to get data by ID with optional data source builder.
   ///
@@ -212,11 +182,9 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<DataResponse<T>> getById(
     String id, {
-    bool isConnected = false,
     FieldParams? params,
-  }) {
-    throw const DataException('getById method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Method to get data by multiple IDs with optional data source builder.
   ///
@@ -231,12 +199,10 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<DataResponse<T>> getByIds(
     List<String> ids, {
-    bool isConnected = false,
     bool forUpdates = false,
     FieldParams? params,
-  }) {
-    throw const DataException('getByIds method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Method to get data by query with optional data source builder.
   ///
@@ -250,16 +216,14 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// ```
   @override
   Future<DataResponse<T>> getByQuery({
-    bool isConnected = false,
-    bool forUpdates = false,
     FieldParams? params,
+    bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
     PagingOptions options = const PagingOptionsImpl(),
-  }) {
-    throw const DataException('getByQuery method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Stream method to listen for data changes with optional data source builder.
   ///
@@ -271,12 +235,9 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// ```
   @override
   Stream<DataResponse<T>> listen({
-    bool isConnected = false,
-    bool forUpdates = false,
     FieldParams? params,
-  }) {
-    throw const DataException('listen method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Stream method to listen for data changes by ID with optional data source builder.
   ///
@@ -290,11 +251,9 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Stream<DataResponse<T>> listenById(
     String id, {
-    bool isConnected = false,
     FieldParams? params,
-  }) {
-    throw const DataException('listenById method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Stream method to listen for data changes by multiple IDs with optional data source builder.
   ///
@@ -309,12 +268,10 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Stream<DataResponse<T>> listenByIds(
     List<String> ids, {
-    bool isConnected = false,
     bool forUpdates = false,
     FieldParams? params,
-  }) {
-    throw const DataException('listenByIds method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Stream method to listen for data changes by query with optional data source builder.
   ///
@@ -328,16 +285,14 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// ```
   @override
   Stream<DataResponse<T>> listenByQuery({
-    bool isConnected = false,
-    bool forUpdates = false,
     FieldParams? params,
+    bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
     PagingOptions options = const PagingOptionsImpl(),
-  }) {
-    throw const DataException('listenByQuery method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Method to check data by query with optional data source builder.
   ///
@@ -352,11 +307,9 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<DataResponse<T>> search(
     Checker checker, {
-    bool isConnected = false,
     FieldParams? params,
-  }) {
-    throw const DataException('checkByQuery method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Method to update data by ID with optional data source builder.
   ///
@@ -372,11 +325,9 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   Future<DataResponse<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    bool isConnected = false,
     FieldParams? params,
-  }) {
-    throw const DataException('updateById method is not implemented');
-  }
+    bool isConnected = false,
+  });
 
   /// Method to update data by multiple IDs with optional data source builder.
   ///
@@ -394,11 +345,9 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<DataResponse<T>> updateByIds(
     List<UpdatingInfo> updates, {
-    bool isConnected = false,
     FieldParams? params,
-  }) {
-    throw const DataException('updateByIds method is not implemented');
-  }
+    bool isConnected = false,
+  });
 }
 
 extension EncryptorExtension on Encryptor? {

@@ -6,11 +6,8 @@ import 'package:dio/dio.dart' as dio;
 import 'package:flutter_andomie/core.dart';
 
 part '../base/api/base.dart';
-
 part '../base/api/config.dart';
-
 part '../base/api/extension.dart';
-
 part '../base/api/finder.dart';
 
 ///

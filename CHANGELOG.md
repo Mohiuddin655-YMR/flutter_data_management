@@ -1,3 +1,7 @@
+## 0.2.0
+
+* Searchable operation done
+
 ## 0.1.9
 
 ## 0.1.8
