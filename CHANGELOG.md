@@ -1,3 +1,9 @@
+## 0.2.1
+
+* Query operation updates
+* Query config updates
+* External libraries updates
+
 ## 0.2.0
 
 * Searchable operation done

@@ -336,6 +336,7 @@ class RemoteDataRepositoryImpl<T extends Entity>
         );
       } else {
         return source.getByQuery(
+          isConnected: connected,
           params: params,
           forUpdates: forUpdates,
           queries: queries,

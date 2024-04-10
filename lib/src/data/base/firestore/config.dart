@@ -45,6 +45,144 @@ class Filter extends fdb.Filter {
     super.whereNotIn,
     super.isNull,
   });
+
+  /// Creates a new filter that is a conjunction of the given filters.
+  ///
+  /// A conjunction filter includes document if it satisfies all of the given filters.
+  static fdb.Filter and(
+    fdb.Filter filter1,
+    fdb.Filter filter2, [
+    fdb.Filter? filter3,
+    fdb.Filter? filter4,
+    fdb.Filter? filter5,
+    fdb.Filter? filter6,
+    fdb.Filter? filter7,
+    fdb.Filter? filter8,
+    fdb.Filter? filter9,
+    fdb.Filter? filter10,
+    fdb.Filter? filter11,
+    fdb.Filter? filter12,
+    fdb.Filter? filter13,
+    fdb.Filter? filter14,
+    fdb.Filter? filter15,
+    fdb.Filter? filter16,
+    fdb.Filter? filter17,
+    fdb.Filter? filter18,
+    fdb.Filter? filter19,
+    fdb.Filter? filter20,
+    fdb.Filter? filter21,
+    fdb.Filter? filter22,
+    fdb.Filter? filter23,
+    fdb.Filter? filter24,
+    fdb.Filter? filter25,
+    fdb.Filter? filter26,
+    fdb.Filter? filter27,
+    fdb.Filter? filter28,
+    fdb.Filter? filter29,
+    fdb.Filter? filter30,
+  ]) {
+    return fdb.Filter.and(
+      filter1,
+      filter2,
+      filter3,
+      filter4,
+      filter5,
+      filter6,
+      filter7,
+      filter8,
+      filter9,
+      filter10,
+      filter11,
+      filter12,
+      filter13,
+      filter14,
+      filter15,
+      filter16,
+      filter17,
+      filter18,
+      filter19,
+      filter20,
+      filter21,
+      filter22,
+      filter23,
+      filter24,
+      filter25,
+      filter26,
+      filter27,
+      filter28,
+      filter29,
+      filter30,
+    );
+  }
+
+  /// Creates a new filter that is a disjunction of the given filters.
+  ///
+  /// A disjunction filter includes a document if it satisfies any of the given filters.
+  static fdb.Filter or(
+    fdb.Filter filter1,
+    fdb.Filter filter2, [
+    fdb.Filter? filter3,
+    fdb.Filter? filter4,
+    fdb.Filter? filter5,
+    fdb.Filter? filter6,
+    fdb.Filter? filter7,
+    fdb.Filter? filter8,
+    fdb.Filter? filter9,
+    fdb.Filter? filter10,
+    fdb.Filter? filter11,
+    fdb.Filter? filter12,
+    fdb.Filter? filter13,
+    fdb.Filter? filter14,
+    fdb.Filter? filter15,
+    fdb.Filter? filter16,
+    fdb.Filter? filter17,
+    fdb.Filter? filter18,
+    fdb.Filter? filter19,
+    fdb.Filter? filter20,
+    fdb.Filter? filter21,
+    fdb.Filter? filter22,
+    fdb.Filter? filter23,
+    fdb.Filter? filter24,
+    fdb.Filter? filter25,
+    fdb.Filter? filter26,
+    fdb.Filter? filter27,
+    fdb.Filter? filter28,
+    fdb.Filter? filter29,
+    fdb.Filter? filter30,
+  ]) {
+    return fdb.Filter.or(
+      filter1,
+      filter2,
+      filter3,
+      filter4,
+      filter5,
+      filter6,
+      filter7,
+      filter8,
+      filter9,
+      filter10,
+      filter11,
+      filter12,
+      filter13,
+      filter14,
+      filter15,
+      filter16,
+      filter17,
+      filter18,
+      filter19,
+      filter20,
+      filter21,
+      filter22,
+      filter23,
+      filter24,
+      filter25,
+      filter26,
+      filter27,
+      filter28,
+      filter29,
+      filter30,
+    );
+  }
 }
 
 class FirestoreQuery extends Query {
@@ -76,7 +214,7 @@ class FirestoreQuery extends Query {
   });
 
   FirestoreQuery.filter(
-    Filter super.filter, {
+    fdb.Filter super.filter, {
     this.isEqualTo,
     this.isNotEqualTo,
     this.isLessThan,
@@ -91,7 +229,7 @@ class FirestoreQuery extends Query {
   });
 
   FirestoreQuery.path(
-    FieldPath super.path, {
+    fdb.FieldPath super.path, {
     this.isEqualTo,
     this.isNotEqualTo,
     this.isLessThan,
