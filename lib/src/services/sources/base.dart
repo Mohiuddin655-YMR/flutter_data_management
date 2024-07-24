@@ -1,12 +1,71 @@
-part of '../../services/controllers/controller.dart';
+import 'package:flutter_entity/flutter_entity.dart';
+import 'package:in_app_query/in_app_query.dart';
 
-///
-/// You can use [Data] without [Entity]
-///
-class LocalDataController<T extends Entity> extends DataController<T> {
-  final LocalDataRepository<T> repository;
+import '../../core/configs.dart';
+import '../../models/checker.dart';
+import '../../models/updating_info.dart';
+import '../../utils/errors.dart';
 
-  LocalDataController(this.repository) : super._();
+/// # Won't Use Directly
+/// You can use:
+/// * <b>[ApiDataSource]</b> : Use for Api related data.
+/// * <b>[FireStoreDataSource]</b> : Use for Firebase Cloud firestore related data.
+/// * <b>[RealtimeDataSource]</b> : Use for Firebase realtime database related data.
+/// * <b>[LocalDataSourceImpl]</b> : Use for local or save instance related data.
+///
+/// ## Abstract class representing a data source for handling operations related to entities of type [T].
+///
+/// ### A data source for handling cached data operations.
+///
+/// Example:
+/// ```dart
+/// class LocalUserDataSource extends LocalDataSourceImpl {
+///   // Implement local data source operations for User entities.
+/// }
+/// ```
+///
+/// ### A data source for handling api based data operations.
+///
+/// Example:
+/// ```dart
+/// class ApiUserDataSource extends ApiDataSource {
+///   // Implement api based data source operations for User entities.
+/// }
+/// ```
+///
+/// ### A data source for handling Firestore database operations.
+///
+/// Example:
+/// ```dart
+/// class FirestoreUserDataSource extends FirestoreDataSource {
+///   // Implement Firestore data source operations for User entities.
+/// }
+/// ```
+///
+/// ### A data source for handling Realtime database operations.
+///
+/// Example:
+/// ```dart
+/// class RealtimeUserDataSource extends RealtimeDataSource {
+///   // Implement real-time data source operations for User entities.
+/// }
+/// ```
+///
+/// ## Abstract class representing a generic data repository with methods for CRUD operations.
+///
+/// This abstract class defines the structure of a generic data repository.
+/// It is not intended to be used directly. Instead, use its implementations:
+/// * <b>[RemoteDataSource]</b> : Use for all remote database related data.
+/// * <b>[LocalDataSource]</b> : Use for all local database related data.
+///
+/// Example:
+/// ```dart
+/// final RemoteDataSource remoteUserDataSource = RemoteUserDataSource();
+/// final LocalDataSource localUserDataSource = LocalUserDataSource();
+/// ```
+///
+abstract class DataSource<T extends Entity> {
+  const DataSource();
 
   /// Method to check data by ID with optional data source builder.
   ///
@@ -17,12 +76,11 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Future<DataResponse<T>> checkById(
+  Future<Response<T>> checkById(
     String id, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.checkById(id, params: params));
+    throw const DataSourceException('checkById method is not implemented');
   }
 
   /// Method to clear data with optional data source builder.
@@ -33,11 +91,10 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Future<DataResponse<T>> clear({
+  Future<Response<T>> clear({
     FieldParams? params,
   }) {
-    return notifier(() => repository.clear(params: params));
+    throw const DataSourceException('clear method is not implemented');
   }
 
   /// Method to create data with optional data source builder.
@@ -50,12 +107,11 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Future<DataResponse<T>> create(
+  Future<Response<T>> create(
     T data, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.create(data, params: params));
+    throw const DataSourceException('create method is not implemented');
   }
 
   /// Method to create multiple data entries with optional data source builder.
@@ -68,12 +124,11 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Future<DataResponse<T>> creates(
+  Future<Response<T>> creates(
     List<T> data, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.creates(data, params: params));
+    throw const DataSourceException('creates method is not implemented');
   }
 
   /// Method to delete data by ID with optional data source builder.
@@ -85,12 +140,11 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Future<DataResponse<T>> deleteById(
+  Future<Response<T>> deleteById(
     String id, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.deleteById(id, params: params));
+    throw const DataSourceException('deleteById method is not implemented');
   }
 
   /// Method to delete data by multiple IDs with optional data source builder.
@@ -103,12 +157,11 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Future<DataResponse<T>> deleteByIds(
+  Future<Response<T>> deleteByIds(
     List<String> ids, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.deleteByIds(ids, params: params));
+    throw const DataSourceException('deleteByIds method is not implemented');
   }
 
   /// Method to get data with optional data source builder.
@@ -119,14 +172,10 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Future<DataResponse<T>> get({
-    bool forUpdates = false,
+  Future<Response<T>> get({
     FieldParams? params,
   }) {
-    return notifier(() {
-      return repository.get(forUpdates: forUpdates, params: params);
-    });
+    throw const DataSourceException('get method is not implemented');
   }
 
   /// Method to get data by ID with optional data source builder.
@@ -138,12 +187,11 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Future<DataResponse<T>> getById(
+  Future<Response<T>> getById(
     String id, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.getById(id, params: params));
+    throw const DataSourceException('getById method is not implemented');
   }
 
   /// Method to get data by multiple IDs with optional data source builder.
@@ -156,15 +204,11 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Future<DataResponse<T>> getByIds(
+  Future<Response<T>> getByIds(
     List<String> ids, {
-    bool forUpdates = false,
     FieldParams? params,
   }) {
-    return notifier(() {
-      return repository.getByIds(ids, forUpdates: forUpdates, params: params);
-    });
+    throw const DataSourceException('getByIds method is not implemented');
   }
 
   /// Method to get data by query with optional data source builder.
@@ -177,25 +221,14 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   queries: queries,
   /// );
   /// ```
-  @override
-  Future<DataResponse<T>> getByQuery({
+  Future<Response<T>> getByQuery({
     FieldParams? params,
-    bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
-    PagingOptions options = const PagingOptionsImpl(),
+    PagingOptions options = const PagingOptions(),
   }) {
-    return notifier(() {
-      return repository.getByQuery(
-        params: params,
-        forUpdates: forUpdates,
-        queries: queries,
-        selections: selections,
-        sorts: sorts,
-        options: options,
-      );
-    });
+    throw const DataSourceException('getByQuery method is not implemented');
   }
 
   /// Stream method to listen for data changes with optional data source builder.
@@ -206,11 +239,10 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Stream<DataResponse<T>> listen({
+  Stream<Response<T>> listen({
     FieldParams? params,
   }) {
-    return repository.listen(params: params);
+    throw const DataSourceException('listen method is not implemented');
   }
 
   /// Stream method to listen for data changes by ID with optional data source builder.
@@ -222,12 +254,11 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Stream<DataResponse<T>> listenById(
+  Stream<Response<T>> listenById(
     String id, {
     FieldParams? params,
   }) {
-    return repository.listenById(id, params: params);
+    throw const DataSourceException('listenById method is not implemented');
   }
 
   /// Stream method to listen for data changes by multiple IDs with optional data source builder.
@@ -240,13 +271,11 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Stream<DataResponse<T>> listenByIds(
+  Stream<Response<T>> listenByIds(
     List<String> ids, {
-    bool forUpdates = false,
     FieldParams? params,
   }) {
-    return repository.listenByIds(ids, forUpdates: forUpdates, params: params);
+    throw const DataSourceException('listenByIds method is not implemented');
   }
 
   /// Stream method to listen for data changes by query with optional data source builder.
@@ -259,23 +288,14 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   queries: queries,
   /// );
   /// ```
-  @override
-  Stream<DataResponse<T>> listenByQuery({
+  Stream<Response<T>> listenByQuery({
     FieldParams? params,
-    bool forUpdates = false,
-    List<Query> queries = const [],
-    List<Selection> selections = const [],
-    List<Sorting> sorts = const [],
-    PagingOptions options = const PagingOptionsImpl(),
+    List<DataQuery> queries = const [],
+    List<DataSelection> selections = const [],
+    List<DataSorting> sorts = const [],
+    PagingOptions options = const PagingOptions(),
   }) {
-    return repository.listenByQuery(
-      params: params,
-      forUpdates: forUpdates,
-      queries: queries,
-      selections: selections,
-      sorts: sorts,
-      options: options,
-    );
+    throw const DataSourceException('listenByQuery method is not implemented');
   }
 
   /// Method to check data by query with optional data source builder.
@@ -288,12 +308,11 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Future<DataResponse<T>> search(
+  Future<Response<T>> search(
     Checker checker, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.search(checker, params: params));
+    throw const DataSourceException('checkByQuery method is not implemented');
   }
 
   /// Method to update data by ID with optional data source builder.
@@ -306,14 +325,12 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
-  @override
-  Future<DataResponse<T>> updateById({
-    required String id,
-    required Map<String, dynamic> data,
+  Future<Response<T>> updateById(
+    String id,
+    Map<String, dynamic> data, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.updateById(id, data, params: params));
+    throw const DataSourceException('updateById method is not implemented');
   }
 
   /// Method to update data by multiple IDs with optional data source builder.
@@ -329,11 +346,12 @@ class LocalDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  @override
-  Future<DataResponse<T>> updateByIds(
+  Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.updateByIds(updates, params: params));
+    throw const DataSourceException('updateByIds method is not implemented');
   }
+
+  T build(dynamic source);
 }

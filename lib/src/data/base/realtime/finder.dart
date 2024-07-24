@@ -1,8 +1,8 @@
-part of '../../sources/realtime_data_source.dart';
+part of '../../sources/realtime.dart';
 
 extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   Future<CheckFinder<T, _RS>> checkById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
@@ -28,7 +28,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Future<ClearFinder<T>> clear<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
   }) async {
     try {
@@ -57,7 +57,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Future<CreationFinder> create<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required T data,
   }) async {
@@ -85,7 +85,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Future<CreationFinder> creates<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<T> data,
   }) async {
@@ -113,7 +113,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Future<DeletionFinder> deleteById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
@@ -141,7 +141,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Future<DeletionFinder> deleteByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
@@ -169,15 +169,13 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Future<GetsFinder<T, _RS>> fetch<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
-    bool onlyUpdates = false,
   }) async {
     try {
       return _fetch<T>(
         builder: builder,
         encryptor: encryptor,
-        onlyUpdates: onlyUpdates,
       ).then((value) {
         if ((value.$1 ?? []).isNotEmpty) {
           return (value, null, Status.ok);
@@ -191,7 +189,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Future<GetFinder<T, _RS>> fetchById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
@@ -217,7 +215,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Future<GetsFinder<T, _RS>> fetchByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
@@ -243,16 +241,14 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Stream<GetsFinder<T, _RS>> listen<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
-    bool onlyUpdates = false,
   }) {
     final controller = StreamController<GetsFinder<T, _RS>>();
     try {
       _listen<T>(
         builder: builder,
         encryptor: encryptor,
-        onlyUpdates: onlyUpdates,
       ).listen((value) {
         if ((value.$1 ?? []).isNotEmpty) {
           controller.add((value, null, Status.ok));
@@ -267,7 +263,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Stream<GetFinder<T, _RS>> liveById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) {
@@ -297,7 +293,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Stream<GetsFinder<T, _RS>> liveByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) {
@@ -327,12 +323,11 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Stream<GetsFinder<T, _RS>> listenByQuery<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
-    bool onlyUpdates = false,
-    List<Query> queries = const [],
-    List<Selection> selections = const [],
-    List<Sorting> sorts = const [],
+    List<DataQuery> queries = const [],
+    List<DataSelection> selections = const [],
+    List<DataSorting> sorts = const [],
     PagingOptions options = const PagingOptions(),
   }) {
     final controller = StreamController<GetsFinder<T, _RS>>();
@@ -340,7 +335,6 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
       _listenByQuery<T>(
         builder: builder,
         encryptor: encryptor,
-        onlyUpdates: onlyUpdates,
         queries: queries,
         selections: selections,
         sorts: sorts,
@@ -359,9 +353,8 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Future<GetsFinder<T, _RS>> query<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
-    bool onlyUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
@@ -371,7 +364,6 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
       return _query<T>(
         builder: builder,
         encryptor: encryptor,
-        onlyUpdates: onlyUpdates,
         queries: queries,
         selections: selections,
         sorts: sorts,
@@ -389,7 +381,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Future<GetsFinder<T, _RS>> search<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Checker checker,
   }) async {
@@ -411,7 +403,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   }
 
   Future<UpdatingFinder> updateById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
     required Map<String, dynamic> data,
@@ -442,7 +434,7 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
   Future<UpdatingFinder> updateByIds<T extends Entity>({
     Encryptor? encryptor,
     required List<UpdatingInfo> data,
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
   }) async {
     if (data.isNotEmpty) {
       try {

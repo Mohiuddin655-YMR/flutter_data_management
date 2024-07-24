@@ -1,4 +1,4 @@
-part of '../../sources/api_data_source.dart';
+part of '../../sources/api.dart';
 
 extension _ApiPathExtension on String {
   String child(
@@ -15,7 +15,7 @@ extension _ApiPathExtension on String {
 
 extension _ApiExtension on dio.Dio {
   Future<bool> _add<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -26,30 +26,31 @@ extension _ApiExtension on dio.Dio {
     if (isEncryptor) {
       var raw = await encryptor.input(data.source);
       if (raw.isNotEmpty) {
-        final result = await post(I, data: raw).onError(DataException.future);
+        final result = await post(I, data: raw)
+            .onError(ApiDataExtensionalException.future);
         final code = result.statusCode;
         if (code == api.status.created || code == api.status.ok) {
           return true;
         } else {
-          throw const DataException("Data hasn't inserted!");
+          throw const ApiDataExtensionalException("Data hasn't inserted!");
         }
       } else {
-        throw const DataException("Encryption error!");
+        throw const ApiDataExtensionalException("Encryption error!");
       }
     } else {
-      final result =
-          await post(I, data: data.source).onError(DataException.future);
+      final result = await post(I, data: data.source)
+          .onError(ApiDataExtensionalException.future);
       final code = result.statusCode;
       if (code == api.status.created || code == api.status.ok) {
         return true;
       } else {
-        throw const DataException("Data hasn't inserted!");
+        throw const ApiDataExtensionalException("Data hasn't inserted!");
       }
     }
   }
 
   Future<bool> _adds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -69,7 +70,7 @@ extension _ApiExtension on dio.Dio {
   }
 
   Future<CheckResponse<T, _AS>> _checkById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -87,11 +88,11 @@ extension _ApiExtension on dio.Dio {
         }
       }
       return (null, i.data);
-    }).onError(DataException.future);
+    }).onError(ApiDataExtensionalException.future);
   }
 
   Future<bool> _deleteById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -103,13 +104,13 @@ extension _ApiExtension on dio.Dio {
       if (code == api.status.ok || code == api.status.deleted) {
         return true;
       } else {
-        throw const DataException("Data hasn't deleted!");
+        throw const ApiDataExtensionalException("Data hasn't deleted!");
       }
-    }).onError(DataException.future);
+    }).onError(ApiDataExtensionalException.future);
   }
 
   Future<bool> _deleteByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -129,11 +130,10 @@ extension _ApiExtension on dio.Dio {
   }
 
   Future<GetsResponse<T, _AS>> _fetch<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
-    bool onlyUpdates = false,
   }) async {
     var isEncryptor = encryptor != null;
     final I = api._parent(endPoint);
@@ -160,13 +160,13 @@ extension _ApiExtension on dio.Dio {
         }
         return (result, snaps);
       } else {
-        throw const DataException("Data hasn't found!");
+        throw const ApiDataExtensionalException("Data hasn't found!");
       }
     });
   }
 
   Future<GetResponse<T, _AS>> _fetchById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -184,11 +184,11 @@ extension _ApiExtension on dio.Dio {
         }
       }
       return (null, i.data);
-    }).onError(DataException.future);
+    }).onError(ApiDataExtensionalException.future);
   }
 
   Future<GetsResponse<T, _AS>> _fetchByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -219,11 +219,10 @@ extension _ApiExtension on dio.Dio {
   }
 
   Stream<GetsResponse<T, _AS>> _listen<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
-    bool onlyUpdates = false,
   }) {
     final controller = StreamController<GetsResponse<T, _AS>>();
     Timer.periodic(
@@ -234,14 +233,14 @@ extension _ApiExtension on dio.Dio {
           api: api,
           endPoint: endPoint,
           encryptor: encryptor,
-        ).then(controller.add).onError(DataException.future);
+        ).then(controller.add).onError(ApiDataExtensionalException.future);
       },
     );
     return controller.stream;
   }
 
   Stream<GetResponse<T, _AS>> _listenById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -257,14 +256,14 @@ extension _ApiExtension on dio.Dio {
           endPoint: endPoint,
           encryptor: encryptor,
           id: id,
-        ).then(controller.add).onError(DataException.future);
+        ).then(controller.add).onError(ApiDataExtensionalException.future);
       },
     );
     return controller.stream;
   }
 
   Stream<GetsResponse<T, _AS>> _listenByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -280,21 +279,20 @@ extension _ApiExtension on dio.Dio {
           endPoint: endPoint,
           encryptor: encryptor,
           ids: ids,
-        ).then(controller.add).onError(DataException.future);
+        ).then(controller.add).onError(ApiDataExtensionalException.future);
       },
     );
     return controller.stream;
   }
 
   Stream<GetsResponse<T, _AS>> _listenByQuery<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
-    bool onlyUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
-    List<Sorting> sorts = const [],
+    List<DataSorting> sorts = const [],
     PagingOptions options = const PagingOptions(),
   }) {
     final controller = StreamController<GetsResponse<T, _AS>>();
@@ -306,23 +304,21 @@ extension _ApiExtension on dio.Dio {
           api: api,
           endPoint: endPoint,
           encryptor: encryptor,
-          onlyUpdates: onlyUpdates,
           queries: queries,
           selections: selections,
           sorts: sorts,
           options: options,
-        ).then(controller.add).onError(DataException.future);
+        ).then(controller.add).onError(ApiDataExtensionalException.future);
       },
     );
     return controller.stream;
   }
 
   Future<GetsResponse<T, _AS>> _query<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
-    bool onlyUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
@@ -331,12 +327,11 @@ extension _ApiExtension on dio.Dio {
     var isEncryptor = encryptor != null;
     final I = api._parent(endPoint);
     final query = _QHelper.query(
-      queries: queries,
-      sorts: sorts,
-      options: options is ApiPagingOptions
-          ? options
-          : const ApiPagingOptions.empty(),
-    );
+        queries: queries,
+        sorts: sorts,
+        options: options is ApiPagingOptions
+            ? options
+            : const ApiPagingOptions.empty());
 
     final request = query.request.isPostRequest
         ? post(I, queryParameters: query.queryParams, data: query.body)
@@ -360,13 +355,13 @@ extension _ApiExtension on dio.Dio {
         }
         return (result, docs);
       } else {
-        throw const DataException("Data hasn't found!");
+        throw const ApiDataExtensionalException("Data hasn't found!");
       }
-    }).onError(DataException.future);
+    }).onError(ApiDataExtensionalException.future);
   }
 
   Future<GetsResponse<T, _AS>> _search<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -398,13 +393,13 @@ extension _ApiExtension on dio.Dio {
         }
         return (result, docs);
       } else {
-        throw const DataException("Data hasn't found!");
+        throw const ApiDataExtensionalException("Data hasn't found!");
       }
-    }).onError(DataException.future);
+    }).onError(ApiDataExtensionalException.future);
   }
 
   Future<bool> _updateById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -427,11 +422,11 @@ extension _ApiExtension on dio.Dio {
               if (code == api.status.ok || code == api.status.updated) {
                 return true;
               } else {
-                throw const DataException("Data hasn't updated!");
+                throw const ApiDataExtensionalException("Data hasn't updated!");
               }
-            }).onError(DataException.future);
+            }).onError(ApiDataExtensionalException.future);
           } else {
-            throw const DataException("Encryption error!");
+            throw const ApiDataExtensionalException("Encryption error!");
           }
         });
       } else {
@@ -440,17 +435,17 @@ extension _ApiExtension on dio.Dio {
           if (code == api.status.ok || code == api.status.updated) {
             return true;
           } else {
-            throw const DataException("Data hasn't updated!");
+            throw const ApiDataExtensionalException("Data hasn't updated!");
           }
-        }).onError(DataException.future);
+        }).onError(ApiDataExtensionalException.future);
       }
     } else {
-      throw const DataException("Id isn't valid!");
+      throw const ApiDataExtensionalException("Id isn't valid!");
     }
   }
 
   Future<bool> _updateByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,

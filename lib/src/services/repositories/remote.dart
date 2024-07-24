@@ -1,5 +1,10 @@
-import 'package:data_management/core.dart';
-import 'package:flutter_andomie/core.dart';
+import 'package:flutter_entity/flutter_entity.dart';
+
+import '../../data/repositories/remote.dart';
+import '../../utils/connectivity.dart';
+import '../sources/local.dart';
+import '../sources/remote.dart';
+import 'base.dart';
 
 /// A repository for handling remote data operations, extending the [DataRepository] interface.
 /// This repository is designed for use with entities of type [T].
@@ -16,7 +21,8 @@ abstract class RemoteDataRepository<T extends Entity>
     extends DataRepository<T> {
   /// Flag indicating whether the repository is operating in cache mode.
   /// When in cache mode, the repository may use a local backup data source.
-  final bool isCacheMode;
+  final bool cacheMode;
+  final bool localMode;
 
   /// The primary remote data source responsible for fetching data.
   final RemoteDataSource<T> source;
@@ -24,15 +30,28 @@ abstract class RemoteDataRepository<T extends Entity>
   /// An optional local data source used as a backup or cache when in cache mode.
   final LocalDataSource<T>? backup;
 
+  /// Connectivity provider for checking internet connectivity.
+  final ConnectionService connectivity = ConnectionService.I;
+
+  /// Getter for checking if the device is connected to the internet.
+  Future<bool> get isConnected async => await connectivity.isConnected;
+
+  /// Getter for checking if the device is disconnected from the internet.
+  Future<bool> get isDisconnected async => !(await isConnected);
+
   /// Method to check if the repository is using a local backup data source.
   ///
   /// Example:
   /// ```dart
-  /// if (userRepository.isLocal) {
+  /// if (userRepository.isLocalMode) {
   ///   // Handle local backup logic
   /// }
   /// ```
-  bool get isLocal => backup != null;
+  bool get isBackupMode => backup != null;
+
+  bool get isCacheMode => cacheMode && isBackupMode;
+
+  bool get isLocalMode => localMode && isBackupMode;
 
   /// Constructor for creating a [RemoteDataRepository] implement.
   ///
@@ -42,10 +61,10 @@ abstract class RemoteDataRepository<T extends Entity>
   /// - [isCacheMode]: Flag indicating whether the repository should operate in cache mode.
   ///
   RemoteDataRepository({
-    super.connectivity,
     required this.source,
     this.backup,
-    this.isCacheMode = false,
+    this.cacheMode = true,
+    this.localMode = false,
   });
 
   /// Factory method to create a [RemoteDataRepository] instance.
@@ -67,14 +86,14 @@ abstract class RemoteDataRepository<T extends Entity>
   factory RemoteDataRepository.create({
     required RemoteDataSource<T> source,
     LocalDataSource<T>? backup,
-    bool isCacheMode = false,
-    ConnectivityProvider? connectivity,
+    bool cacheMode = true,
+    bool localMode = false,
   }) {
     return RemoteDataRepositoryImpl(
       source: source,
       backup: backup,
-      connectivity: connectivity,
-      isCacheMode: isCacheMode,
+      cacheMode: cacheMode,
+      localMode: localMode,
     );
   }
 }

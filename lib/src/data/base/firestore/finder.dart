@@ -1,8 +1,8 @@
-part of '../../sources/fire_store_data_source.dart';
+part of '../../sources/firestore.dart';
 
 extension _FireStoreCollectionFinder on fdb.CollectionReference {
   Future<CheckFinder<T, _FS>> checkById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
@@ -28,7 +28,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Future<ClearFinder<T>> clear<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
   }) async {
     try {
@@ -57,7 +57,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Future<CreationFinder> create<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required T data,
   }) async {
@@ -85,7 +85,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Future<CreationFinder> creates<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<T> data,
   }) async {
@@ -113,7 +113,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Future<DeletionFinder> deleteById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
@@ -141,7 +141,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Future<DeletionFinder> deleteByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
@@ -169,7 +169,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Future<GetsFinder<T, _FS>> fetch<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
   }) async {
@@ -191,7 +191,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Future<GetFinder<T, _FS>> fetchById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
@@ -217,7 +217,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Future<GetsFinder<T, _FS>> fetchByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
@@ -243,7 +243,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Stream<GetsFinder<T, _FS>> listen<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
   }) {
@@ -267,7 +267,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Stream<GetFinder<T, _FS>> liveById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) {
@@ -297,7 +297,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Stream<GetsFinder<T, _FS>> liveByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) {
@@ -327,12 +327,12 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Stream<GetsFinder<T, _FS>> listenByQuery<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
-    List<Query> queries = const [],
-    List<Selection> selections = const [],
-    List<Sorting> sorts = const [],
+    List<DataQuery> queries = const [],
+    List<DataSelection> selections = const [],
+    List<DataSorting> sorts = const [],
     PagingOptions options = const PagingOptions(),
   }) {
     final controller = StreamController<GetsFinder<T, _FS>>();
@@ -359,7 +359,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Future<GetsFinder<T, _FS>> query<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
     List<Query> queries = const [],
@@ -389,7 +389,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Future<GetsFinder<T, _FS>> search<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Checker checker,
   }) async {
@@ -411,7 +411,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   }
 
   Future<UpdatingFinder> updateById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
     required Map<String, dynamic> data,
@@ -442,7 +442,7 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
   Future<UpdatingFinder> updateByIds<T extends Entity>({
     Encryptor? encryptor,
     required List<UpdatingInfo> data,
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
   }) async {
     if (data.isNotEmpty) {
       try {

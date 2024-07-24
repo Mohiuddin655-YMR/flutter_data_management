@@ -1,8 +1,8 @@
-part of '../../sources/realtime_data_source.dart';
+part of '../../sources/realtime.dart';
 
 extension _RealtimeReferenceExtension on rdb.DatabaseReference {
   Future<bool> _add<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required T data,
     bool withPriority = false,
@@ -16,33 +16,33 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
           return reference
               .setWithPriority(raw, data.timeMills)
               .then((_) => true)
-              .onError(DataException.future);
+              .onError(RealtimeDataExtensionalException.future);
         } else {
           return reference
               .set(raw)
               .then((_) => true)
-              .onError(DataException.future);
+              .onError(RealtimeDataExtensionalException.future);
         }
       } else {
-        throw const DataException("Encryption error!");
+        throw const RealtimeDataExtensionalException("Encryption error!");
       }
     } else {
       if (withPriority) {
         return reference
             .setWithPriority(data.source, data.timeMills)
             .then((_) => true)
-            .onError(DataException.future);
+            .onError(RealtimeDataExtensionalException.future);
       } else {
         return reference
             .set(data.source)
             .then((_) => true)
-            .onError(DataException.future);
+            .onError(RealtimeDataExtensionalException.future);
       }
     }
   }
 
   Future<bool> _adds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<T> data,
   }) async {
@@ -58,7 +58,7 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
   }
 
   Future<CheckResponse<T, _RS>> _checkById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
@@ -70,21 +70,21 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         return (builder(v), i);
       }
       return (null, i);
-    }).onError(DataException.future);
+    }).onError(RealtimeDataExtensionalException.future);
   }
 
   Future<bool> _deleteById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) {
     return child(id).remove().then((value) {
       return true;
-    }).onError(DataException.future);
+    }).onError(RealtimeDataExtensionalException.future);
   }
 
   Future<bool> _deleteByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
@@ -100,9 +100,8 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
   }
 
   Future<GetsResponse<T, _RS>> _fetch<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
-    bool onlyUpdates = false,
   }) async {
     var isEncryptor = encryptor != null;
     List<T> result = [];
@@ -123,11 +122,11 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         children = _.children.toList();
       } catch (_) {}
       return (result, children);
-    }).onError(DataException.future);
+    }).onError(RealtimeDataExtensionalException.future);
   }
 
   Future<GetResponse<T, _RS>> _fetchById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
@@ -139,11 +138,11 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         return (builder(v), i);
       }
       return (null, i);
-    }).onError(DataException.future);
+    }).onError(RealtimeDataExtensionalException.future);
   }
 
   Future<GetsResponse<T, _RS>> _fetchByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
@@ -170,9 +169,8 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
   }
 
   Stream<GetsResponse<T, _RS>> _listen<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
-    bool onlyUpdates = false,
   }) {
     final controller = StreamController<GetsResponse<T, _RS>>();
     var isEncryptor = encryptor != null;
@@ -194,12 +192,12 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         children = _.snapshot.children.toList();
       } catch (_) {}
       controller.add((result, children));
-    }).onError(DataException.stream);
+    }).onError(RealtimeDataExtensionalException.stream);
     return controller.stream;
   }
 
   Stream<GetResponse<T, _RS>> _listenById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) {
@@ -214,13 +212,13 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         } else {
           controller.add((null, i.snapshot));
         }
-      }).onError(DataException.stream);
+      }).onError(RealtimeDataExtensionalException.stream);
     }
     return controller.stream;
   }
 
   Stream<GetsResponse<T, _RS>> _listenByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) {
@@ -250,12 +248,11 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
   }
 
   Stream<GetsResponse<T, _RS>> _listenByQuery<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
-    bool onlyUpdates = false,
-    List<Query> queries = const [],
-    List<Selection> selections = const [],
-    List<Sorting> sorts = const [],
+    List<DataQuery> queries = const [],
+    List<DataSelection> selections = const [],
+    List<DataSorting> sorts = const [],
     PagingOptions options = const PagingOptions(),
   }) {
     final controller = StreamController<GetsResponse<T, _RS>>();
@@ -284,14 +281,13 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         children = _.snapshot.children.toList();
       } catch (_) {}
       controller.add((result, children));
-    }).onError(DataException.stream);
+    }).onError(RealtimeDataExtensionalException.stream);
     return controller.stream;
   }
 
   Future<GetsResponse<T, _RS>> _query<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
-    bool onlyUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
@@ -322,13 +318,13 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         children = _.children.toList();
       } catch (_) {}
       return (result, children);
-    }).onError(DataException.future);
+    }).onError(RealtimeDataExtensionalException.future);
   }
 
   Future<GetsResponse<T, _RS>> _search<T extends Entity>({
     Encryptor? encryptor,
     required Checker checker,
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
   }) async {
     var isEncryptor = encryptor != null;
     List<T> result = [];
@@ -344,11 +340,11 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         }
       }
       return (result, _.children);
-    }).onError(DataException.future);
+    }).onError(RealtimeDataExtensionalException.future);
   }
 
   Future<bool> _updateById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Map<String, dynamic> data,
   }) async {
@@ -365,21 +361,21 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
               return true;
             });
           } else {
-            throw const DataException("Encryption error!");
+            throw const RealtimeDataExtensionalException("Encryption error!");
           }
         });
       } else {
         return child(id).update(data).then((value) {
           return true;
-        }).onError(DataException.future);
+        }).onError(RealtimeDataExtensionalException.future);
       }
     } else {
-      throw const DataException("Id isn't valid!");
+      throw const RealtimeDataExtensionalException("Id isn't valid!");
     }
   }
 
   Future<bool> _updateByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<UpdatingInfo> data,
   }) async {

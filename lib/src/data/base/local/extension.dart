@@ -1,8 +1,8 @@
-part of '../../sources/local_store_data_source.dart';
+part of '../../sources/local.dart';
 
-extension _LocalStoreCollectionExtension on ldb.CollectionRef {
+extension on fdb.InAppQueryReference {
   Future<bool> _add<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required T data,
   }) async {
@@ -14,20 +14,20 @@ extension _LocalStoreCollectionExtension on ldb.CollectionRef {
         return reference
             .set(raw)
             .then((_) => true)
-            .onError(DataException.future);
+            .onError(LocalDataExtensionalException.future);
       } else {
-        throw const DataException("Encryption error!");
+        throw const LocalDataExtensionalException("Encryption error!");
       }
     } else {
       return reference
-          .set(data.source, ldb.SetOptions(merge: true))
+          .set(data.source, const fdb.InAppSetOptions(merge: true))
           .then((_) => true)
-          .onError(DataException.future);
+          .onError(LocalDataExtensionalException.future);
     }
   }
 
   Future<bool> _adds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<T> data,
   }) async {
@@ -42,34 +42,34 @@ extension _LocalStoreCollectionExtension on ldb.CollectionRef {
     return data.length == counter;
   }
 
-  Future<CheckResponse<T, _LS>> _checkById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Future<CheckResponse<T, _Snapshot>> _checkById<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
     var isEncryptor = encryptor != null;
     return doc(id).get().then((i) async {
-      var data = i;
-      if (data is Map<String, dynamic>) {
+      var data = i.data;
+      if (i.exists && data is Map<String, dynamic>) {
         var v = isEncryptor ? await encryptor.output(data) : data;
         return (builder(v), i);
       }
       return (null, i);
-    }).onError(DataException.future);
+    }).onError(LocalDataExtensionalException.future);
   }
 
   Future<bool> _deleteById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) {
     return doc(id).delete().then((value) {
       return true;
-    }).onError(DataException.future);
+    }).onError(LocalDataExtensionalException.future);
   }
 
   Future<bool> _deleteByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
@@ -84,254 +84,347 @@ extension _LocalStoreCollectionExtension on ldb.CollectionRef {
     return ids.length == counter;
   }
 
-  Future<GetsResponse<T, _LS>> _fetch<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Future<GetsResponse<T, _Snapshot>> _fetch<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
   }) async {
     var isEncryptor = encryptor != null;
-    Map<String, T> result = {};
-    Map<String, _LS> docs = {};
+    List<T> result = [];
+    List<fdb.InAppDocumentSnapshot> docs = [];
     return get().then((_) async {
       result.clear();
       docs.clear();
-      final data = _ ?? {};
-      if (data.isNotEmpty) {
-        for (var i in data.entries) {
-          docs[i.key] = i.value;
-          var v = isEncryptor ? await encryptor.output(i.value) : i.value;
-          final item = builder(v);
-          result[item.id] == item;
+      if (_.docs.isNotEmpty || _.docChanges.isNotEmpty) {
+        if (onlyUpdates) {
+          for (var i in _.docChanges) {
+            var data = i.doc.data;
+            if (i.doc.exists && data is Map<String, dynamic>) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
+          }
+        } else {
+          for (var i in _.docs) {
+            var data = i.data;
+            if (i.exists) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
+          }
         }
       }
-      return (result.values.toList(), docs.values.toList());
-    }).onError(DataException.future);
+      try {
+        if (onlyUpdates) {
+          docs = _.docChanges.map((e) => e.doc).toList();
+        } else {
+          docs = _.docs;
+        }
+      } catch (_) {}
+      return (result, docs);
+    }).onError(LocalDataExtensionalException.future);
   }
 
-  Future<GetResponse<T, _LS>> _fetchById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Future<GetResponse<T, _Snapshot>> _fetchById<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
     var isEncryptor = encryptor != null;
     return doc(id).get().then((i) async {
-      var data = i;
-      if (data is Map<String, dynamic>) {
+      var data = i.data;
+      if (i.exists && data is Map<String, dynamic>) {
         var v = isEncryptor ? await encryptor.output(data) : data;
         return (builder(v), i);
       }
       return (null, i);
-    }).onError(DataException.future);
+    }).onError(LocalDataExtensionalException.future);
   }
 
-  Future<GetsResponse<T, _LS>> _fetchByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Future<GetsResponse<T, _Snapshot>> _fetchByIds<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
-    List<T> result = [];
-    List<_LS> snaps = [];
-    for (String id in ids) {
-      try {
-        var value = await _fetchById(
-          builder: builder,
-          encryptor: encryptor,
-          id: id,
-        );
-        final data = value.$1;
-        final snap = value.$2;
-        if (data != null) {
-          result.add(data);
-        }
-        if (snap != null) {
-          snaps.add(snap);
-        }
-      } catch (_) {}
-    }
-    return (result, snaps);
-  }
-
-  Stream<GetsResponse<T, _LS>> _listen<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    bool onlyUpdates = false,
-  }) {
-    final controller = StreamController<GetsResponse<T, _LS>>();
     var isEncryptor = encryptor != null;
-    Map<String, T> result = {};
-    Map<String, _LS> docs = {};
-    stream.listen((_) async {
-      result.clear();
-      docs.clear();
-      final data = _;
-      if (data.isNotEmpty) {
-        for (var i in data.entries) {
-          docs[i.key] = i.value;
-          var v = isEncryptor ? await encryptor.output(i.value) : i.value;
-          final item = builder(v);
-          result[item.id] == item;
-        }
-      }
-      controller.add((result.values.toList(), docs.values.toList()));
-    }).onError(DataException.stream);
-    return controller.stream;
-  }
-
-  Stream<GetResponse<T, _LS>> _listenById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required String id,
-  }) {
-    final controller = StreamController<GetResponse<T, _LS>>();
-    if (id.isNotEmpty) {
-      var isEncryptor = encryptor != null;
-      Map<String, T> result = {};
-      Map<String, _LS> docs = {};
-      where(LocalstoreFieldPath.documentId, isEqualTo: id)
-          .stream
-          .listen((_) async {
-        result.clear();
-        docs.clear();
-        final data = _;
-        if (data.isNotEmpty) {
-          for (var i in data.entries) {
-            docs[i.key] = i.value;
-            var v = isEncryptor ? await encryptor.output(i.value) : i.value;
-            final item = builder(v);
-            result[item.id] == item;
-          }
-        }
-        controller.add((result.values.firstOrNull, docs.values.firstOrNull));
-      }).onError(DataException.stream);
-    }
-    return controller.stream;
-  }
-
-  Stream<GetsResponse<T, _LS>> _listenByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
-    Encryptor? encryptor,
-    required List<String> ids,
-  }) {
-    final controller = StreamController<GetsResponse<T, _LS>>();
-    Map<String, T> map = {};
-    Map<String, _LS> snaps = {};
-    for (String id in ids) {
-      try {
-        _listenById(
-          builder: builder,
-          encryptor: encryptor,
-          id: id,
-        ).listen((value) {
+    List<T> result = [];
+    if (ids.length > _Limitations.whereIn) {
+      List<fdb.InAppDocumentSnapshot> snaps = [];
+      for (String id in ids) {
+        try {
+          var value = await _fetchById(
+            builder: builder,
+            encryptor: encryptor,
+            id: id,
+          );
           final data = value.$1;
           final snap = value.$2;
           if (data != null) {
-            map[data.id] = data;
+            result.add(data);
           }
           if (snap != null) {
-            snaps[snap.id] = snap;
+            snaps.add(snap);
           }
-          controller.add((map.values.toList(), snaps.values.toList()));
-        });
+        } catch (_) {}
+      }
+      return (result, snaps);
+    } else {
+      return where(FieldPath.documentId, whereIn: ids).get().then((_) async {
+        result.clear();
+        if (_.docs.isNotEmpty) {
+          for (var i in _.docs) {
+            var data = i.data;
+            if (i.exists) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
+          }
+        }
+        return (result, _.docs);
+      }).onError(LocalDataExtensionalException.future);
+    }
+  }
+
+  Stream<GetsResponse<T, _Snapshot>> _listen<T extends Entity>({
+    required DataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+  }) {
+    final controller = StreamController<GetsResponse<T, _Snapshot>>();
+    var isEncryptor = encryptor != null;
+    List<T> result = [];
+    List<fdb.InAppDocumentSnapshot> docs = [];
+    snapshots().listen((_) async {
+      result.clear();
+      docs.clear();
+      if (_.docs.isNotEmpty || _.docChanges.isNotEmpty) {
+        if (onlyUpdates) {
+          for (var i in _.docChanges) {
+            var data = i.doc.data;
+            if (i.doc.exists && data is Map<String, dynamic>) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
+          }
+        } else {
+          for (var i in _.docs) {
+            var data = i.data;
+            if (i.exists) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
+          }
+        }
+      }
+      try {
+        if (onlyUpdates) {
+          docs = _.docChanges.map((e) => e.doc).toList();
+        } else {
+          docs = _.docs;
+        }
       } catch (_) {}
+      controller.add((result, docs));
+    }).onError(LocalDataExtensionalException.stream);
+    return controller.stream;
+  }
+
+  Stream<GetResponse<T, _Snapshot>> _listenById<T extends Entity>({
+    required DataBuilder<T> builder,
+    Encryptor? encryptor,
+    required String id,
+  }) {
+    final controller = StreamController<GetResponse<T, _Snapshot>>();
+    if (id.isNotEmpty) {
+      var isEncryptor = encryptor != null;
+      doc(id).snapshots().listen((i) async {
+        var data = i.data;
+        if (i.exists && data is Map<String, dynamic>) {
+          var v = isEncryptor ? await encryptor.output(data) : data;
+          controller.add((builder(v), i));
+        } else {
+          controller.add((null, i));
+        }
+      }).onError(LocalDataExtensionalException.stream);
     }
     return controller.stream;
   }
 
-  Stream<GetsResponse<T, _LS>> _listenByQuery<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Stream<GetsResponse<T, _Snapshot>> _listenByIds<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
-    bool onlyUpdates = false,
-    List<Query> queries = const [],
-    List<Selection> selections = const [],
-    List<Sorting> sorts = const [],
-    PagingOptions options = const PagingOptions(),
+    required List<String> ids,
   }) {
-    final controller = StreamController<GetsResponse<T, _LS>>();
+    final controller = StreamController<GetsResponse<T, _Snapshot>>();
     var isEncryptor = encryptor != null;
-    Map<String, T> result = {};
-    Map<String, _LS> docs = {};
-    Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      _QHelper.query(
-        reference: this,
-        queries: queries,
-        selections: selections,
-        sorts: sorts,
-        options: options,
-      ).then((_) async {
+    List<T> result = [];
+    if (ids.length > _Limitations.whereIn) {
+      Map<String, T> map = {};
+      Map<String, fdb.InAppDocumentSnapshot> snaps = {};
+      for (String id in ids) {
+        try {
+          _listenById(
+            builder: builder,
+            encryptor: encryptor,
+            id: id,
+          ).listen((value) {
+            final data = value.$1;
+            final snap = value.$2;
+            if (data != null) {
+              map[data.id] = data;
+            }
+            if (snap != null) {
+              snaps[snap.id] = snap;
+            }
+          });
+        } catch (_) {}
+      }
+      controller.add((map.values.toList(), snaps.values.toList()));
+    } else {
+      where(FieldPath.documentId, whereIn: ids).snapshots().listen((_) async {
         result.clear();
-        docs.clear();
-        final data = _ ?? {};
-        if (data.isNotEmpty) {
-          for (var i in data.entries) {
-            docs[i.key] = i.value;
-            var v = isEncryptor ? await encryptor.output(i.value) : i.value;
-            final item = builder(v);
-            result[item.id] = item;
+        if (_.docs.isNotEmpty) {
+          for (var i in _.docs) {
+            var data = i.data;
+            if (i.exists) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
           }
         }
-        controller.add((result.values.toList(), docs.values.toList()));
-      }).onError(DataException.future);
-    });
+        controller.add((result, _.docs));
+      }).onError(LocalDataExtensionalException.stream);
+    }
     return controller.stream;
   }
 
-  Future<GetsResponse<T, _LS>> _query<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Stream<GetsResponse<T, _Snapshot>> _listenByQuery<T extends Entity>({
+    required DataBuilder<T> builder,
+    Encryptor? encryptor,
+    bool onlyUpdates = false,
+    List<DataQuery> queries = const [],
+    List<DataSelection> selections = const [],
+    List<DataSorting> sorts = const [],
+    PagingOptions options = const PagingOptions(),
+  }) {
+    final controller = StreamController<GetsResponse<T, _Snapshot>>();
+    var isEncryptor = encryptor != null;
+    List<T> result = [];
+    List<fdb.InAppDocumentSnapshot> docs = [];
+    _QHelper.query(
+      reference: this,
+      queries: queries,
+      selections: selections,
+      sorts: sorts,
+      options: options,
+    ).snapshots().listen((_) async {
+      result.clear();
+      docs.clear();
+      if (_.docs.isNotEmpty || _.docChanges.isNotEmpty) {
+        if (onlyUpdates) {
+          for (var i in _.docChanges) {
+            var data = i.doc.data;
+            if (i.doc.exists && data is Map<String, dynamic>) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
+          }
+        } else {
+          for (var i in _.docs) {
+            var data = i.data;
+            if (i.exists) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
+          }
+        }
+      }
+      try {
+        if (onlyUpdates) {
+          docs = _.docChanges.map((e) => e.doc).toList();
+        } else {
+          docs = _.docs;
+        }
+      } catch (_) {}
+      controller.add((result, docs));
+    }).onError(LocalDataExtensionalException.stream);
+    return controller.stream;
+  }
+
+  Future<GetsResponse<T, _Snapshot>> _query<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
     PagingOptions options = const PagingOptions(),
-  }) {
+  }) async {
     var isEncryptor = encryptor != null;
-    Map<String, T> result = {};
-    Map<String, _LS> docs = {};
+    List<T> result = [];
+    List<fdb.InAppDocumentSnapshot> docs = [];
     return _QHelper.query(
       reference: this,
       queries: queries,
       sorts: sorts,
       selections: selections,
       options: options,
-    ).then((_) async {
+    ).get().then((_) async {
       result.clear();
       docs.clear();
-      final data = _ ?? {};
-      if (data.isNotEmpty) {
-        for (var i in data.entries) {
-          docs[i.key] = i.value;
-          var v = isEncryptor ? await encryptor.output(i.value) : i.value;
-          final item = builder(v);
-          result[item.id] == item;
+      if (_.docs.isNotEmpty || _.docChanges.isNotEmpty) {
+        if (onlyUpdates) {
+          for (var i in _.docChanges) {
+            var data = i.doc.data;
+            if (i.doc.exists && data is Map<String, dynamic>) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
+          }
+        } else {
+          for (var i in _.docs) {
+            var data = i.data;
+            if (i.exists) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(builder(v));
+            }
+          }
         }
       }
-      return (result.values.toList(), docs.values.toList());
-    }).onError(DataException.future);
+      try {
+        if (onlyUpdates) {
+          docs = _.docChanges.map((e) => e.doc).toList();
+        } else {
+          docs = _.docs;
+        }
+      } catch (_) {}
+      return (result, docs);
+    }).onError(LocalDataExtensionalException.future);
   }
 
-  Future<GetsResponse<T, _LS>> _search<T extends Entity>({
+  Future<GetsResponse<T, _Snapshot>> _search<T extends Entity>({
     Encryptor? encryptor,
     required Checker checker,
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
   }) async {
     var isEncryptor = encryptor != null;
     List<T> result = [];
-    return _QHelper.search(this, checker).then((_) async {
+    return _QHelper.search(this, checker).get().then((_) async {
       result.clear();
-      final data = _ ?? {};
-      if (data.isNotEmpty) {
-        for (var i in data.values) {
-          var v = isEncryptor ? await encryptor.output(i) : i;
-          final item = builder(v);
-          result.add(item);
+      if (_.docs.isNotEmpty || _.docChanges.isNotEmpty) {
+        for (var i in _.docs) {
+          var data = i.data;
+          if (i.exists) {
+            var v = isEncryptor ? await encryptor.output(data) : data;
+            result.add(builder(v));
+          }
         }
       }
-      return (result, data.values);
-    }).onError(DataException.future);
+      return (result, _.docs);
+    }).onError(LocalDataExtensionalException.future);
   }
 
   Future<bool> _updateById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Map<String, dynamic> data,
   }) async {
@@ -344,25 +437,25 @@ extension _LocalStoreCollectionExtension on ldb.CollectionRef {
           x.addAll(data);
           var v = await encryptor.input(x);
           if (v.isNotEmpty) {
-            return doc(id).set(v, ldb.SetOptions(merge: true)).then((value) {
+            return doc(id).update(v).then((value) {
               return true;
             });
           } else {
-            throw const DataException("Encryption error!");
+            throw const LocalDataExtensionalException("Encryption error!");
           }
         });
       } else {
-        return doc(id).set(data, ldb.SetOptions(merge: true)).then((value) {
+        return doc(id).update(data).then((value) {
           return true;
-        }).onError(DataException.future);
+        }).onError(LocalDataExtensionalException.future);
       }
     } else {
-      throw const DataException("Id isn't valid!");
+      throw const LocalDataExtensionalException("Id isn't valid!");
     }
   }
 
   Future<bool> _updateByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<UpdatingInfo> data,
   }) async {

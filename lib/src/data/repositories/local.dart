@@ -1,12 +1,18 @@
-part of '../../services/controllers/controller.dart';
+import 'package:flutter_entity/flutter_entity.dart';
+import 'package:in_app_query/in_app_query.dart';
+
+import '../../core/configs.dart';
+import '../../models/checker.dart';
+import '../../models/updating_info.dart';
+import '../../services/repositories/local.dart';
 
 ///
 /// You can use [Data] without [Entity]
 ///
-class RemoteDataController<T extends Entity> extends DataController<T> {
-  final RemoteDataRepository<T> repository;
-
-  RemoteDataController(this.repository) : super._();
+class LocalDataRepositoryImpl<T extends Entity> extends LocalDataRepository<T> {
+  const LocalDataRepositoryImpl({
+    required super.source,
+  });
 
   /// Method to check data by ID with optional data source builder.
   ///
@@ -18,11 +24,11 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> checkById(
+  Future<Response<T>> checkById(
     String id, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.checkById(id, params: params));
+    return source.checkById(id, params: params);
   }
 
   /// Method to clear data with optional data source builder.
@@ -34,10 +40,10 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> clear({
+  Future<Response<T>> clear({
     FieldParams? params,
   }) {
-    return notifier(() => repository.clear(params: params));
+    return source.clear(params: params);
   }
 
   /// Method to create data with optional data source builder.
@@ -51,11 +57,11 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> create(
+  Future<Response<T>> create(
     T data, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.create(data, params: params));
+    return source.create(data, params: params);
   }
 
   /// Method to create multiple data entries with optional data source builder.
@@ -69,11 +75,11 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> creates(
+  Future<Response<T>> creates(
     List<T> data, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.creates(data, params: params));
+    return source.creates(data, params: params);
   }
 
   /// Method to delete data by ID with optional data source builder.
@@ -86,11 +92,11 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> deleteById(
+  Future<Response<T>> deleteById(
     String id, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.deleteById(id, params: params));
+    return source.deleteById(id, params: params);
   }
 
   /// Method to delete data by multiple IDs with optional data source builder.
@@ -104,11 +110,11 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> deleteByIds(
+  Future<Response<T>> deleteByIds(
     List<String> ids, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.deleteByIds(ids, params: params));
+    return source.deleteByIds(ids, params: params);
   }
 
   /// Method to get data with optional data source builder.
@@ -120,13 +126,10 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> get({
-    bool forUpdates = false,
+  Future<Response<T>> get({
     FieldParams? params,
   }) {
-    return notifier(() {
-      return repository.get(forUpdates: forUpdates, params: params);
-    });
+    return source.get(params: params);
   }
 
   /// Method to get data by ID with optional data source builder.
@@ -139,11 +142,11 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> getById(
+  Future<Response<T>> getById(
     String id, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.getById(id, params: params));
+    return source.getById(id, params: params);
   }
 
   /// Method to get data by multiple IDs with optional data source builder.
@@ -157,14 +160,11 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> getByIds(
+  Future<Response<T>> getByIds(
     List<String> ids, {
-    bool forUpdates = false,
     FieldParams? params,
   }) {
-    return notifier(() {
-      return repository.getByIds(ids, forUpdates: forUpdates, params: params);
-    });
+    return source.getByIds(ids, params: params);
   }
 
   /// Method to get data by query with optional data source builder.
@@ -178,24 +178,20 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> getByQuery({
+  Future<Response<T>> getByQuery({
     FieldParams? params,
-    bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
-    PagingOptions options = const PagingOptionsImpl(),
+    PagingOptions options = const PagingOptions(),
   }) {
-    return notifier(() {
-      return repository.getByQuery(
-        params: params,
-        forUpdates: forUpdates,
-        queries: queries,
-        selections: selections,
-        sorts: sorts,
-        options: options,
-      );
-    });
+    return source.getByQuery(
+      params: params,
+      queries: queries,
+      selections: selections,
+      sorts: sorts,
+      options: options,
+    );
   }
 
   /// Stream method to listen for data changes with optional data source builder.
@@ -207,10 +203,10 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listen({
+  Stream<Response<T>> listen({
     FieldParams? params,
   }) {
-    return repository.listen(params: params);
+    return source.listen(params: params);
   }
 
   /// Stream method to listen for data changes by ID with optional data source builder.
@@ -223,11 +219,11 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listenById(
+  Stream<Response<T>> listenById(
     String id, {
     FieldParams? params,
   }) {
-    return repository.listenById(id, params: params);
+    return source.listenById(id, params: params);
   }
 
   /// Stream method to listen for data changes by multiple IDs with optional data source builder.
@@ -241,12 +237,11 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listenByIds(
+  Stream<Response<T>> listenByIds(
     List<String> ids, {
-    bool forUpdates = false,
     FieldParams? params,
   }) {
-    return repository.listenByIds(ids, forUpdates: forUpdates, params: params);
+    return source.listenByIds(ids, params: params);
   }
 
   /// Stream method to listen for data changes by query with optional data source builder.
@@ -260,17 +255,15 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listenByQuery({
+  Stream<Response<T>> listenByQuery({
     FieldParams? params,
-    bool forUpdates = false,
-    List<Query> queries = const [],
-    List<Selection> selections = const [],
-    List<Sorting> sorts = const [],
-    PagingOptions options = const PagingOptionsImpl(),
+    List<DataQuery> queries = const [],
+    List<DataSelection> selections = const [],
+    List<DataSorting> sorts = const [],
+    PagingOptions options = const PagingOptions(),
   }) {
-    return repository.listenByQuery(
+    return source.listenByQuery(
       params: params,
-      forUpdates: forUpdates,
       queries: queries,
       selections: selections,
       sorts: sorts,
@@ -289,11 +282,11 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> search(
+  Future<Response<T>> search(
     Checker checker, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.search(checker, params: params));
+    return source.search(checker, params: params);
   }
 
   /// Method to update data by ID with optional data source builder.
@@ -306,14 +299,13 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
-  Future<DataResponse<T>> updateById({
-    required String id,
-    required Map<String, dynamic> data,
+  Future<Response<T>> updateById(
+    String id,
+    Map<String, dynamic> data, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.updateById(id, data, params: params));
+    return source.updateById(id, data, params: params);
   }
 
   /// Method to update data by multiple IDs with optional data source builder.
@@ -330,10 +322,10 @@ class RemoteDataController<T extends Entity> extends DataController<T> {
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> updateByIds(
+  Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
     FieldParams? params,
   }) {
-    return notifier(() => repository.updateByIds(updates, params: params));
+    return source.updateByIds(updates, params: params);
   }
 }

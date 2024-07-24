@@ -1,49 +1,4 @@
-part of '../../sources/realtime_data_source.dart';
-
-class RealtimeQuery extends Query {}
-
-class RealtimeSelection extends Selection {
-  final String? key;
-  final RealtimeSelectionType type;
-
-  const RealtimeSelection.endAt(super.value, {this.key})
-      : type = RealtimeSelectionType.endAt;
-
-  const RealtimeSelection.endBefore(super.value, {this.key})
-      : type = RealtimeSelectionType.endBefore;
-
-  const RealtimeSelection.equalTo(super.value, {this.key})
-      : type = RealtimeSelectionType.equalTo;
-
-  const RealtimeSelection.startAfter(super.value, {this.key})
-      : type = RealtimeSelectionType.startAfter;
-
-  const RealtimeSelection.startAt(super.value, {this.key})
-      : type = RealtimeSelectionType.startAt;
-}
-
-enum RealtimeSelectionType {
-  endAt,
-  endBefore,
-  equalTo,
-  startAfter,
-  startAt,
-  none;
-
-  bool get isEndAt => this == endAt;
-
-  bool get isEndBefore => this == endBefore;
-
-  bool get isEqualTo => this == equalTo;
-
-  bool get isStartAfter => this == startAfter;
-
-  bool get isStartAt => this == startAt;
-}
-
-class RealtimeSorting extends Sorting {
-  const RealtimeSorting(super.field);
-}
+part of '../../sources/realtime.dart';
 
 class _QHelper {
   const _QHelper._();
@@ -73,36 +28,37 @@ class _QHelper {
   }) {
     var isFetchingMode = true;
 
-    final fetchingSizeInit = options.initialFetchingSize ?? 0;
+    final fetchingSizeInit = options.initialSize ?? 0;
     final fetchingSize = options.fetchingSize ?? fetchingSizeInit;
     final isValidLimit = fetchingSize > 0;
 
+    if (queries.isNotEmpty) {
+      for (final i in queries) {
+        if (i.isEqualTo != null) {
+          reference = reference.equalTo(i.isEqualTo);
+        }
+      }
+    }
     if (sorts.isNotEmpty) {
       for (final i in sorts) {
-        if (i is RealtimeSorting) {
-          reference = reference.orderByChild(i.field);
-        }
+        reference = reference.orderByChild(i.field);
       }
     }
 
     if (selections.isNotEmpty) {
       for (final i in selections) {
-        if (i is RealtimeSelection) {
-          final key = i.key;
-          final value = i.value;
-          final type = i.type;
-          isFetchingMode = value != null;
-          if (type.isEndAt) {
-            reference = reference.endAt(value, key: key);
-          } else if (type.isEndBefore) {
-            reference = reference.endBefore(value, key: key);
-          } else if (type.isEqualTo) {
-            reference = reference.equalTo(value, key: key);
-          } else if (type.isStartAfter) {
-            reference = reference.startAfter(value, key: key);
-          } else if (type.isStartAt) {
-            reference = reference.startAt(value, key: key);
-          }
+        const key = null;
+        final value = i.value;
+        final type = i.type;
+        isFetchingMode = value != null;
+        if (type.isEndAt) {
+          reference = reference.endAt(value, key: key);
+        } else if (type.isEndBefore) {
+          reference = reference.endBefore(value, key: key);
+        } else if (type.isStartAfter) {
+          reference = reference.startAfter(value, key: key);
+        } else if (type.isStartAt) {
+          reference = reference.startAt(value, key: key);
         }
       }
     }

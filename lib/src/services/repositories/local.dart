@@ -1,5 +1,8 @@
-import 'package:data_management/core.dart';
-import 'package:flutter_andomie/core.dart';
+import 'package:flutter_entity/flutter_entity.dart';
+
+import '../../data/repositories/local.dart';
+import '../sources/local.dart';
+import 'base.dart';
 
 /// A repository for handling local data operations, extending the [DataRepository] interface.
 /// This repository is designed for use with entities of type [T].
@@ -25,8 +28,7 @@ abstract class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   source: LocalDataSourceImpl<User>(),
   /// );
   /// ```
-  LocalDataRepository({
-    super.connectivity,
+  const LocalDataRepository({
     required this.source,
   });
 
@@ -44,11 +46,9 @@ abstract class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   /// ```
   factory LocalDataRepository.create({
     required LocalDataSource<T> source,
-    ConnectivityProvider? connectivity,
   }) {
     return LocalDataRepositoryImpl(
       source: source,
-      connectivity: connectivity,
     );
   }
 }

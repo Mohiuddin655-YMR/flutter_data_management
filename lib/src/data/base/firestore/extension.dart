@@ -1,8 +1,8 @@
-part of '../../sources/fire_store_data_source.dart';
+part of '../../sources/firestore.dart';
 
 extension _FireStoreCollectionExtension on fdb.CollectionReference {
   Future<bool> _add<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required T data,
   }) async {
@@ -14,20 +14,20 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
         return reference
             .set(raw)
             .then((_) => true)
-            .onError(DataException.future);
+            .onError(FirestoreDataExtensionalException.future);
       } else {
-        throw const DataException("Encryption error!");
+        throw const FirestoreDataExtensionalException("Encryption error!");
       }
     } else {
       return reference
           .set(data.source, fdb.SetOptions(merge: true))
           .then((_) => true)
-          .onError(DataException.future);
+          .onError(FirestoreDataExtensionalException.future);
     }
   }
 
   Future<bool> _adds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<T> data,
   }) async {
@@ -43,7 +43,7 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
   }
 
   Future<CheckResponse<T, _FS>> _checkById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
@@ -55,21 +55,21 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
         return (builder(v), i);
       }
       return (null, i);
-    }).onError(DataException.future);
+    }).onError(FirestoreDataExtensionalException.future);
   }
 
   Future<bool> _deleteById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) {
     return doc(id).delete().then((value) {
       return true;
-    }).onError(DataException.future);
+    }).onError(FirestoreDataExtensionalException.future);
   }
 
   Future<bool> _deleteByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
@@ -85,7 +85,7 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
   }
 
   Future<GetsResponse<T, _FS>> _fetch<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
   }) async {
@@ -122,11 +122,11 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
         }
       } catch (_) {}
       return (result, docs);
-    }).onError(DataException.future);
+    }).onError(FirestoreDataExtensionalException.future);
   }
 
   Future<GetResponse<T, _FS>> _fetchById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
@@ -138,11 +138,11 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
         return (builder(v), i);
       }
       return (null, i);
-    }).onError(DataException.future);
+    }).onError(FirestoreDataExtensionalException.future);
   }
 
   Future<GetsResponse<T, _FS>> _fetchByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
@@ -181,12 +181,12 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
           }
         }
         return (result, _.docs);
-      }).onError(DataException.future);
+      }).onError(FirestoreDataExtensionalException.future);
     }
   }
 
   Stream<GetsResponse<T, _FS>> _listen<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
   }) {
@@ -224,12 +224,12 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
         }
       } catch (_) {}
       controller.add((result, docs));
-    }).onError(DataException.stream);
+    }).onError(FirestoreDataExtensionalException.stream);
     return controller.stream;
   }
 
   Stream<GetResponse<T, _FS>> _listenById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) {
@@ -244,13 +244,13 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
         } else {
           controller.add((null, i));
         }
-      }).onError(DataException.stream);
+      }).onError(FirestoreDataExtensionalException.stream);
     }
     return controller.stream;
   }
 
   Stream<GetsResponse<T, _FS>> _listenByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) {
@@ -292,18 +292,18 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
           }
         }
         controller.add((result, _.docs));
-      }).onError(DataException.stream);
+      }).onError(FirestoreDataExtensionalException.stream);
     }
     return controller.stream;
   }
 
   Stream<GetsResponse<T, _FS>> _listenByQuery<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
-    List<Query> queries = const [],
-    List<Selection> selections = const [],
-    List<Sorting> sorts = const [],
+    List<DataQuery> queries = const [],
+    List<DataSelection> selections = const [],
+    List<DataSorting> sorts = const [],
     PagingOptions options = const PagingOptions(),
   }) {
     final controller = StreamController<GetsResponse<T, _FS>>();
@@ -346,12 +346,12 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
         }
       } catch (_) {}
       controller.add((result, docs));
-    }).onError(DataException.stream);
+    }).onError(FirestoreDataExtensionalException.stream);
     return controller.stream;
   }
 
   Future<GetsResponse<T, _FS>> _query<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
     List<Query> queries = const [],
@@ -398,13 +398,13 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
         }
       } catch (_) {}
       return (result, docs);
-    }).onError(DataException.future);
+    }).onError(FirestoreDataExtensionalException.future);
   }
 
   Future<GetsResponse<T, _FS>> _search<T extends Entity>({
     Encryptor? encryptor,
     required Checker checker,
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
   }) async {
     var isEncryptor = encryptor != null;
     List<T> result = [];
@@ -420,11 +420,11 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
         }
       }
       return (result, _.docs);
-    }).onError(DataException.future);
+    }).onError(FirestoreDataExtensionalException.future);
   }
 
   Future<bool> _updateById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Map<String, dynamic> data,
   }) async {
@@ -441,21 +441,21 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
               return true;
             });
           } else {
-            throw const DataException("Encryption error!");
+            throw const FirestoreDataExtensionalException("Encryption error!");
           }
         });
       } else {
         return doc(id).update(data).then((value) {
           return true;
-        }).onError(DataException.future);
+        }).onError(FirestoreDataExtensionalException.future);
       }
     } else {
-      throw const DataException("Id isn't valid!");
+      throw const FirestoreDataExtensionalException("Id isn't valid!");
     }
   }
 
   Future<bool> _updateByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<UpdatingInfo> data,
   }) async {

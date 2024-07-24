@@ -1,34 +1,42 @@
 import 'dart:async';
 
-import 'package:data_management/core.dart';
-import 'package:firebase_database/firebase_database.dart' as rdb;
-import 'package:flutter_andomie/core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' as fdb;
+import 'package:flutter_entity/flutter_entity.dart';
+import 'package:in_app_query/in_app_query.dart';
 
-part '../base/realtime/config.dart';
-part '../base/realtime/extension.dart';
-part '../base/realtime/finder.dart';
+import '../../core/configs.dart';
+import '../../core/extensions.dart';
+import '../../models/checker.dart';
+import '../../models/updating_info.dart';
+import '../../services/sources/remote.dart';
+import '../../utils/encryptor.dart';
+import '../../utils/errors.dart';
+
+part '../base/firestore/config.dart';
+part '../base/firestore/extension.dart';
+part '../base/firestore/finder.dart';
 
 ///
 /// You can use base class [Data] without [Entity]
 ///
 
-typedef _RS = rdb.DataSnapshot;
+typedef _FS = fdb.DocumentSnapshot;
 
-abstract class RealtimeDataSource<T extends Entity>
+abstract class FirestoreDataSource<T extends Entity>
     extends RemoteDataSource<T> {
   final String path;
 
-  RealtimeDataSource({
+  FirestoreDataSource({
     required this.path,
     super.encryptor,
   });
 
-  rdb.FirebaseDatabase? _db;
+  fdb.FirebaseFirestore? _db;
 
-  rdb.FirebaseDatabase get database => _db ??= rdb.FirebaseDatabase.instance;
+  fdb.FirebaseFirestore get database => _db ??= fdb.FirebaseFirestore.instance;
 
-  rdb.DatabaseReference _source(FieldParams? params) {
-    return database.ref(params.generate(path));
+  fdb.CollectionReference _source(FieldParams? params) {
+    return database.collection(params.generate(path));
   }
 
   /// Method to check data by ID with optional data source builder.
@@ -40,8 +48,9 @@ abstract class RealtimeDataSource<T extends Entity>
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
+
   @override
-  Future<DataResponse<T>> checkById(
+  Future<Response<T>> checkById(
     String id, {
     bool isConnected = false,
     FieldParams? params,
@@ -53,17 +62,17 @@ abstract class RealtimeDataSource<T extends Entity>
           encryptor: encryptor,
           id: id,
         );
-        return DataResponse(
+        return Response(
           data: finder.$1?.$1,
           snapshot: finder.$1?.$2,
           exception: finder.$2,
           status: finder.$3,
         );
       } else {
-        return DataResponse(status: Status.invalidId);
+        return Response(status: Status.invalidId);
       }
     } else {
-      return DataResponse(status: Status.networkError);
+      return Response(status: Status.networkError);
     }
   }
 
@@ -76,7 +85,7 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> clear({
+  Future<Response<T>> clear({
     bool isConnected = false,
     FieldParams? params,
   }) async {
@@ -85,13 +94,13 @@ abstract class RealtimeDataSource<T extends Entity>
         builder: build,
         encryptor: encryptor,
       );
-      return DataResponse(
+      return Response(
         backups: finder.$1,
         exception: finder.$2,
         status: finder.$3,
       );
     } else {
-      return DataResponse(status: Status.networkError);
+      return Response(status: Status.networkError);
     }
   }
 
@@ -106,24 +115,24 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> create(
+  Future<Response<T>> create(
     T data, {
     bool isConnected = false,
     FieldParams? params,
   }) async {
     if (isConnected) {
-      if (data.id.isValid) {
+      if (data.id.isNotEmpty) {
         final finder = await _source(params).create(
           builder: build,
           encryptor: encryptor,
           data: data,
         );
-        return DataResponse(exception: finder.$1, status: finder.$2);
+        return Response(exception: finder.$1, status: finder.$2);
       } else {
-        return DataResponse(status: Status.invalidId);
+        return Response(status: Status.invalidId);
       }
     } else {
-      return DataResponse(status: Status.networkError);
+      return Response(status: Status.networkError);
     }
   }
 
@@ -138,24 +147,24 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> creates(
+  Future<Response<T>> creates(
     List<T> data, {
     bool isConnected = false,
     FieldParams? params,
   }) async {
     if (isConnected) {
-      if (data.isValid) {
+      if (data.isNotEmpty) {
         final finder = await _source(params).creates(
           builder: build,
           encryptor: encryptor,
           data: data,
         );
-        return DataResponse(exception: finder.$1, status: finder.$2);
+        return Response(exception: finder.$1, status: finder.$2);
       } else {
-        return DataResponse(status: Status.invalidId);
+        return Response(status: Status.invalidId);
       }
     } else {
-      return DataResponse(status: Status.networkError);
+      return Response(status: Status.networkError);
     }
   }
 
@@ -169,7 +178,7 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> deleteById(
+  Future<Response<T>> deleteById(
     String id, {
     bool isConnected = false,
     FieldParams? params,
@@ -181,12 +190,12 @@ abstract class RealtimeDataSource<T extends Entity>
           encryptor: encryptor,
           id: id,
         );
-        return DataResponse(exception: finder.$1, status: finder.$2);
+        return Response(exception: finder.$1, status: finder.$2);
       } else {
-        return DataResponse(status: Status.invalidId);
+        return Response(status: Status.invalidId);
       }
     } else {
-      return DataResponse(status: Status.networkError);
+      return Response(status: Status.networkError);
     }
   }
 
@@ -201,7 +210,7 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> deleteByIds(
+  Future<Response<T>> deleteByIds(
     List<String> ids, {
     bool isConnected = false,
     FieldParams? params,
@@ -213,12 +222,12 @@ abstract class RealtimeDataSource<T extends Entity>
           encryptor: encryptor,
           ids: ids,
         );
-        return DataResponse(exception: finder.$1, status: finder.$2);
+        return Response(exception: finder.$1, status: finder.$2);
       } else {
-        return DataResponse(status: Status.invalidId);
+        return Response(status: Status.invalidId);
       }
     } else {
-      return DataResponse(status: Status.networkError);
+      return Response(status: Status.networkError);
     }
   }
 
@@ -231,25 +240,23 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> get({
+  Future<Response<T>> get({
     bool isConnected = false,
-    bool forUpdates = false,
     FieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await _source(params).fetch(
         builder: build,
         encryptor: encryptor,
-        onlyUpdates: forUpdates,
       );
-      return DataResponse(
+      return Response(
         result: finder.$1?.$1,
         snapshot: finder.$1?.$2,
         exception: finder.$2,
         status: finder.$3,
       );
     } else {
-      return DataResponse(status: Status.networkError);
+      return Response(status: Status.networkError);
     }
   }
 
@@ -263,7 +270,7 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> getById(
+  Future<Response<T>> getById(
     String id, {
     bool isConnected = false,
     FieldParams? params,
@@ -274,14 +281,14 @@ abstract class RealtimeDataSource<T extends Entity>
         encryptor: encryptor,
         id: id,
       );
-      return DataResponse(
+      return Response(
         data: finder.$1?.$1,
         snapshot: finder.$1?.$2,
         message: finder.$2,
         status: finder.$3,
       );
     } else {
-      return DataResponse(status: Status.networkError);
+      return Response(status: Status.networkError);
     }
   }
 
@@ -296,10 +303,9 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> getByIds(
+  Future<Response<T>> getByIds(
     List<String> ids, {
     bool isConnected = false,
-    bool forUpdates = false,
     FieldParams? params,
   }) async {
     if (isConnected) {
@@ -308,14 +314,14 @@ abstract class RealtimeDataSource<T extends Entity>
         encryptor: encryptor,
         ids: ids,
       );
-      return DataResponse(
+      return Response(
         result: finder.$1?.$1,
         snapshot: finder.$1?.$2,
         message: finder.$2,
         status: finder.$3,
       );
     } else {
-      return DataResponse(status: Status.networkError);
+      return Response(status: Status.networkError);
     }
   }
 
@@ -330,33 +336,33 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> getByQuery({
+  Future<Response<T>> getByQuery({
     bool isConnected = false,
-    bool forUpdates = false,
     FieldParams? params,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
-    PagingOptions options = const PagingOptionsImpl(),
+    PagingOptions options = const PagingOptions(),
   }) async {
     if (isConnected) {
       var finder = await _source(params).query(
         builder: build,
         encryptor: encryptor,
-        onlyUpdates: forUpdates,
         queries: queries,
         selections: selections,
         sorts: sorts,
         options: options,
       );
-      return DataResponse(
+      final snapshot = finder.$1?.$2;
+      final response = Response(
         result: finder.$1?.$1,
-        snapshot: finder.$1?.$2,
+        snapshot: snapshot,
         exception: finder.$2,
         status: finder.$3,
       );
+      return response;
     } else {
-      return DataResponse(status: Status.networkError);
+      return Response(status: Status.networkError);
     }
   }
 
@@ -369,22 +375,20 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listen({
+  Stream<Response<T>> listen({
     bool isConnected = false,
-    bool forUpdates = false,
     FieldParams? params,
   }) {
-    final controller = StreamController<DataResponse<T>>();
+    final controller = StreamController<Response<T>>();
     if (isConnected) {
       try {
         _source(params)
             .listen(
           builder: build,
           encryptor: encryptor,
-          onlyUpdates: forUpdates,
         )
             .listen((finder) {
-          controller.add(DataResponse(
+          controller.add(Response(
             result: finder.$1?.$1,
             snapshot: finder.$1?.$2,
             exception: finder.$2,
@@ -392,13 +396,13 @@ abstract class RealtimeDataSource<T extends Entity>
           ));
         });
       } catch (_) {
-        controller.add(DataResponse(
+        controller.add(Response(
           exception: "$_",
           status: Status.failure,
         ));
       }
     } else {
-      controller.add(DataResponse(status: Status.networkError));
+      controller.add(Response(status: Status.networkError));
     }
     return controller.stream;
   }
@@ -413,18 +417,18 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listenById(
+  Stream<Response<T>> listenById(
     String id, {
     bool isConnected = false,
     FieldParams? params,
   }) {
-    final controller = StreamController<DataResponse<T>>();
+    final controller = StreamController<Response<T>>();
     if (isConnected) {
       try {
         _source(params)
             .liveById(builder: build, encryptor: encryptor, id: id)
             .listen((finder) {
-          controller.add(DataResponse(
+          controller.add(Response(
             data: finder.$1?.$1,
             snapshot: finder.$1?.$2,
             message: finder.$2,
@@ -432,13 +436,13 @@ abstract class RealtimeDataSource<T extends Entity>
           ));
         });
       } catch (_) {
-        controller.add(DataResponse(
+        controller.add(Response(
           exception: "$_",
           status: Status.failure,
         ));
       }
     } else {
-      controller.add(DataResponse(status: Status.networkError));
+      controller.add(Response(status: Status.networkError));
     }
     return controller.stream;
   }
@@ -454,19 +458,18 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listenByIds(
+  Stream<Response<T>> listenByIds(
     List<String> ids, {
     bool isConnected = false,
-    bool forUpdates = false,
     FieldParams? params,
   }) {
-    final controller = StreamController<DataResponse<T>>();
+    final controller = StreamController<Response<T>>();
     if (isConnected) {
       try {
         _source(params)
             .liveByIds(builder: build, encryptor: encryptor, ids: ids)
             .listen((finder) {
-          controller.add(DataResponse(
+          controller.add(Response(
             result: finder.$1?.$1,
             snapshot: finder.$1?.$2,
             message: finder.$2,
@@ -474,13 +477,13 @@ abstract class RealtimeDataSource<T extends Entity>
           ));
         });
       } catch (_) {
-        controller.add(DataResponse(
+        controller.add(Response(
           exception: "$_",
           status: Status.failure,
         ));
       }
     } else {
-      controller.add(DataResponse(status: Status.networkError));
+      controller.add(Response(status: Status.networkError));
     }
     return controller.stream;
   }
@@ -496,30 +499,28 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Stream<DataResponse<T>> listenByQuery({
+  Stream<Response<T>> listenByQuery({
     bool isConnected = false,
-    bool forUpdates = false,
     FieldParams? params,
-    List<Query> queries = const [],
-    List<Selection> selections = const [],
-    List<Sorting> sorts = const [],
-    PagingOptions options = const PagingOptionsImpl(),
+    List<DataQuery> queries = const [],
+    List<DataSelection> selections = const [],
+    List<DataSorting> sorts = const [],
+    PagingOptions options = const PagingOptions(),
   }) {
-    final controller = StreamController<DataResponse<T>>();
+    final controller = StreamController<Response<T>>();
     if (isConnected) {
       try {
         _source(params)
             .listenByQuery(
           builder: build,
           encryptor: encryptor,
-          onlyUpdates: forUpdates,
           queries: queries,
           selections: selections,
           sorts: sorts,
           options: options,
         )
             .listen((finder) {
-          controller.add(DataResponse(
+          controller.add(Response(
             result: finder.$1?.$1,
             snapshot: finder.$1?.$2,
             exception: finder.$2,
@@ -527,13 +528,13 @@ abstract class RealtimeDataSource<T extends Entity>
           ));
         });
       } catch (_) {
-        controller.add(DataResponse(
+        controller.add(Response(
           exception: "$_",
           status: Status.failure,
         ));
       }
     } else {
-      controller.add(DataResponse(status: Status.networkError));
+      controller.add(Response(status: Status.networkError));
     }
     return controller.stream;
   }
@@ -549,7 +550,7 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> search(
+  Future<Response<T>> search(
     Checker checker, {
     bool isConnected = false,
     FieldParams? params,
@@ -560,14 +561,14 @@ abstract class RealtimeDataSource<T extends Entity>
         encryptor: encryptor,
         checker: checker,
       );
-      return DataResponse(
+      return Response(
         result: finder.$1?.$1,
         snapshot: finder.$1?.$2,
         exception: finder.$2,
         status: finder.$3,
       );
     } else {
-      return DataResponse(status: Status.networkError);
+      return Response(status: Status.networkError);
     }
   }
 
@@ -582,7 +583,7 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> updateById(
+  Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
@@ -596,12 +597,12 @@ abstract class RealtimeDataSource<T extends Entity>
           id: id,
           data: data,
         );
-        return DataResponse(exception: finder.$1, status: finder.$2);
+        return Response(exception: finder.$1, status: finder.$2);
       } else {
-        return DataResponse(status: Status.invalidId);
+        return Response(status: Status.invalidId);
       }
     } else {
-      return DataResponse(status: Status.networkError);
+      return Response(status: Status.networkError);
     }
   }
 
@@ -619,7 +620,7 @@ abstract class RealtimeDataSource<T extends Entity>
   /// );
   /// ```
   @override
-  Future<DataResponse<T>> updateByIds(
+  Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
     bool isConnected = false,
     FieldParams? params,
@@ -631,12 +632,12 @@ abstract class RealtimeDataSource<T extends Entity>
           encryptor: encryptor,
           data: updates,
         );
-        return DataResponse(exception: finder.$1, status: finder.$2);
+        return Response(exception: finder.$1, status: finder.$2);
       } else {
-        return DataResponse(status: Status.invalidId);
+        return Response(status: Status.invalidId);
       }
     } else {
-      return DataResponse(status: Status.networkError);
+      return Response(status: Status.networkError);
     }
   }
 }

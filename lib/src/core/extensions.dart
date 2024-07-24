@@ -1,30 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_andomie/utils.dart';
+import 'package:flutter_entity/flutter_entity.dart';
 
-import '../services/controllers/controller.dart';
-import '../utils/errors.dart';
-import '../widgets/provider.dart';
-import 'configs.dart';
+import '../../core.dart';
 
-extension DataContextHelper on BuildContext {
-  T findDataController<T extends DataController>() {
-    try {
-      return DataControllers.of<T>(this);
-    } catch (_) {
-      throw const DataException();
-    }
-  }
-}
+extension DMMapHelper on Map<String, dynamic>? {
+  String? get id => (this ?? {})[EntityKey.i.id];
 
-extension FieldParamsHelper on FieldParams? {
-  String generate(String root) {
-    final params = this;
-    if (params is Params) {
-      return PathReplacer.replace(root, params.values);
-    } else if (params is IterableParams) {
-      return PathReplacer.replaceByIterable(root, params.values);
-    } else {
-      return root;
-    }
+  Map<String, dynamic> withId(String id) {
+    return (this ?? {})..addAll({EntityKey.i.id: id});
   }
 }

@@ -1,3 +1,7 @@
+## 1.0.0
+
+* Stable version
+
 ## 0.2.1
 
 * Query operation updates

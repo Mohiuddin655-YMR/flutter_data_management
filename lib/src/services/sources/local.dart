@@ -1,6 +1,9 @@
-import 'package:flutter_andomie/core.dart';
+import 'package:flutter_entity/flutter_entity.dart';
+import 'package:in_app_database/in_app_database.dart';
 
-import 'data_source.dart';
+import '../../core/configs.dart';
+import '../../utils/encryptor.dart';
+import 'base.dart';
 
 /// ## Abstract class representing a data source for handling operations related to entities of type [T].
 ///
@@ -25,16 +28,22 @@ import 'data_source.dart';
 /// ```
 ///
 abstract class LocalDataSource<T extends Entity> extends DataSource<T> {
+  final Duration reloadDuration;
   final String path;
+  final Encryptor? encryptor;
+  final InAppDatabase database;
 
-  LocalDataSource({
+  bool get isEncryptor => encryptor.isValid;
+
+  const LocalDataSource({
     required this.path,
-    LocalDatabase? database,
-  }) : _proxy = database;
+    this.reloadDuration = const Duration(seconds: 2),
+    this.encryptor,
+    required this.database,
+  });
 
-  LocalDatabase? _proxy;
-
-  Future<LocalDatabase> get database async {
-    return _proxy ??= await LocalDatabaseImpl.I;
-  }
+  Future<Response<T>> keep(
+    List<T> data, {
+    FieldParams? params,
+  });
 }

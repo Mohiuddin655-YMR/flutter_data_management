@@ -1,9 +1,10 @@
-import 'package:flutter_andomie/core.dart';
+import 'package:flutter_entity/flutter_entity.dart';
+import 'package:in_app_query/in_app_query.dart';
 
 import '../../core/configs.dart';
 import '../../models/checker.dart';
 import '../../models/updating_info.dart';
-import '../../utils/response.dart';
+import '../../utils/errors.dart';
 
 /// ## Abstract class representing a generic data repository with methods for CRUD operations.
 ///
@@ -19,19 +20,7 @@ import '../../utils/response.dart';
 /// ```
 
 abstract class DataRepository<T extends Entity> {
-  /// Connectivity provider for checking internet connectivity.
-  final ConnectivityProvider connectivity;
-
-  /// Constructor with an optional parameter for the connectivity provider.
-  DataRepository({
-    ConnectivityProvider? connectivity,
-  }) : connectivity = connectivity ?? ConnectivityProvider.I;
-
-  /// Getter for checking if the device is connected to the internet.
-  Future<bool> get isConnected async => await connectivity.isConnected;
-
-  /// Getter for checking if the device is disconnected from the internet.
-  Future<bool> get isDisconnected async => !(await isConnected);
+  const DataRepository();
 
   /// Method to check data by ID with optional data source builder.
   ///
@@ -42,10 +31,12 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Future<DataResponse<T>> checkById(
+  Future<Response<T>> checkById(
     String id, {
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException('checkById method is not implemented');
+  }
 
   /// Method to clear data with optional data source builder.
   ///
@@ -55,9 +46,11 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Future<DataResponse<T>> clear({
+  Future<Response<T>> clear({
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException('clear method is not implemented');
+  }
 
   /// Method to create data with optional data source builder.
   ///
@@ -69,10 +62,12 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Future<DataResponse<T>> create(
+  Future<Response<T>> create(
     T data, {
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException('create method is not implemented');
+  }
 
   /// Method to create multiple data entries with optional data source builder.
   ///
@@ -84,10 +79,12 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Future<DataResponse<T>> creates(
+  Future<Response<T>> creates(
     List<T> data, {
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException('creates method is not implemented');
+  }
 
   /// Method to delete data by ID with optional data source builder.
   ///
@@ -98,10 +95,12 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Future<DataResponse<T>> deleteById(
+  Future<Response<T>> deleteById(
     String id, {
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException('deleteById method is not implemented');
+  }
 
   /// Method to delete data by multiple IDs with optional data source builder.
   ///
@@ -113,10 +112,14 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Future<DataResponse<T>> deleteByIds(
+  Future<Response<T>> deleteByIds(
     List<String> ids, {
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException(
+      'deleteByIds method is not implemented',
+    );
+  }
 
   /// Method to get data with optional data source builder.
   ///
@@ -126,10 +129,11 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Future<DataResponse<T>> get({
-    bool forUpdates = false,
+  Future<Response<T>> get({
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException('get method is not implemented');
+  }
 
   /// Method to get data by ID with optional data source builder.
   ///
@@ -140,10 +144,12 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Future<DataResponse<T>> getById(
+  Future<Response<T>> getById(
     String id, {
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException('getById method is not implemented');
+  }
 
   /// Method to get data by multiple IDs with optional data source builder.
   ///
@@ -155,11 +161,12 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Future<DataResponse<T>> getByIds(
+  Future<Response<T>> getByIds(
     List<String> ids, {
-    bool forUpdates = false,
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException('getByIds method is not implemented');
+  }
 
   /// Method to get data by query with optional data source builder.
   ///
@@ -171,14 +178,15 @@ abstract class DataRepository<T extends Entity> {
   ///   queries: queries,
   /// );
   /// ```
-  Future<DataResponse<T>> getByQuery({
+  Future<Response<T>> getByQuery({
     FieldParams? params,
-    bool forUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
-    PagingOptions options = const PagingOptionsImpl(),
-  });
+    PagingOptions options = const PagingOptions(),
+  }) {
+    throw const DataRepositoryException('getByQuery method is not implemented');
+  }
 
   /// Stream method to listen for data changes with optional data source builder.
   ///
@@ -188,9 +196,11 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Stream<DataResponse<T>> listen({
+  Stream<Response<T>> listen({
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException('listen method is not implemented');
+  }
 
   /// Stream method to listen for data changes by ID with optional data source builder.
   ///
@@ -201,10 +211,12 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Stream<DataResponse<T>> listenById(
+  Stream<Response<T>> listenById(
     String id, {
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException('listenById method is not implemented');
+  }
 
   /// Stream method to listen for data changes by multiple IDs with optional data source builder.
   ///
@@ -216,11 +228,14 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Stream<DataResponse<T>> listenByIds(
+  Stream<Response<T>> listenByIds(
     List<String> ids, {
-    bool forUpdates = false,
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException(
+      'listenByIds method is not implemented',
+    );
+  }
 
   /// Stream method to listen for data changes by query with optional data source builder.
   ///
@@ -232,14 +247,17 @@ abstract class DataRepository<T extends Entity> {
   ///   queries: queries,
   /// );
   /// ```
-  Stream<DataResponse<T>> listenByQuery({
+  Stream<Response<T>> listenByQuery({
     FieldParams? params,
-    bool forUpdates = false,
-    List<Query> queries = const [],
-    List<Selection> selections = const [],
-    List<Sorting> sorts = const [],
-    PagingOptions options = const PagingOptionsImpl(),
-  });
+    List<DataQuery> queries = const [],
+    List<DataSelection> selections = const [],
+    List<DataSorting> sorts = const [],
+    PagingOptions options = const PagingOptions(),
+  }) {
+    throw const DataRepositoryException(
+      'listenByQuery method is not implemented',
+    );
+  }
 
   /// Method to check data by query with optional data source builder.
   ///
@@ -251,10 +269,12 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Future<DataResponse<T>> search(
+  Future<Response<T>> search(
     Checker checker, {
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException('search method is not implemented');
+  }
 
   /// Method to update data by ID with optional data source builder.
   ///
@@ -266,11 +286,13 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Future<DataResponse<T>> updateById(
+  Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException('updateById method is not implemented');
+  }
 
   /// Method to update data by multiple IDs with optional data source builder.
   ///
@@ -285,8 +307,12 @@ abstract class DataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-  Future<DataResponse<T>> updateByIds(
+  Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
     FieldParams? params,
-  });
+  }) {
+    throw const DataRepositoryException(
+      'updateByIds method is not implemented',
+    );
+  }
 }

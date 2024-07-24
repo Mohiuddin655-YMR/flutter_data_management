@@ -1,4 +1,4 @@
-part of '../../sources/api_data_source.dart';
+part of '../../sources/api.dart';
 
 class ApiPagingOptions extends PagingOptions {
   final Object? body;
@@ -12,18 +12,6 @@ class ApiPagingOptions extends PagingOptions {
   });
 
   const ApiPagingOptions.empty() : this();
-}
-
-class ApiQuery extends Query {
-  const ApiQuery();
-}
-
-class ApiSelection extends Selection {
-  const ApiSelection(super.value);
-}
-
-class ApiSorting extends Sorting {
-  const ApiSorting() : super("");
 }
 
 class _QHelper {

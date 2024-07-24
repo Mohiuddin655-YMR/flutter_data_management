@@ -1,8 +1,8 @@
-part of '../../sources/api_data_source.dart';
+part of '../../sources/api.dart';
 
 extension _ApiDataFinder on dio.Dio {
   Future<CheckFinder<T, _AS>> checkById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -32,7 +32,7 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Future<ClearFinder<T>> clear<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -70,7 +70,7 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Future<CreationFinder> create<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -102,7 +102,7 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Future<CreationFinder> creates<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -134,7 +134,7 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Future<DeletionFinder> deleteById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -166,7 +166,7 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Future<DeletionFinder> deleteByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -198,11 +198,10 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Future<GetsFinder<T, _AS>> fetchAll<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
-    bool onlyUpdates = false,
   }) async {
     try {
       return _fetch<T>(
@@ -210,7 +209,6 @@ extension _ApiDataFinder on dio.Dio {
         encryptor: encryptor,
         api: api,
         endPoint: endPoint,
-        onlyUpdates: onlyUpdates,
       ).then((value) {
         if ((value.$1 ?? []).isNotEmpty) {
           return (value, null, Status.ok);
@@ -224,7 +222,7 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Future<GetFinder<T, _AS>> fetchById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -254,7 +252,7 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Future<GetsFinder<T, _AS>> fetchByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -284,11 +282,10 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Stream<GetsFinder<T, _AS>> listen<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
-    bool onlyUpdates = false,
   }) {
     final controller = StreamController<GetsFinder<T, _AS>>();
     try {
@@ -297,7 +294,6 @@ extension _ApiDataFinder on dio.Dio {
         encryptor: encryptor,
         api: api,
         endPoint: endPoint,
-        onlyUpdates: onlyUpdates,
       ).listen((value) {
         if ((value.$1 ?? []).isNotEmpty) {
           controller.add((value, null, Status.ok));
@@ -312,7 +308,7 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Stream<GetFinder<T, _AS>> liveById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -346,7 +342,7 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Stream<GetsFinder<T, _AS>> liveByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -380,14 +376,13 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Stream<GetsFinder<T, _AS>> listenByQuery<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
-    bool onlyUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
-    List<Sorting> sorts = const [],
+    List<DataSorting> sorts = const [],
     PagingOptions options = const PagingOptions(),
   }) {
     final controller = StreamController<GetsFinder<T, _AS>>();
@@ -397,7 +392,6 @@ extension _ApiDataFinder on dio.Dio {
         encryptor: encryptor,
         api: api,
         endPoint: endPoint,
-        onlyUpdates: onlyUpdates,
         queries: queries,
         selections: selections,
         sorts: sorts,
@@ -416,11 +410,10 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Future<GetsFinder<T, _AS>> query<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
-    bool onlyUpdates = false,
     List<Query> queries = const [],
     List<Selection> selections = const [],
     List<Sorting> sorts = const [],
@@ -432,7 +425,6 @@ extension _ApiDataFinder on dio.Dio {
         encryptor: encryptor,
         api: api,
         endPoint: endPoint,
-        onlyUpdates: onlyUpdates,
         queries: queries,
         selections: selections,
         sorts: sorts,
@@ -450,7 +442,7 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Future<GetsFinder<T, _AS>> search<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -476,7 +468,7 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Future<UpdatingFinder> updateById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,
@@ -509,7 +501,7 @@ extension _ApiDataFinder on dio.Dio {
   }
 
   Future<UpdatingFinder> updateByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Api api,
     required String endPoint,

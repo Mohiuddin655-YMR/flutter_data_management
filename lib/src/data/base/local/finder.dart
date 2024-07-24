@@ -1,8 +1,8 @@
-part of '../../sources/local_store_data_source.dart';
+part of '../../sources/local.dart';
 
-extension _LocalStoreCollectionFinder on ldb.CollectionRef {
-  Future<CheckFinder<T, _LS>> checkById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+extension _LocalDataFinder on fdb.InAppQueryReference {
+  Future<CheckFinder<T, _Snapshot>> checkById<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
@@ -28,7 +28,7 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
   }
 
   Future<ClearFinder<T>> clear<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
   }) async {
     try {
@@ -57,7 +57,7 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
   }
 
   Future<CreationFinder> create<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required T data,
   }) async {
@@ -85,7 +85,7 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
   }
 
   Future<CreationFinder> creates<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<T> data,
   }) async {
@@ -113,7 +113,7 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
   }
 
   Future<DeletionFinder> deleteById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
@@ -141,7 +141,7 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
   }
 
   Future<DeletionFinder> deleteByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
@@ -168,8 +168,8 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
     }
   }
 
-  Future<GetsFinder<T, _LS>> fetch<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Future<GetsFinder<T, _Snapshot>> fetch<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
   }) async {
@@ -190,8 +190,8 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
     }
   }
 
-  Future<GetFinder<T, _LS>> fetchById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Future<GetFinder<T, _Snapshot>> fetchById<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) async {
@@ -216,8 +216,8 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
     }
   }
 
-  Future<GetsFinder<T, _LS>> fetchByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Future<GetsFinder<T, _Snapshot>> fetchByIds<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) async {
@@ -242,12 +242,12 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
     }
   }
 
-  Stream<GetsFinder<T, _LS>> listen<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Stream<GetsFinder<T, _Snapshot>> listen<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
   }) {
-    final controller = StreamController<GetsFinder<T, _LS>>();
+    final controller = StreamController<GetsFinder<T, _Snapshot>>();
     try {
       _listen<T>(
         builder: builder,
@@ -266,12 +266,12 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
     return controller.stream;
   }
 
-  Stream<GetFinder<T, _LS>> liveById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Stream<GetFinder<T, _Snapshot>> liveById<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
   }) {
-    final controller = StreamController<GetFinder<T, _LS>>();
+    final controller = StreamController<GetFinder<T, _Snapshot>>();
     if (id.isNotEmpty) {
       try {
         _listenById<T>(
@@ -296,12 +296,12 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
     return controller.stream;
   }
 
-  Stream<GetsFinder<T, _LS>> liveByIds<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Stream<GetsFinder<T, _Snapshot>> liveByIds<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required List<String> ids,
   }) {
-    final controller = StreamController<GetsFinder<T, _LS>>();
+    final controller = StreamController<GetsFinder<T, _Snapshot>>();
     if (ids.isNotEmpty) {
       try {
         _listenByIds<T>(
@@ -326,16 +326,16 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
     return controller.stream;
   }
 
-  Stream<GetsFinder<T, _LS>> listenByQuery<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Stream<GetsFinder<T, _Snapshot>> listenByQuery<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
-    List<Query> queries = const [],
-    List<Selection> selections = const [],
-    List<Sorting> sorts = const [],
+    List<DataQuery> queries = const [],
+    List<DataSelection> selections = const [],
+    List<DataSorting> sorts = const [],
     PagingOptions options = const PagingOptions(),
   }) {
-    final controller = StreamController<GetsFinder<T, _LS>>();
+    final controller = StreamController<GetsFinder<T, _Snapshot>>();
     try {
       _listenByQuery<T>(
         builder: builder,
@@ -358,8 +358,8 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
     return controller.stream;
   }
 
-  Future<GetsFinder<T, _LS>> query<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Future<GetsFinder<T, _Snapshot>> query<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     bool onlyUpdates = false,
     List<Query> queries = const [],
@@ -388,8 +388,8 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
     }
   }
 
-  Future<GetsFinder<T, _LS>> search<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+  Future<GetsFinder<T, _Snapshot>> search<T extends Entity>({
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required Checker checker,
   }) async {
@@ -411,7 +411,7 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
   }
 
   Future<UpdatingFinder> updateById<T extends Entity>({
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
     Encryptor? encryptor,
     required String id,
     required Map<String, dynamic> data,
@@ -442,7 +442,7 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
   Future<UpdatingFinder> updateByIds<T extends Entity>({
     Encryptor? encryptor,
     required List<UpdatingInfo> data,
-    required LocalDataBuilder<T> builder,
+    required DataBuilder<T> builder,
   }) async {
     if (data.isNotEmpty) {
       try {
@@ -464,6 +464,32 @@ extension _LocalStoreCollectionFinder on ldb.CollectionRef {
       }
     } else {
       return (null, Status.invalidId);
+    }
+  }
+
+  Future<CreationFinder> keep<T extends Entity>(List<T> data) async {
+    if (data.isNotEmpty) {
+      try {
+        final children = List.of(data.map((e) {
+          return fdb.InAppDocumentSnapshot(e.id, e.source);
+        }));
+        return set(children)
+            .then((_) => true)
+            .onError(LocalDataExtensionalException.future)
+            .then((successful) {
+          if (successful) {
+            return (null, Status.ok);
+          } else {
+            return ("Database error!", Status.error);
+          }
+        }).onError((_, __) {
+          return ("$_", Status.failure);
+        });
+      } catch (_) {
+        return ("$_", Status.failure);
+      }
+    } else {
+      return (null, Status.notFound);
     }
   }
 }
