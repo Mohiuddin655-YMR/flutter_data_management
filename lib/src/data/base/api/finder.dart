@@ -23,8 +23,8 @@ extension _ApiDataFinder on dio.Dio {
             return (null, null, Status.notFound);
           }
         });
-      } catch (_) {
-        return (null, "$_", Status.failure);
+      } catch (e) {
+        return (null, "$e", Status.failure);
       }
     } else {
       return (null, null, Status.invalidId);
@@ -57,15 +57,15 @@ extension _ApiDataFinder on dio.Dio {
             } else {
               return (null, "Database error!", Status.error);
             }
-          }).onError((_, __) {
-            return (null, "$_", Status.failure);
+          }).onError((error, __) {
+            return (null, "$error", Status.failure);
           });
         } else {
           return (null, null, Status.notFound);
         }
       });
-    } catch (_) {
-      return (null, "$_", Status.failure);
+    } catch (e) {
+      return (null, "$e", Status.failure);
     }
   }
 
@@ -90,11 +90,11 @@ extension _ApiDataFinder on dio.Dio {
           } else {
             return ("Database error!", Status.error);
           }
-        }).onError((_, __) {
-          return ("$_", Status.error);
+        }).onError((error, __) {
+          return ("$error", Status.error);
         });
-      } catch (_) {
-        return ("$_", Status.failure);
+      } catch (e) {
+        return ("$e", Status.failure);
       }
     } else {
       return (null, Status.invalidId);

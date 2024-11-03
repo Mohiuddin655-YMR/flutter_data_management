@@ -140,12 +140,12 @@ extension _ApiExtension on dio.Dio {
     final request = api.request.isGetRequest ? get(I) : post(I);
     List<T> result = [];
     List<_AS> snaps = [];
-    return request.then((_) async {
+    return request.then((response) async {
       result.clear();
       snaps.clear();
-      if (_.statusCode == api.status.ok) {
-        if (_.data is List) {
-          for (var i in _.data) {
+      if (response.statusCode == api.status.ok) {
+        if (response.data is List) {
+          for (var i in response.data) {
             snaps.add(i);
             final data = i is Map<String, dynamic>
                 ? i
@@ -340,12 +340,12 @@ extension _ApiExtension on dio.Dio {
     List<T> result = [];
     List<_AS> docs = [];
 
-    return request.then((_) async {
+    return request.then((response) async {
       result.clear();
       docs.clear();
-      if (_.statusCode == api.status.ok) {
-        if (_.data is List) {
-          for (var i in _.data) {
+      if (response.statusCode == api.status.ok) {
+        if (response.data is List) {
+          for (var i in response.data) {
             docs.add(i);
             if (i != null && i is Map<String, dynamic>) {
               var v = isEncryptor ? await encryptor.output(i) : i;
@@ -378,12 +378,12 @@ extension _ApiExtension on dio.Dio {
     List<T> result = [];
     List<_AS> docs = [];
 
-    return request.then((_) async {
+    return request.then((response) async {
       result.clear();
       docs.clear();
-      if (_.statusCode == api.status.ok) {
-        if (_.data is List) {
-          for (var i in _.data) {
+      if (response.statusCode == api.status.ok) {
+        if (response.data is List) {
+          for (var i in response.data) {
             docs.add(i);
             if (i != null && i is Map<String, dynamic>) {
               var v = isEncryptor ? await encryptor.output(i) : i;

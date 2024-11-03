@@ -65,7 +65,7 @@ abstract class FirestoreDataSource<T extends Entity>
         return Response(
           data: finder.$1?.$1,
           snapshot: finder.$1?.$2,
-          exception: finder.$2,
+          error: finder.$2,
           status: finder.$3,
         );
       } else {
@@ -96,7 +96,7 @@ abstract class FirestoreDataSource<T extends Entity>
       );
       return Response(
         backups: finder.$1,
-        exception: finder.$2,
+        error: finder.$2,
         status: finder.$3,
       );
     } else {
@@ -127,7 +127,7 @@ abstract class FirestoreDataSource<T extends Entity>
           encryptor: encryptor,
           data: data,
         );
-        return Response(exception: finder.$1, status: finder.$2);
+        return Response(error: finder.$1, status: finder.$2);
       } else {
         return Response(status: Status.invalidId);
       }
@@ -159,7 +159,7 @@ abstract class FirestoreDataSource<T extends Entity>
           encryptor: encryptor,
           data: data,
         );
-        return Response(exception: finder.$1, status: finder.$2);
+        return Response(error: finder.$1, status: finder.$2);
       } else {
         return Response(status: Status.invalidId);
       }
@@ -190,7 +190,7 @@ abstract class FirestoreDataSource<T extends Entity>
           encryptor: encryptor,
           id: id,
         );
-        return Response(exception: finder.$1, status: finder.$2);
+        return Response(error: finder.$1, status: finder.$2);
       } else {
         return Response(status: Status.invalidId);
       }
@@ -222,7 +222,7 @@ abstract class FirestoreDataSource<T extends Entity>
           encryptor: encryptor,
           ids: ids,
         );
-        return Response(exception: finder.$1, status: finder.$2);
+        return Response(error: finder.$1, status: finder.$2);
       } else {
         return Response(status: Status.invalidId);
       }
@@ -252,7 +252,7 @@ abstract class FirestoreDataSource<T extends Entity>
       return Response(
         result: finder.$1?.$1,
         snapshot: finder.$1?.$2,
-        exception: finder.$2,
+        error: finder.$2,
         status: finder.$3,
       );
     } else {
@@ -357,7 +357,7 @@ abstract class FirestoreDataSource<T extends Entity>
       final response = Response(
         result: finder.$1?.$1,
         snapshot: snapshot,
-        exception: finder.$2,
+        error: finder.$2,
         status: finder.$3,
       );
       return response;
@@ -391,13 +391,13 @@ abstract class FirestoreDataSource<T extends Entity>
           controller.add(Response(
             result: finder.$1?.$1,
             snapshot: finder.$1?.$2,
-            exception: finder.$2,
+            error: finder.$2,
             status: finder.$3,
           ));
         });
-      } catch (_) {
+      } catch (e) {
         controller.add(Response(
-          exception: "$_",
+          error: "$e",
           status: Status.failure,
         ));
       }
@@ -435,9 +435,9 @@ abstract class FirestoreDataSource<T extends Entity>
             status: finder.$3,
           ));
         });
-      } catch (_) {
+      } catch (e) {
         controller.add(Response(
-          exception: "$_",
+          error: "$e",
           status: Status.failure,
         ));
       }
@@ -476,9 +476,9 @@ abstract class FirestoreDataSource<T extends Entity>
             status: finder.$3,
           ));
         });
-      } catch (_) {
+      } catch (e) {
         controller.add(Response(
-          exception: "$_",
+          error: "$e",
           status: Status.failure,
         ));
       }
@@ -523,13 +523,13 @@ abstract class FirestoreDataSource<T extends Entity>
           controller.add(Response(
             result: finder.$1?.$1,
             snapshot: finder.$1?.$2,
-            exception: finder.$2,
+            error: finder.$2,
             status: finder.$3,
           ));
         });
-      } catch (_) {
+      } catch (e) {
         controller.add(Response(
-          exception: "$_",
+          error: "$e",
           status: Status.failure,
         ));
       }
@@ -564,7 +564,7 @@ abstract class FirestoreDataSource<T extends Entity>
       return Response(
         result: finder.$1?.$1,
         snapshot: finder.$1?.$2,
-        exception: finder.$2,
+        error: finder.$2,
         status: finder.$3,
       );
     } else {
@@ -597,7 +597,7 @@ abstract class FirestoreDataSource<T extends Entity>
           id: id,
           data: data,
         );
-        return Response(exception: finder.$1, status: finder.$2);
+        return Response(error: finder.$1, status: finder.$2);
       } else {
         return Response(status: Status.invalidId);
       }
@@ -632,7 +632,7 @@ abstract class FirestoreDataSource<T extends Entity>
           encryptor: encryptor,
           data: updates,
         );
-        return Response(exception: finder.$1, status: finder.$2);
+        return Response(error: finder.$1, status: finder.$2);
       } else {
         return Response(status: Status.invalidId);
       }

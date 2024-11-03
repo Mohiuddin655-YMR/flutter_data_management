@@ -67,7 +67,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
         return Response(
           data: finder.$1?.$1,
           snapshot: finder.$1?.$2,
-          exception: finder.$2,
+          error: finder.$2,
           status: finder.$3,
         );
       } else {
@@ -100,7 +100,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
       );
       return Response(
         backups: finder.$1,
-        exception: finder.$2,
+        error: finder.$2,
         status: finder.$3,
       );
     } else {
@@ -133,7 +133,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           endPoint: _source(params),
           data: data,
         );
-        return Response(exception: finder.$1, status: finder.$2);
+        return Response(error: finder.$1, status: finder.$2);
       } else {
         return Response(status: Status.invalidId);
       }
@@ -167,7 +167,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           endPoint: _source(params),
           data: data,
         );
-        return Response(exception: finder.$1, status: finder.$2);
+        return Response(error: finder.$1, status: finder.$2);
       } else {
         return Response(status: Status.invalidId);
       }
@@ -200,7 +200,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           endPoint: _source(params),
           id: id,
         );
-        return Response(exception: finder.$1, status: finder.$2);
+        return Response(error: finder.$1, status: finder.$2);
       } else {
         return Response(status: Status.invalidId);
       }
@@ -234,7 +234,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           endPoint: _source(params),
           ids: ids,
         );
-        return Response(exception: finder.$1, status: finder.$2);
+        return Response(error: finder.$1, status: finder.$2);
       } else {
         return Response(status: Status.invalidId);
       }
@@ -266,7 +266,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
       return Response(
         result: finder.$1?.$1,
         snapshot: finder.$1?.$2,
-        exception: finder.$2,
+        error: finder.$2,
         status: finder.$3,
       );
     } else {
@@ -376,7 +376,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
       return Response(
         result: finder.$1?.$1,
         snapshot: finder.$1?.$2,
-        exception: finder.$2,
+        error: finder.$2,
         status: finder.$3,
       );
     } else {
@@ -411,13 +411,13 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           controller.add(Response(
             result: finder.$1?.$1,
             snapshot: finder.$1?.$2,
-            exception: finder.$2,
+            error: finder.$2,
             status: finder.$3,
           ));
         });
-      } catch (_) {
+      } catch (error) {
         controller.add(Response(
-          exception: "$_",
+          error: "$error",
           status: Status.failure,
         ));
       }
@@ -461,9 +461,9 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
             status: finder.$3,
           ));
         });
-      } catch (_) {
+      } catch (error) {
         controller.add(Response(
-          exception: "$_",
+          error: "$error",
           status: Status.failure,
         ));
       }
@@ -508,9 +508,9 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
             status: finder.$3,
           ));
         });
-      } catch (_) {
+      } catch (e) {
         controller.add(Response(
-          exception: "$_",
+          error: "$e",
           status: Status.failure,
         ));
       }
@@ -557,13 +557,13 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           controller.add(Response(
             result: finder.$1?.$1,
             snapshot: finder.$1?.$2,
-            exception: finder.$2,
+            error: finder.$2,
             status: finder.$3,
           ));
         });
-      } catch (_) {
+      } catch (e) {
         controller.add(Response(
-          exception: "$_",
+          error: "$e",
           status: Status.failure,
         ));
       }
@@ -600,7 +600,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
       return Response(
         result: finder.$1?.$1,
         snapshot: finder.$1?.$2,
-        exception: finder.$2,
+        error: finder.$2,
         status: finder.$3,
       );
     } else {
@@ -635,7 +635,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           id: id,
           data: data,
         );
-        return Response(exception: finder.$1, status: finder.$2);
+        return Response(error: finder.$1, status: finder.$2);
       } else {
         return Response(status: Status.invalidId);
       }
@@ -672,7 +672,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           endPoint: _source(params),
           data: updates,
         );
-        return Response(exception: finder.$1, status: finder.$2);
+        return Response(error: finder.$1, status: finder.$2);
       } else {
         return Response(status: Status.invalidId);
       }
