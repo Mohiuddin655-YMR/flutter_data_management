@@ -1,6 +1,6 @@
 part of 'configs.dart';
 
-enum FieldPaths {
+enum DataFieldPaths {
   documentId,
   none;
 
@@ -9,16 +9,16 @@ enum FieldPaths {
   bool get isNone => this == none;
 }
 
-class FieldPath {
+class DataFieldPath {
   final Object? field;
-  final FieldPaths type;
+  final DataFieldPaths type;
 
-  const FieldPath(
+  const DataFieldPath(
     this.field, [
-    this.type = FieldPaths.none,
+    this.type = DataFieldPaths.none,
   ]);
 
-  static FieldPath get documentId {
-    return const FieldPath(null, FieldPaths.documentId);
+  static DataFieldPath get documentId {
+    return const DataFieldPath(null, DataFieldPaths.documentId);
   }
 }

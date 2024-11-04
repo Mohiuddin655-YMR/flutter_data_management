@@ -3,7 +3,7 @@ part of 'source.dart';
 extension on fdb.InAppQueryReference {
   Future<bool> _add<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required T data,
   }) async {
     var isEncryptor = encryptor != null;
@@ -14,21 +14,21 @@ extension on fdb.InAppQueryReference {
         return reference
             .set(raw)
             .then((_) => true)
-            .onError(LocalDataExtensionalException.future);
+            .onError(LocalDataException.future);
       } else {
-        throw const LocalDataExtensionalException("Encryption error!");
+        throw const LocalDataException("Encryption error!");
       }
     } else {
       return reference
           .set(data.source, const fdb.InAppSetOptions(merge: true))
           .then((_) => true)
-          .onError(LocalDataExtensionalException.future);
+          .onError(LocalDataException.future);
     }
   }
 
   Future<bool> _adds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<T> data,
   }) async {
     var counter = 0;
@@ -42,9 +42,9 @@ extension on fdb.InAppQueryReference {
     return data.length == counter;
   }
 
-  Future<CheckResponse<T, _Snapshot>> _checkById<T extends Entity>({
+  Future<DataCheckResponse<T, _Snapshot>> _checkById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) async {
     var isEncryptor = encryptor != null;
@@ -55,22 +55,22 @@ extension on fdb.InAppQueryReference {
         return (builder(v), i);
       }
       return (null, i);
-    }).onError(LocalDataExtensionalException.future);
+    }).onError(LocalDataException.future);
   }
 
   Future<bool> _deleteById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) {
     return doc(id).delete().then((value) {
       return true;
-    }).onError(LocalDataExtensionalException.future);
+    }).onError(LocalDataException.future);
   }
 
   Future<bool> _deleteByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) async {
     var counter = 0;
@@ -84,9 +84,9 @@ extension on fdb.InAppQueryReference {
     return ids.length == counter;
   }
 
-  Future<GetsResponse<T, _Snapshot>> _fetch<T extends Entity>({
+  Future<DataGetsResponse<T, _Snapshot>> _fetch<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     bool onlyUpdates = false,
   }) async {
     var isEncryptor = encryptor != null;
@@ -122,12 +122,12 @@ extension on fdb.InAppQueryReference {
         }
       } catch (_) {}
       return (result, docs);
-    }).onError(LocalDataExtensionalException.future);
+    }).onError(LocalDataException.future);
   }
 
-  Future<GetResponse<T, _Snapshot>> _fetchById<T extends Entity>({
+  Future<DataGetResponse<T, _Snapshot>> _fetchById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) async {
     var isEncryptor = encryptor != null;
@@ -138,12 +138,12 @@ extension on fdb.InAppQueryReference {
         return (builder(v), i);
       }
       return (null, i);
-    }).onError(LocalDataExtensionalException.future);
+    }).onError(LocalDataException.future);
   }
 
-  Future<GetsResponse<T, _Snapshot>> _fetchByIds<T extends Entity>({
+  Future<DataGetsResponse<T, _Snapshot>> _fetchByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) async {
     var isEncryptor = encryptor != null;
@@ -169,7 +169,9 @@ extension on fdb.InAppQueryReference {
       }
       return (result, snaps);
     } else {
-      return where(FieldPath.documentId, whereIn: ids).get().then((r) async {
+      return where(DataFieldPath.documentId, whereIn: ids)
+          .get()
+          .then((r) async {
         result.clear();
         if (r.docs.isNotEmpty) {
           for (var i in r.docs) {
@@ -181,16 +183,16 @@ extension on fdb.InAppQueryReference {
           }
         }
         return (result, r.docs);
-      }).onError(LocalDataExtensionalException.future);
+      }).onError(LocalDataException.future);
     }
   }
 
-  Stream<GetsResponse<T, _Snapshot>> _listen<T extends Entity>({
+  Stream<DataGetsResponse<T, _Snapshot>> _listen<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     bool onlyUpdates = false,
   }) {
-    final controller = StreamController<GetsResponse<T, _Snapshot>>();
+    final controller = StreamController<DataGetsResponse<T, _Snapshot>>();
     var isEncryptor = encryptor != null;
     List<T> result = [];
     List<fdb.InAppDocumentSnapshot> docs = [];
@@ -224,16 +226,16 @@ extension on fdb.InAppQueryReference {
         }
       } catch (_) {}
       controller.add((result, docs));
-    }).onError(LocalDataExtensionalException.stream);
+    }).onError(LocalDataException.stream);
     return controller.stream;
   }
 
-  Stream<GetResponse<T, _Snapshot>> _listenById<T extends Entity>({
+  Stream<DataGetResponse<T, _Snapshot>> _listenById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) {
-    final controller = StreamController<GetResponse<T, _Snapshot>>();
+    final controller = StreamController<DataGetResponse<T, _Snapshot>>();
     if (id.isNotEmpty) {
       var isEncryptor = encryptor != null;
       doc(id).snapshots().listen((i) async {
@@ -244,17 +246,17 @@ extension on fdb.InAppQueryReference {
         } else {
           controller.add((null, i));
         }
-      }).onError(LocalDataExtensionalException.stream);
+      }).onError(LocalDataException.stream);
     }
     return controller.stream;
   }
 
-  Stream<GetsResponse<T, _Snapshot>> _listenByIds<T extends Entity>({
+  Stream<DataGetsResponse<T, _Snapshot>> _listenByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) {
-    final controller = StreamController<GetsResponse<T, _Snapshot>>();
+    final controller = StreamController<DataGetsResponse<T, _Snapshot>>();
     var isEncryptor = encryptor != null;
     List<T> result = [];
     if (ids.length > _Limitations.whereIn) {
@@ -280,7 +282,9 @@ extension on fdb.InAppQueryReference {
       }
       controller.add((map.values.toList(), snaps.values.toList()));
     } else {
-      where(FieldPath.documentId, whereIn: ids).snapshots().listen((e) async {
+      where(DataFieldPath.documentId, whereIn: ids)
+          .snapshots()
+          .listen((e) async {
         result.clear();
         if (e.docs.isNotEmpty) {
           for (var i in e.docs) {
@@ -292,21 +296,21 @@ extension on fdb.InAppQueryReference {
           }
         }
         controller.add((result, e.docs));
-      }).onError(LocalDataExtensionalException.stream);
+      }).onError(LocalDataException.stream);
     }
     return controller.stream;
   }
 
-  Stream<GetsResponse<T, _Snapshot>> _listenByQuery<T extends Entity>({
+  Stream<DataGetsResponse<T, _Snapshot>> _listenByQuery<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     bool onlyUpdates = false,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
   }) {
-    final controller = StreamController<GetsResponse<T, _Snapshot>>();
+    final controller = StreamController<DataGetsResponse<T, _Snapshot>>();
     var isEncryptor = encryptor != null;
     List<T> result = [];
     List<fdb.InAppDocumentSnapshot> docs = [];
@@ -346,13 +350,13 @@ extension on fdb.InAppQueryReference {
         }
       } catch (_) {}
       controller.add((result, docs));
-    }).onError(LocalDataExtensionalException.stream);
+    }).onError(LocalDataException.stream);
     return controller.stream;
   }
 
-  Future<GetsResponse<T, _Snapshot>> _query<T extends Entity>({
+  Future<DataGetsResponse<T, _Snapshot>> _query<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     bool onlyUpdates = false,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
@@ -398,11 +402,11 @@ extension on fdb.InAppQueryReference {
         }
       } catch (_) {}
       return (result, docs);
-    }).onError(LocalDataExtensionalException.future);
+    }).onError(LocalDataException.future);
   }
 
-  Future<GetsResponse<T, _Snapshot>> _search<T extends Entity>({
-    Encryptor? encryptor,
+  Future<DataGetsResponse<T, _Snapshot>> _search<T extends Entity>({
+    DataEncryptor? encryptor,
     required Checker checker,
     required DataBuilder<T> builder,
   }) async {
@@ -420,12 +424,12 @@ extension on fdb.InAppQueryReference {
         }
       }
       return (result, response.docs);
-    }).onError(LocalDataExtensionalException.future);
+    }).onError(LocalDataException.future);
   }
 
   Future<bool> _updateById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Map<String, dynamic> data,
   }) async {
     var isEncryptor = encryptor != null;
@@ -441,22 +445,22 @@ extension on fdb.InAppQueryReference {
               return true;
             });
           } else {
-            throw const LocalDataExtensionalException("Encryption error!");
+            throw const LocalDataException("Encryption error!");
           }
         });
       } else {
         return doc(id).update(data).then((value) {
           return true;
-        }).onError(LocalDataExtensionalException.future);
+        }).onError(LocalDataException.future);
       }
     } else {
-      throw const LocalDataExtensionalException("Id isn't valid!");
+      throw const LocalDataException("Id isn't valid!");
     }
   }
 
   Future<bool> _updateByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<UpdatingInfo> data,
   }) async {
     var counter = 0;

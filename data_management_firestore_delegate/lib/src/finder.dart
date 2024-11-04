@@ -1,9 +1,9 @@
 part of 'source.dart';
 
 extension _FireStoreCollectionFinder on fdb.CollectionReference {
-  Future<CheckFinder<T, _FS>> checkById<T extends Entity>({
+  Future<DataCheckFinder<T, _FS>> checkById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) async {
     if (id.isNotEmpty) {
@@ -27,9 +27,9 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     }
   }
 
-  Future<ClearFinder<T>> clear<T extends Entity>({
+  Future<DataClearFinder<T>> clear<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
   }) async {
     try {
       return _fetch<T>(builder: builder, encryptor: encryptor).then((value) {
@@ -56,9 +56,9 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     }
   }
 
-  Future<CreationFinder> create<T extends Entity>({
+  Future<DataCreationFinder> create<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required T data,
   }) async {
     if (data.id.isNotEmpty) {
@@ -84,9 +84,9 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     }
   }
 
-  Future<CreationFinder> creates<T extends Entity>({
+  Future<DataCreationFinder> creates<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<T> data,
   }) async {
     if (data.isNotEmpty) {
@@ -112,9 +112,9 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     }
   }
 
-  Future<DeletionFinder> deleteById<T extends Entity>({
+  Future<DataDeletionFinder> deleteById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) async {
     if (id.isNotEmpty) {
@@ -140,9 +140,9 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     }
   }
 
-  Future<DeletionFinder> deleteByIds<T extends Entity>({
+  Future<DataDeletionFinder> deleteByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) async {
     if (ids.isNotEmpty) {
@@ -168,9 +168,9 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     }
   }
 
-  Future<GetsFinder<T, _FS>> fetch<T extends Entity>({
+  Future<DataGetsFinder<T, _FS>> fetch<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     bool onlyUpdates = false,
   }) async {
     try {
@@ -190,9 +190,9 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     }
   }
 
-  Future<GetFinder<T, _FS>> fetchById<T extends Entity>({
+  Future<DataGetFinder<T, _FS>> fetchById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) async {
     if (id.isNotEmpty) {
@@ -216,9 +216,9 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     }
   }
 
-  Future<GetsFinder<T, _FS>> fetchByIds<T extends Entity>({
+  Future<DataGetsFinder<T, _FS>> fetchByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) async {
     if (ids.isNotEmpty) {
@@ -242,12 +242,12 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     }
   }
 
-  Stream<GetsFinder<T, _FS>> listen<T extends Entity>({
+  Stream<DataGetsFinder<T, _FS>> listen<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     bool onlyUpdates = false,
   }) {
-    final controller = StreamController<GetsFinder<T, _FS>>();
+    final controller = StreamController<DataGetsFinder<T, _FS>>();
     try {
       _listen<T>(
         builder: builder,
@@ -266,12 +266,12 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     return controller.stream;
   }
 
-  Stream<GetFinder<T, _FS>> liveById<T extends Entity>({
+  Stream<DataGetFinder<T, _FS>> liveById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) {
-    final controller = StreamController<GetFinder<T, _FS>>();
+    final controller = StreamController<DataGetFinder<T, _FS>>();
     if (id.isNotEmpty) {
       try {
         _listenById<T>(
@@ -296,12 +296,12 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     return controller.stream;
   }
 
-  Stream<GetsFinder<T, _FS>> liveByIds<T extends Entity>({
+  Stream<DataGetsFinder<T, _FS>> liveByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) {
-    final controller = StreamController<GetsFinder<T, _FS>>();
+    final controller = StreamController<DataGetsFinder<T, _FS>>();
     if (ids.isNotEmpty) {
       try {
         _listenByIds<T>(
@@ -326,16 +326,16 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     return controller.stream;
   }
 
-  Stream<GetsFinder<T, _FS>> listenByQuery<T extends Entity>({
+  Stream<DataGetsFinder<T, _FS>> listenByQuery<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     bool onlyUpdates = false,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
   }) {
-    final controller = StreamController<GetsFinder<T, _FS>>();
+    final controller = StreamController<DataGetsFinder<T, _FS>>();
     try {
       _listenByQuery<T>(
         builder: builder,
@@ -358,9 +358,9 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     return controller.stream;
   }
 
-  Future<GetsFinder<T, _FS>> query<T extends Entity>({
+  Future<DataGetsFinder<T, _FS>> query<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     bool onlyUpdates = false,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
@@ -388,9 +388,9 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     }
   }
 
-  Future<GetsFinder<T, _FS>> search<T extends Entity>({
+  Future<DataGetsFinder<T, _FS>> search<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Checker checker,
   }) async {
     try {
@@ -410,9 +410,9 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     }
   }
 
-  Future<UpdatingFinder> updateById<T extends Entity>({
+  Future<DataUpdatingFinder> updateById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
     required Map<String, dynamic> data,
   }) async {
@@ -439,8 +439,8 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
     }
   }
 
-  Future<UpdatingFinder> updateByIds<T extends Entity>({
-    Encryptor? encryptor,
+  Future<DataUpdatingFinder> updateByIds<T extends Entity>({
+    DataEncryptor? encryptor,
     required List<UpdatingInfo> data,
     required DataBuilder<T> builder,
   }) async {

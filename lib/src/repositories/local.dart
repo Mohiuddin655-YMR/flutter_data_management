@@ -39,7 +39,7 @@ class LocalDataRepository<T extends Entity> {
 
   Future<Response<T>> checkById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.checkById(id, params: params);
   }
@@ -54,7 +54,7 @@ class LocalDataRepository<T extends Entity> {
   /// ```
 
   Future<Response<T>> clear({
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.clear(params: params);
   }
@@ -72,7 +72,7 @@ class LocalDataRepository<T extends Entity> {
 
   Future<Response<T>> create(
     T data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.create(data, params: params);
   }
@@ -90,7 +90,7 @@ class LocalDataRepository<T extends Entity> {
 
   Future<Response<T>> creates(
     List<T> data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.creates(data, params: params);
   }
@@ -107,7 +107,7 @@ class LocalDataRepository<T extends Entity> {
 
   Future<Response<T>> deleteById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.deleteById(id, params: params);
   }
@@ -125,7 +125,7 @@ class LocalDataRepository<T extends Entity> {
 
   Future<Response<T>> deleteByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.deleteByIds(ids, params: params);
   }
@@ -140,7 +140,7 @@ class LocalDataRepository<T extends Entity> {
   /// ```
 
   Future<Response<T>> get({
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.get(params: params);
   }
@@ -157,7 +157,7 @@ class LocalDataRepository<T extends Entity> {
 
   Future<Response<T>> getById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.getById(id, params: params);
   }
@@ -175,7 +175,7 @@ class LocalDataRepository<T extends Entity> {
 
   Future<Response<T>> getByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.getByIds(ids, params: params);
   }
@@ -192,7 +192,7 @@ class LocalDataRepository<T extends Entity> {
   /// ```
 
   Future<Response<T>> getByQuery({
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -217,7 +217,7 @@ class LocalDataRepository<T extends Entity> {
   /// ```
 
   Stream<Response<T>> listen({
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.listen(params: params);
   }
@@ -234,7 +234,7 @@ class LocalDataRepository<T extends Entity> {
 
   Stream<Response<T>> listenById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.listenById(id, params: params);
   }
@@ -252,7 +252,7 @@ class LocalDataRepository<T extends Entity> {
 
   Stream<Response<T>> listenByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.listenByIds(ids, params: params);
   }
@@ -269,7 +269,7 @@ class LocalDataRepository<T extends Entity> {
   /// ```
 
   Stream<Response<T>> listenByQuery({
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -297,7 +297,7 @@ class LocalDataRepository<T extends Entity> {
 
   Future<Response<T>> search(
     Checker checker, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.search(checker, params: params);
   }
@@ -316,7 +316,7 @@ class LocalDataRepository<T extends Entity> {
   Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.updateById(id, data, params: params);
   }
@@ -337,7 +337,7 @@ class LocalDataRepository<T extends Entity> {
 
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     return source.updateByIds(updates, params: params);
   }

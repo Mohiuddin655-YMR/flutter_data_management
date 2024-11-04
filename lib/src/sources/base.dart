@@ -77,7 +77,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Future<Response<T>> checkById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('checkById method is not implemented');
   }
@@ -91,7 +91,7 @@ abstract class DataSource<T extends Entity> {
   /// );
   /// ```
   Future<Response<T>> clear({
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('clear method is not implemented');
   }
@@ -108,7 +108,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Future<Response<T>> create(
     T data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('create method is not implemented');
   }
@@ -125,7 +125,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Future<Response<T>> creates(
     List<T> data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('creates method is not implemented');
   }
@@ -141,7 +141,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Future<Response<T>> deleteById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('deleteById method is not implemented');
   }
@@ -158,7 +158,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Future<Response<T>> deleteByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('deleteByIds method is not implemented');
   }
@@ -172,7 +172,7 @@ abstract class DataSource<T extends Entity> {
   /// );
   /// ```
   Future<Response<T>> get({
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('get method is not implemented');
   }
@@ -188,7 +188,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Future<Response<T>> getById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('getById method is not implemented');
   }
@@ -205,7 +205,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Future<Response<T>> getByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('getByIds method is not implemented');
   }
@@ -221,7 +221,7 @@ abstract class DataSource<T extends Entity> {
   /// );
   /// ```
   Future<Response<T>> getByQuery({
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -239,7 +239,7 @@ abstract class DataSource<T extends Entity> {
   /// );
   /// ```
   Stream<Response<T>> listen({
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('listen method is not implemented');
   }
@@ -255,7 +255,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Stream<Response<T>> listenById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('listenById method is not implemented');
   }
@@ -272,7 +272,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Stream<Response<T>> listenByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('listenByIds method is not implemented');
   }
@@ -288,7 +288,7 @@ abstract class DataSource<T extends Entity> {
   /// );
   /// ```
   Stream<Response<T>> listenByQuery({
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -309,7 +309,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Future<Response<T>> search(
     Checker checker, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('checkByQuery method is not implemented');
   }
@@ -327,7 +327,7 @@ abstract class DataSource<T extends Entity> {
   Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('updateById method is not implemented');
   }
@@ -347,7 +347,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataSourceException('updateByIds method is not implemented');
   }

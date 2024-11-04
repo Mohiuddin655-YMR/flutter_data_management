@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:data_management/core.dart';
 import 'package:firebase_database/firebase_database.dart' as rdb;
 
+import 'exceptions.dart';
+
 part 'config.dart';
 part 'extension.dart';
 part 'finder.dart';
@@ -26,7 +28,7 @@ abstract class RealtimeDataSource<T extends Entity>
 
   rdb.FirebaseDatabase get database => _db ??= rdb.FirebaseDatabase.instance;
 
-  rdb.DatabaseReference _source(FieldParams? params) {
+  rdb.DatabaseReference _source(DataFieldParams? params) {
     return database.ref(params.generate(path));
   }
 
@@ -43,7 +45,7 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> checkById(
     String id, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
@@ -77,7 +79,7 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> clear({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await _source(params).clear(
@@ -108,7 +110,7 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> create(
     T data, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (data.id.isNotEmpty) {
@@ -140,7 +142,7 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> creates(
     List<T> data, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (data.isNotEmpty) {
@@ -171,7 +173,7 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> deleteById(
     String id, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
@@ -203,7 +205,7 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> deleteByIds(
     List<String> ids, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (ids.isNotEmpty) {
@@ -232,7 +234,7 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> get({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await _source(params).fetch(
@@ -263,7 +265,7 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> getById(
     String id, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await _source(params).fetchById(
@@ -296,7 +298,7 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> getByIds(
     List<String> ids, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await _source(params).fetchByIds(
@@ -328,7 +330,7 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> getByQuery({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -365,7 +367,7 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Stream<Response<T>> listen({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     if (isConnected) {
@@ -408,7 +410,7 @@ abstract class RealtimeDataSource<T extends Entity>
   Stream<Response<T>> listenById(
     String id, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     if (isConnected) {
@@ -449,7 +451,7 @@ abstract class RealtimeDataSource<T extends Entity>
   Stream<Response<T>> listenByIds(
     List<String> ids, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     if (isConnected) {
@@ -489,7 +491,7 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Stream<Response<T>> listenByQuery({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -541,7 +543,7 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> search(
     Checker checker, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await _source(params).search(
@@ -575,7 +577,7 @@ abstract class RealtimeDataSource<T extends Entity>
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
@@ -611,7 +613,7 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (updates.isNotEmpty) {

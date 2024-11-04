@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:data_management/core.dart';
 import 'package:in_app_database/in_app_database.dart' as fdb;
 
+import 'exceptions.dart';
+
 part 'config.dart';
 part 'extension.dart';
 part 'finder.dart';
@@ -22,7 +24,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
     super.reloadDuration,
   });
 
-  fdb.InAppQueryReference _source(FieldParams? params) {
+  fdb.InAppQueryReference _source(DataFieldParams? params) {
     return database.collection(params.generate(path));
   }
 
@@ -39,7 +41,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> checkById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (id.isNotEmpty) {
       var finder = await _source(params).checkById(
@@ -68,7 +70,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   /// ```
   @override
   Future<Response<T>> clear({
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     var finder = await _source(params).clear(
       builder: build,
@@ -94,7 +96,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> create(
     T data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (data.id.isNotEmpty) {
       final finder = await _source(params).create(
@@ -121,7 +123,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> creates(
     List<T> data, {
-    FieldParams? params,
+    DataFieldParams? params,
     bool store = false,
   }) async {
     if (data.isNotEmpty) {
@@ -148,7 +150,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> deleteById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (id.isNotEmpty) {
       var finder = await _source(params).deleteById(
@@ -175,7 +177,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> deleteByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (ids.isNotEmpty) {
       var finder = await _source(params).deleteByIds(
@@ -199,7 +201,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   /// ```
   @override
   Future<Response<T>> get({
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     var finder = await _source(params).fetch(
       builder: build,
@@ -225,7 +227,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> getById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     var finder = await _source(params).fetchById(
       builder: build,
@@ -253,7 +255,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> getByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     var finder = await _source(params).fetchByIds(
       builder: build,
@@ -280,7 +282,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   /// ```
   @override
   Future<Response<T>> getByQuery({
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -314,7 +316,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   /// ```
   @override
   Stream<Response<T>> listen({
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     try {
@@ -352,7 +354,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Stream<Response<T>> listenById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     try {
@@ -388,7 +390,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Stream<Response<T>> listenByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     try {
@@ -423,7 +425,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   /// ```
   @override
   Stream<Response<T>> listenByQuery({
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -470,7 +472,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> search(
     Checker checker, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     var finder = await _source(params).search(
       builder: build,
@@ -499,7 +501,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (id.isNotEmpty) {
       final finder = await _source(params).updateById(
@@ -530,7 +532,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (updates.isNotEmpty) {
       final finder = await _source(params).updateByIds(
@@ -547,7 +549,7 @@ abstract class LocalDataSourceImpl<T extends Entity>
   @override
   Future<Response<T>> keep(
     List<T> data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (data.isNotEmpty) {
       final finder = await _source(params).keep(data);

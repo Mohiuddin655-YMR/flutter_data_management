@@ -1,13 +1,14 @@
 part of 'configs.dart';
 
-class IdGenerator {
-  final ByteType type;
+class DataIdGenerator {
+  final DataByteType type;
 
-  IdGenerator._(this.type);
+  DataIdGenerator._(this.type);
 
-  static IdGenerator get I => IdGenerator._(ByteType.x16);
+  static DataIdGenerator get I => DataIdGenerator._(DataByteType.x16);
 
-  factory IdGenerator.generate(ByteType type) => IdGenerator._(type);
+  factory DataIdGenerator.generate(DataByteType type) =>
+      DataIdGenerator._(type);
 
   int get length => type.value;
 
@@ -37,7 +38,7 @@ class IdGenerator {
   }
 }
 
-enum ByteType {
+enum DataByteType {
   x2(2),
   x4(4),
   x8(8),
@@ -48,5 +49,5 @@ enum ByteType {
 
   final int value;
 
-  const ByteType(this.value);
+  const DataByteType(this.value);
 }

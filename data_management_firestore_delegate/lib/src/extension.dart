@@ -3,7 +3,7 @@ part of 'source.dart';
 extension _FireStoreCollectionExtension on fdb.CollectionReference {
   Future<bool> _add<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required T data,
   }) async {
     var isEncryptor = encryptor != null;
@@ -28,7 +28,7 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
 
   Future<bool> _adds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<T> data,
   }) async {
     var counter = 0;
@@ -42,9 +42,9 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
     return data.length == counter;
   }
 
-  Future<CheckResponse<T, _FS>> _checkById<T extends Entity>({
+  Future<DataCheckResponse<T, _FS>> _checkById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) async {
     var isEncryptor = encryptor != null;
@@ -60,7 +60,7 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
 
   Future<bool> _deleteById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) {
     return doc(id).delete().then((value) {
@@ -70,7 +70,7 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
 
   Future<bool> _deleteByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) async {
     var counter = 0;
@@ -84,9 +84,9 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
     return ids.length == counter;
   }
 
-  Future<GetsResponse<T, _FS>> _fetch<T extends Entity>({
+  Future<DataGetsResponse<T, _FS>> _fetch<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     bool onlyUpdates = false,
   }) async {
     var isEncryptor = encryptor != null;
@@ -125,9 +125,9 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
     }).onError(FirestoreDataExtensionalException.future);
   }
 
-  Future<GetResponse<T, _FS>> _fetchById<T extends Entity>({
+  Future<DataGetResponse<T, _FS>> _fetchById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) async {
     var isEncryptor = encryptor != null;
@@ -141,9 +141,9 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
     }).onError(FirestoreDataExtensionalException.future);
   }
 
-  Future<GetsResponse<T, _FS>> _fetchByIds<T extends Entity>({
+  Future<DataGetsResponse<T, _FS>> _fetchByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) async {
     var isEncryptor = encryptor != null;
@@ -170,7 +170,7 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
       return (result, snaps);
     } else {
       return where(
-        FieldPath.documentId,
+        DataFieldPath.documentId,
         whereIn: ids,
       ).get().then((response) async {
         result.clear();
@@ -188,12 +188,12 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
     }
   }
 
-  Stream<GetsResponse<T, _FS>> _listen<T extends Entity>({
+  Stream<DataGetsResponse<T, _FS>> _listen<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     bool onlyUpdates = false,
   }) {
-    final controller = StreamController<GetsResponse<T, _FS>>();
+    final controller = StreamController<DataGetsResponse<T, _FS>>();
     var isEncryptor = encryptor != null;
     List<T> result = [];
     List<fdb.DocumentSnapshot> docs = [];
@@ -231,12 +231,12 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
     return controller.stream;
   }
 
-  Stream<GetResponse<T, _FS>> _listenById<T extends Entity>({
+  Stream<DataGetResponse<T, _FS>> _listenById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) {
-    final controller = StreamController<GetResponse<T, _FS>>();
+    final controller = StreamController<DataGetResponse<T, _FS>>();
     if (id.isNotEmpty) {
       var isEncryptor = encryptor != null;
       doc(id).snapshots().listen((i) async {
@@ -252,12 +252,12 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
     return controller.stream;
   }
 
-  Stream<GetsResponse<T, _FS>> _listenByIds<T extends Entity>({
+  Stream<DataGetsResponse<T, _FS>> _listenByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) {
-    final controller = StreamController<GetsResponse<T, _FS>>();
+    final controller = StreamController<DataGetsResponse<T, _FS>>();
     var isEncryptor = encryptor != null;
     List<T> result = [];
     if (ids.length > _Limitations.whereIn) {
@@ -284,7 +284,7 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
       controller.add((map.values.toList(), snaps.values.toList()));
     } else {
       where(
-        FieldPath.documentId,
+        DataFieldPath.documentId,
         whereIn: ids,
       ).snapshots().listen((event) async {
         result.clear();
@@ -303,16 +303,16 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
     return controller.stream;
   }
 
-  Stream<GetsResponse<T, _FS>> _listenByQuery<T extends Entity>({
+  Stream<DataGetsResponse<T, _FS>> _listenByQuery<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     bool onlyUpdates = false,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
   }) {
-    final controller = StreamController<GetsResponse<T, _FS>>();
+    final controller = StreamController<DataGetsResponse<T, _FS>>();
     var isEncryptor = encryptor != null;
     List<T> result = [];
     List<fdb.DocumentSnapshot> docs = [];
@@ -356,9 +356,9 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
     return controller.stream;
   }
 
-  Future<GetsResponse<T, _FS>> _query<T extends Entity>({
+  Future<DataGetsResponse<T, _FS>> _query<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     bool onlyUpdates = false,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
@@ -407,8 +407,8 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
     }).onError(FirestoreDataExtensionalException.future);
   }
 
-  Future<GetsResponse<T, _FS>> _search<T extends Entity>({
-    Encryptor? encryptor,
+  Future<DataGetsResponse<T, _FS>> _search<T extends Entity>({
+    DataEncryptor? encryptor,
     required Checker checker,
     required DataBuilder<T> builder,
   }) async {
@@ -431,7 +431,7 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
 
   Future<bool> _updateById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Map<String, dynamic> data,
   }) async {
     var isEncryptor = encryptor != null;
@@ -462,7 +462,7 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
 
   Future<bool> _updateByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<UpdatingInfo> data,
   }) async {
     var counter = 0;

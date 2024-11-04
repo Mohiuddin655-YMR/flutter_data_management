@@ -15,7 +15,7 @@ typedef EncryptorRequestBuilder = Map<String, dynamic> Function(
 typedef EncryptorResponseBuilder = dynamic Function(Map<String, dynamic> data);
 
 /// Utility class for encryption and decryption operations.
-class Encryptor {
+class DataEncryptor {
   /// Encryption key.
   final String key;
 
@@ -44,7 +44,7 @@ class Encryptor {
   /// ```dart
   /// Encryptor encryptor = Encryptor(request: myRequestBuilder, response: myResponseBuilder);
   /// ```
-  const Encryptor({
+  const DataEncryptor({
     this.key = "A79842D8A13A10A6DD27759BD700E292",
     this.iv = "9777298A5D7A8AFA",
     this.passcode = "passcode",
@@ -113,8 +113,8 @@ class Encryptor {
   /// ```dart
   /// String generatedKey = Encryptor.generateKey(ByteType.x16);
   /// ```
-  static String generateKey([ByteType type = ByteType.x16]) {
-    return IdGenerator.generate(type).secretKey;
+  static String generateKey([DataByteType type = DataByteType.x16]) {
+    return DataIdGenerator.generate(type).secretKey;
   }
 
   /// Generates a random initialization vector (IV) based on the specified byte type.
@@ -124,15 +124,15 @@ class Encryptor {
   /// ```dart
   /// String generatedIV = Encryptor.generateIV(ByteType.x8);
   /// ```
-  static String generateIV([ByteType type = ByteType.x8]) {
-    return IdGenerator.generate(type).secretIV;
+  static String generateIV([DataByteType type = DataByteType.x8]) {
+    return DataIdGenerator.generate(type).secretIV;
   }
 }
 
-extension EncryptorExtension on Encryptor? {
+extension DataEncryptorHelper on DataEncryptor? {
   bool get isValid => this != null;
 
-  Encryptor get use => this ?? const Encryptor();
+  DataEncryptor get use => this ?? const DataEncryptor();
 
   Future<Map<String, dynamic>> input(dynamic data) async {
     return isValid ? await use.input(data) : {};

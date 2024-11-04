@@ -1,8 +1,8 @@
 part of 'configs.dart';
 
 /// Utility class for replacing placeholders in a path with provided values.
-class FieldReplacer {
-  const FieldReplacer._();
+class DataFieldReplacer {
+  const DataFieldReplacer._();
 
   /// Replaces placeholders in the given [path] using the provided [params] map.
   ///

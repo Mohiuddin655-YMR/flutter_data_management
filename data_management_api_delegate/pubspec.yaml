@@ -1,6 +1,6 @@
 name: data_management_api_delegate
 description: Collection of service with advanced style and controlling system.
-version: 1.0.0
+version: 1.0.1
 repository: https://github.com/P-YMR/flutter_data_management.git
 
 environment:
@@ -12,7 +12,7 @@ dependencies:
     sdk: flutter
 
   dio: ^5.7.0
-  data_management: ^2.0.0
+  data_management: ^2.0.2
 
 dev_dependencies:
   flutter_test:

@@ -1,9 +1,9 @@
 part of 'source.dart';
 
 extension _RealtimeReferenceFinder on rdb.DatabaseReference {
-  Future<CheckFinder<T, _RS>> checkById<T extends Entity>({
+  Future<DataCheckFinder<T, _RS>> checkById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) async {
     if (id.isNotEmpty) {
@@ -27,9 +27,9 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Future<ClearFinder<T>> clear<T extends Entity>({
+  Future<DataClearFinder<T>> clear<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
   }) async {
     try {
       return _fetch<T>(builder: builder, encryptor: encryptor).then((value) {
@@ -56,9 +56,9 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Future<CreationFinder> create<T extends Entity>({
+  Future<DataCreationFinder> create<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required T data,
   }) async {
     if (data.id.isNotEmpty) {
@@ -84,9 +84,9 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Future<CreationFinder> creates<T extends Entity>({
+  Future<DataCreationFinder> creates<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<T> data,
   }) async {
     if (data.isNotEmpty) {
@@ -112,9 +112,9 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Future<DeletionFinder> deleteById<T extends Entity>({
+  Future<DataDeletionFinder> deleteById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) async {
     if (id.isNotEmpty) {
@@ -140,9 +140,9 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Future<DeletionFinder> deleteByIds<T extends Entity>({
+  Future<DataDeletionFinder> deleteByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) async {
     if (ids.isNotEmpty) {
@@ -168,9 +168,9 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Future<GetsFinder<T, _RS>> fetch<T extends Entity>({
+  Future<DataGetsFinder<T, _RS>> fetch<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
   }) async {
     try {
       return _fetch<T>(
@@ -188,9 +188,9 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Future<GetFinder<T, _RS>> fetchById<T extends Entity>({
+  Future<DataGetFinder<T, _RS>> fetchById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) async {
     if (id.isNotEmpty) {
@@ -214,9 +214,9 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Future<GetsFinder<T, _RS>> fetchByIds<T extends Entity>({
+  Future<DataGetsFinder<T, _RS>> fetchByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) async {
     if (ids.isNotEmpty) {
@@ -240,11 +240,11 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Stream<GetsFinder<T, _RS>> listen<T extends Entity>({
+  Stream<DataGetsFinder<T, _RS>> listen<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
   }) {
-    final controller = StreamController<GetsFinder<T, _RS>>();
+    final controller = StreamController<DataGetsFinder<T, _RS>>();
     try {
       _listen<T>(
         builder: builder,
@@ -262,12 +262,12 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     return controller.stream;
   }
 
-  Stream<GetFinder<T, _RS>> liveById<T extends Entity>({
+  Stream<DataGetFinder<T, _RS>> liveById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) {
-    final controller = StreamController<GetFinder<T, _RS>>();
+    final controller = StreamController<DataGetFinder<T, _RS>>();
     if (id.isNotEmpty) {
       try {
         _listenById<T>(
@@ -292,12 +292,12 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     return controller.stream;
   }
 
-  Stream<GetsFinder<T, _RS>> liveByIds<T extends Entity>({
+  Stream<DataGetsFinder<T, _RS>> liveByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) {
-    final controller = StreamController<GetsFinder<T, _RS>>();
+    final controller = StreamController<DataGetsFinder<T, _RS>>();
     if (ids.isNotEmpty) {
       try {
         _listenByIds<T>(
@@ -322,15 +322,15 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     return controller.stream;
   }
 
-  Stream<GetsFinder<T, _RS>> listenByQuery<T extends Entity>({
+  Stream<DataGetsFinder<T, _RS>> listenByQuery<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
   }) {
-    final controller = StreamController<GetsFinder<T, _RS>>();
+    final controller = StreamController<DataGetsFinder<T, _RS>>();
     try {
       _listenByQuery<T>(
         builder: builder,
@@ -352,9 +352,9 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     return controller.stream;
   }
 
-  Future<GetsFinder<T, _RS>> query<T extends Entity>({
+  Future<DataGetsFinder<T, _RS>> query<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -380,9 +380,9 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Future<GetsFinder<T, _RS>> search<T extends Entity>({
+  Future<DataGetsFinder<T, _RS>> search<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Checker checker,
   }) async {
     try {
@@ -402,9 +402,9 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Future<UpdatingFinder> updateById<T extends Entity>({
+  Future<DataUpdatingFinder> updateById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
     required Map<String, dynamic> data,
   }) async {
@@ -431,8 +431,8 @@ extension _RealtimeReferenceFinder on rdb.DatabaseReference {
     }
   }
 
-  Future<UpdatingFinder> updateByIds<T extends Entity>({
-    Encryptor? encryptor,
+  Future<DataUpdatingFinder> updateByIds<T extends Entity>({
+    DataEncryptor? encryptor,
     required List<UpdatingInfo> data,
     required DataBuilder<T> builder,
   }) async {

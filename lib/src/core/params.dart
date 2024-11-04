@@ -1,10 +1,10 @@
 part of 'configs.dart';
 
 /// You can use like
-/// * [Params]
+/// * [KeyParams]
 /// * [IterableParams]
-abstract class FieldParams {
-  const FieldParams();
+abstract class DataFieldParams {
+  const DataFieldParams();
 }
 
 /// Replaces placeholders in the given [path] using the provided [params] map.
@@ -15,10 +15,10 @@ abstract class FieldParams {
 /// String root = "/path/{param1}/endpoint/{param2}";                          // Input : /path/{param1}/endpoint/{param2}
 /// String path = params.generate(root);                                       // Output: /path/value1/endpoint/value2
 /// ```
-class Params extends FieldParams {
+class KeyParams extends DataFieldParams {
   final Map<String, String> values;
 
-  const Params(this.values);
+  const KeyParams(this.values);
 }
 
 /// Replaces placeholders in the given [path] using values from the [params] iterable.
@@ -29,19 +29,19 @@ class Params extends FieldParams {
 /// String root = "/path/{param1}/endpoint/{param2}";              // Input : /path/{param1}/endpoint/{param2}
 /// String path = params.generate(root);                           // Output: /path/value1/endpoint/value2
 /// ```
-class IterableParams extends FieldParams {
+class IterableParams extends DataFieldParams {
   final List<String> values;
 
   const IterableParams(this.values);
 }
 
-extension FieldParamsHelper on FieldParams? {
+extension DataFieldParamsHelper on DataFieldParams? {
   String generate(String root) {
     final params = this;
-    if (params is Params) {
-      return FieldReplacer.replace(root, params.values);
+    if (params is KeyParams) {
+      return DataFieldReplacer.replace(root, params.values);
     } else if (params is IterableParams) {
-      return FieldReplacer.replaceByIterable(root, params.values);
+      return DataFieldReplacer.replaceByIterable(root, params.values);
     } else {
       return root;
     }

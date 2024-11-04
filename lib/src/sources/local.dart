@@ -29,7 +29,7 @@ import 'base.dart';
 abstract class LocalDataSource<T extends Entity> extends DataSource<T> {
   final Duration reloadDuration;
   final String path;
-  final Encryptor? encryptor;
+  final DataEncryptor? encryptor;
 
   bool get isEncryptor => encryptor.isValid;
 
@@ -41,6 +41,6 @@ abstract class LocalDataSource<T extends Entity> extends DataSource<T> {
 
   Future<Response<T>> keep(
     List<T> data, {
-    FieldParams? params,
+    DataFieldParams? params,
   });
 }

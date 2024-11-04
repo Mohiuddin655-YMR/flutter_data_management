@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:data_management/core.dart';
 import 'package:dio/dio.dart' as dio;
 
+import 'exceptions.dart';
+
 part 'base.dart';
 part 'config.dart';
 part 'extension.dart';
@@ -29,7 +31,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
   dio.Dio get database => _db ??= dio.Dio(api._options);
 
-  String _source(FieldParams? params) => params.generate(_path);
+  String _source(DataFieldParams? params) => params.generate(_path);
 
   /// Method to check data by ID with optional data source builder.
   ///
@@ -44,7 +46,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> checkById(
     String id, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
@@ -80,7 +82,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> clear({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await database.clear(
@@ -113,7 +115,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> create(
     T data, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (data.id.isNotEmpty) {
@@ -147,7 +149,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> creates(
     List<T> data, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (data.isNotEmpty) {
@@ -180,7 +182,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> deleteById(
     String id, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
@@ -214,7 +216,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> deleteByIds(
     List<String> ids, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (ids.isNotEmpty) {
@@ -245,7 +247,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> get({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await database.fetchAll(
@@ -278,7 +280,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> getById(
     String id, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await database.fetchById(
@@ -313,7 +315,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> getByIds(
     List<String> ids, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await database.fetchByIds(
@@ -347,7 +349,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> getByQuery({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -386,7 +388,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Stream<Response<T>> listen({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     if (isConnected) {
@@ -431,7 +433,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Stream<Response<T>> listenById(
     String id, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     if (isConnected) {
@@ -478,7 +480,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Stream<Response<T>> listenByIds(
     List<String> ids, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     if (isConnected) {
@@ -524,7 +526,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Stream<Response<T>> listenByQuery({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -578,7 +580,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> search(
     Checker checker, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await database.search(
@@ -614,7 +616,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
@@ -652,7 +654,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (updates.isNotEmpty) {

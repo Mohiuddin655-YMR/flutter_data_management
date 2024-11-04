@@ -2,7 +2,7 @@ import 'package:flutter_entity/flutter_entity.dart';
 
 import '../../core.dart';
 
-extension DMMapHelper on Map<String, dynamic>? {
+extension DataMapHelper on Map<String, dynamic>? {
   String? get id => (this ?? {})[EntityKey.i.id];
 
   Map<String, dynamic> withId(String id) {

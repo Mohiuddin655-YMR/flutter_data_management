@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart' as fdb;
 import 'package:data_management/core.dart';
 
+import 'exceptions.dart';
+
 part 'config.dart';
 part 'extension.dart';
 part 'finder.dart';
@@ -26,7 +28,7 @@ abstract class FirestoreDataSource<T extends Entity>
 
   fdb.FirebaseFirestore get database => _db ??= fdb.FirebaseFirestore.instance;
 
-  fdb.CollectionReference _source(FieldParams? params) {
+  fdb.CollectionReference _source(DataFieldParams? params) {
     return database.collection(params.generate(path));
   }
 
@@ -44,7 +46,7 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> checkById(
     String id, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
@@ -78,7 +80,7 @@ abstract class FirestoreDataSource<T extends Entity>
   @override
   Future<Response<T>> clear({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await _source(params).clear(
@@ -109,7 +111,7 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> create(
     T data, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (data.id.isNotEmpty) {
@@ -141,7 +143,7 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> creates(
     List<T> data, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (data.isNotEmpty) {
@@ -172,7 +174,7 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> deleteById(
     String id, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
@@ -204,7 +206,7 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> deleteByIds(
     List<String> ids, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (ids.isNotEmpty) {
@@ -233,7 +235,7 @@ abstract class FirestoreDataSource<T extends Entity>
   @override
   Future<Response<T>> get({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await _source(params).fetch(
@@ -264,7 +266,7 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> getById(
     String id, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await _source(params).fetchById(
@@ -297,7 +299,7 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> getByIds(
     List<String> ids, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await _source(params).fetchByIds(
@@ -329,7 +331,7 @@ abstract class FirestoreDataSource<T extends Entity>
   @override
   Future<Response<T>> getByQuery({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -368,7 +370,7 @@ abstract class FirestoreDataSource<T extends Entity>
   @override
   Stream<Response<T>> listen({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     if (isConnected) {
@@ -411,7 +413,7 @@ abstract class FirestoreDataSource<T extends Entity>
   Stream<Response<T>> listenById(
     String id, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     if (isConnected) {
@@ -452,7 +454,7 @@ abstract class FirestoreDataSource<T extends Entity>
   Stream<Response<T>> listenByIds(
     List<String> ids, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     if (isConnected) {
@@ -492,7 +494,7 @@ abstract class FirestoreDataSource<T extends Entity>
   @override
   Stream<Response<T>> listenByQuery({
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -544,7 +546,7 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> search(
     Checker checker, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       var finder = await _source(params).search(
@@ -578,7 +580,7 @@ abstract class FirestoreDataSource<T extends Entity>
     String id,
     Map<String, dynamic> data, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (id.isNotEmpty) {
@@ -614,7 +616,7 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
     bool isConnected = false,
-    FieldParams? params,
+    DataFieldParams? params,
   }) async {
     if (isConnected) {
       if (updates.isNotEmpty) {

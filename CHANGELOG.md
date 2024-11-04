@@ -1,3 +1,11 @@
+## 2.0.2
+
+* Add error parser
+
+## 2.0.1
+
+* Renamed properties with prefix 'Data'
+
 ## 2.0.0
 
 * External libraries removed

@@ -7,13 +7,14 @@ import '../models/checker.dart';
 import '../models/updating_info.dart';
 import '../sources/local.dart';
 import '../sources/remote.dart';
-import '../utils/connectivity.dart';
 import 'base.dart';
+
+typedef ConnectivityCallback = Future<bool> Function();
 
 ///
 /// You can use [Data] without [Entity]
 ///
-class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
+class RemoteDataRepository<T extends Entity> extends DataRepository<T> {
   /// Flag indicating whether the repository is operating in cache mode.
   /// When in cache mode, the repository may use a local backup data source.
   final bool cacheMode;
@@ -26,10 +27,13 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   final LocalDataSource<T>? backup;
 
   /// Connectivity provider for checking internet connectivity.
-  final ConnectionService connectivity = ConnectionService.I;
+  final ConnectivityCallback? connectivity;
 
   /// Getter for checking if the device is connected to the internet.
-  Future<bool> get isConnected async => await connectivity.isConnected;
+  Future<bool> get isConnected async {
+    if (connectivity != null) return await connectivity!();
+    return true;
+  }
 
   /// Getter for checking if the device is disconnected from the internet.
   Future<bool> get isDisconnected async => !(await isConnected);
@@ -55,11 +59,12 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   /// - [backup]: An optional local backup or cache data source. Ex: [LocalDataSourceImpl].
   /// - [isCacheMode]: Flag indicating whether the repository should operate in cache mode.
   ///
-  RemoteDataRepositoryImpl({
+  RemoteDataRepository({
     required this.source,
     this.backup,
     this.cacheMode = true,
     this.localMode = false,
+    this.connectivity,
   });
 
   /// Method to check data by ID with optional data source builder.
@@ -74,7 +79,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   @override
   Future<Response<T>> checkById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     if (isLocalMode) {
       return backup!.checkById(id, params: params);
@@ -99,7 +104,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   /// ```
   @override
   Future<Response<T>> clear({
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     if (isLocalMode) {
       return backup!.clear(params: params);
@@ -135,7 +140,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   @override
   Future<Response<T>> create(
     T data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     if (isLocalMode) {
       return backup!.create(data, params: params);
@@ -171,7 +176,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   @override
   Future<Response<T>> creates(
     List<T> data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     if (isLocalMode) {
       return backup!.creates(data, params: params);
@@ -206,7 +211,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   @override
   Future<Response<T>> deleteById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     if (isLocalMode) {
       return backup!.deleteById(id, params: params);
@@ -242,7 +247,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   @override
   Future<Response<T>> deleteByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     if (isLocalMode) {
       return backup!.deleteByIds(ids, params: params);
@@ -277,7 +282,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   /// ```
   @override
   Future<Response<T>> get({
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     if (isLocalMode) {
       return backup!.get(params: params);
@@ -314,7 +319,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   @override
   Future<Response<T>> getById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     if (isLocalMode) {
       return backup!.getById(id, params: params);
@@ -351,7 +356,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   @override
   Future<Response<T>> getByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     if (isLocalMode) {
       return backup!.getByIds(ids, params: params);
@@ -388,7 +393,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   /// ```
   @override
   Future<Response<T>> getByQuery({
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -446,7 +451,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   /// ```
   @override
   Stream<Response<T>> listen({
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     if (isLocalMode) {
@@ -484,7 +489,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   @override
   Stream<Response<T>> listenById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     if (isLocalMode) {
@@ -525,7 +530,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   @override
   Stream<Response<T>> listenByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     final controller = StreamController<Response<T>>();
     if (isLocalMode) {
@@ -565,7 +570,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   /// ```
   @override
   Stream<Response<T>> listenByQuery({
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -633,7 +638,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   @override
   Future<Response<T>> search(
     Checker checker, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     if (isLocalMode) {
       return backup!.search(checker, params: params);
@@ -672,7 +677,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     if (isLocalMode) {
       return backup!.updateById(id, data, params: params);
@@ -713,7 +718,7 @@ class RemoteDataRepositoryImpl<T extends Entity> extends DataRepository<T> {
   @override
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     if (isLocalMode) {
       return backup!.updateByIds(updates, params: params);

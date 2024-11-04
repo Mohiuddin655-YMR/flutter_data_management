@@ -32,7 +32,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> checkById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException('checkById method is not implemented');
   }
@@ -46,7 +46,7 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Future<Response<T>> clear({
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException('clear method is not implemented');
   }
@@ -63,7 +63,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> create(
     T data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException('create method is not implemented');
   }
@@ -80,7 +80,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> creates(
     List<T> data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException('creates method is not implemented');
   }
@@ -96,7 +96,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> deleteById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException('deleteById method is not implemented');
   }
@@ -113,7 +113,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> deleteByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException(
       'deleteByIds method is not implemented',
@@ -129,7 +129,7 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Future<Response<T>> get({
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException('get method is not implemented');
   }
@@ -145,7 +145,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> getById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException('getById method is not implemented');
   }
@@ -162,7 +162,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> getByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException('getByIds method is not implemented');
   }
@@ -178,7 +178,7 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Future<Response<T>> getByQuery({
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -196,7 +196,7 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Stream<Response<T>> listen({
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException('listen method is not implemented');
   }
@@ -212,7 +212,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Stream<Response<T>> listenById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException('listenById method is not implemented');
   }
@@ -229,7 +229,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Stream<Response<T>> listenByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException(
       'listenByIds method is not implemented',
@@ -247,7 +247,7 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Stream<Response<T>> listenByQuery({
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -270,7 +270,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> search(
     Checker checker, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException('search method is not implemented');
   }
@@ -288,7 +288,7 @@ abstract class DataRepository<T extends Entity> {
   Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException('updateById method is not implemented');
   }
@@ -308,7 +308,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
-    FieldParams? params,
+    DataFieldParams? params,
   }) {
     throw const DataRepositoryException(
       'updateByIds method is not implemented',

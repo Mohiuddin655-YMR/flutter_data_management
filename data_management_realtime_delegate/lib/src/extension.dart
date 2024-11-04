@@ -3,7 +3,7 @@ part of 'source.dart';
 extension _RealtimeReferenceExtension on rdb.DatabaseReference {
   Future<bool> _add<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required T data,
     bool withPriority = false,
   }) async {
@@ -16,34 +16,34 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
           return reference
               .setWithPriority(raw, data.timeMills)
               .then((_) => true)
-              .onError(RealtimeDataExtensionalException.future);
+              .onError(RealtimeDataException.future);
         } else {
           return reference
               .set(raw)
               .then((_) => true)
-              .onError(RealtimeDataExtensionalException.future);
+              .onError(RealtimeDataException.future);
         }
       } else {
-        throw const RealtimeDataExtensionalException("Encryption error!");
+        throw const RealtimeDataException("Encryption error!");
       }
     } else {
       if (withPriority) {
         return reference
             .setWithPriority(data.source, data.timeMills)
             .then((_) => true)
-            .onError(RealtimeDataExtensionalException.future);
+            .onError(RealtimeDataException.future);
       } else {
         return reference
             .set(data.source)
             .then((_) => true)
-            .onError(RealtimeDataExtensionalException.future);
+            .onError(RealtimeDataException.future);
       }
     }
   }
 
   Future<bool> _adds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<T> data,
   }) async {
     var counter = 0;
@@ -57,9 +57,9 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
     return data.length == counter;
   }
 
-  Future<CheckResponse<T, _RS>> _checkById<T extends Entity>({
+  Future<DataCheckResponse<T, _RS>> _checkById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) async {
     var isEncryptor = encryptor != null;
@@ -70,22 +70,22 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         return (builder(v), i);
       }
       return (null, i);
-    }).onError(RealtimeDataExtensionalException.future);
+    }).onError(RealtimeDataException.future);
   }
 
   Future<bool> _deleteById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) {
     return child(id).remove().then((value) {
       return true;
-    }).onError(RealtimeDataExtensionalException.future);
+    }).onError(RealtimeDataException.future);
   }
 
   Future<bool> _deleteByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) async {
     var counter = 0;
@@ -99,9 +99,9 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
     return ids.length == counter;
   }
 
-  Future<GetsResponse<T, _RS>> _fetch<T extends Entity>({
+  Future<DataGetsResponse<T, _RS>> _fetch<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
   }) async {
     var isEncryptor = encryptor != null;
     List<T> result = [];
@@ -122,12 +122,12 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         children = response.children.toList();
       } catch (_) {}
       return (result, children);
-    }).onError(RealtimeDataExtensionalException.future);
+    }).onError(RealtimeDataException.future);
   }
 
-  Future<GetResponse<T, _RS>> _fetchById<T extends Entity>({
+  Future<DataGetResponse<T, _RS>> _fetchById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) async {
     var isEncryptor = encryptor != null;
@@ -138,12 +138,12 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         return (builder(v), i);
       }
       return (null, i);
-    }).onError(RealtimeDataExtensionalException.future);
+    }).onError(RealtimeDataException.future);
   }
 
-  Future<GetsResponse<T, _RS>> _fetchByIds<T extends Entity>({
+  Future<DataGetsResponse<T, _RS>> _fetchByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) async {
     List<T> result = [];
@@ -168,11 +168,11 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
     return (result, snaps);
   }
 
-  Stream<GetsResponse<T, _RS>> _listen<T extends Entity>({
+  Stream<DataGetsResponse<T, _RS>> _listen<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
   }) {
-    final controller = StreamController<GetsResponse<T, _RS>>();
+    final controller = StreamController<DataGetsResponse<T, _RS>>();
     var isEncryptor = encryptor != null;
     List<T> result = [];
     List<rdb.DataSnapshot> children = [];
@@ -192,16 +192,16 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         children = response.snapshot.children.toList();
       } catch (_) {}
       controller.add((result, children));
-    }).onError(RealtimeDataExtensionalException.stream);
+    }).onError(RealtimeDataException.stream);
     return controller.stream;
   }
 
-  Stream<GetResponse<T, _RS>> _listenById<T extends Entity>({
+  Stream<DataGetResponse<T, _RS>> _listenById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required String id,
   }) {
-    final controller = StreamController<GetResponse<T, _RS>>();
+    final controller = StreamController<DataGetResponse<T, _RS>>();
     if (id.isNotEmpty) {
       var isEncryptor = encryptor != null;
       child(id).onValue.listen((i) async {
@@ -212,17 +212,17 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         } else {
           controller.add((null, i.snapshot));
         }
-      }).onError(RealtimeDataExtensionalException.stream);
+      }).onError(RealtimeDataException.stream);
     }
     return controller.stream;
   }
 
-  Stream<GetsResponse<T, _RS>> _listenByIds<T extends Entity>({
+  Stream<DataGetsResponse<T, _RS>> _listenByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<String> ids,
   }) {
-    final controller = StreamController<GetsResponse<T, _RS>>();
+    final controller = StreamController<DataGetsResponse<T, _RS>>();
     Map<String, T> map = {};
     Map<String, rdb.DataSnapshot> snaps = {};
     for (String id in ids) {
@@ -247,15 +247,15 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
     return controller.stream;
   }
 
-  Stream<GetsResponse<T, _RS>> _listenByQuery<T extends Entity>({
+  Stream<DataGetsResponse<T, _RS>> _listenByQuery<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
   }) {
-    final controller = StreamController<GetsResponse<T, _RS>>();
+    final controller = StreamController<DataGetsResponse<T, _RS>>();
     var isEncryptor = encryptor != null;
     List<T> result = [];
     List<rdb.DataSnapshot> children = [];
@@ -281,13 +281,13 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         children = response.snapshot.children.toList();
       } catch (_) {}
       controller.add((result, children));
-    }).onError(RealtimeDataExtensionalException.stream);
+    }).onError(RealtimeDataException.stream);
     return controller.stream;
   }
 
-  Future<GetsResponse<T, _RS>> _query<T extends Entity>({
+  Future<DataGetsResponse<T, _RS>> _query<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -318,11 +318,11 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         children = response.children.toList();
       } catch (_) {}
       return (result, children);
-    }).onError(RealtimeDataExtensionalException.future);
+    }).onError(RealtimeDataException.future);
   }
 
-  Future<GetsResponse<T, _RS>> _search<T extends Entity>({
-    Encryptor? encryptor,
+  Future<DataGetsResponse<T, _RS>> _search<T extends Entity>({
+    DataEncryptor? encryptor,
     required Checker checker,
     required DataBuilder<T> builder,
   }) async {
@@ -340,12 +340,12 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
         }
       }
       return (result, response.children);
-    }).onError(RealtimeDataExtensionalException.future);
+    }).onError(RealtimeDataException.future);
   }
 
   Future<bool> _updateById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Map<String, dynamic> data,
   }) async {
     var isEncryptor = encryptor != null;
@@ -361,22 +361,22 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
               return true;
             });
           } else {
-            throw const RealtimeDataExtensionalException("Encryption error!");
+            throw const RealtimeDataException("Encryption error!");
           }
         });
       } else {
         return child(id).update(data).then((value) {
           return true;
-        }).onError(RealtimeDataExtensionalException.future);
+        }).onError(RealtimeDataException.future);
       }
     } else {
-      throw const RealtimeDataExtensionalException("Id isn't valid!");
+      throw const RealtimeDataException("Id isn't valid!");
     }
   }
 
   Future<bool> _updateByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required List<UpdatingInfo> data,
   }) async {
     var counter = 0;

@@ -16,7 +16,7 @@ extension _ApiPathExtension on String {
 extension _ApiExtension on dio.Dio {
   Future<bool> _add<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     required T data,
@@ -51,7 +51,7 @@ extension _ApiExtension on dio.Dio {
 
   Future<bool> _adds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     required List<T> data,
@@ -69,9 +69,9 @@ extension _ApiExtension on dio.Dio {
     return data.length == counter;
   }
 
-  Future<CheckResponse<T, _AS>> _checkById<T extends Entity>({
+  Future<DataCheckResponse<T, _AS>> _checkById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     required String id,
@@ -93,7 +93,7 @@ extension _ApiExtension on dio.Dio {
 
   Future<bool> _deleteById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     required String id,
@@ -111,7 +111,7 @@ extension _ApiExtension on dio.Dio {
 
   Future<bool> _deleteByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     required List<String> ids,
@@ -129,9 +129,9 @@ extension _ApiExtension on dio.Dio {
     return ids.length == counter;
   }
 
-  Future<GetsResponse<T, _AS>> _fetch<T extends Entity>({
+  Future<DataGetsResponse<T, _AS>> _fetch<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
   }) async {
@@ -165,9 +165,9 @@ extension _ApiExtension on dio.Dio {
     });
   }
 
-  Future<GetResponse<T, _AS>> _fetchById<T extends Entity>({
+  Future<DataGetResponse<T, _AS>> _fetchById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     required String id,
@@ -187,9 +187,9 @@ extension _ApiExtension on dio.Dio {
     }).onError(ApiDataExtensionalException.future);
   }
 
-  Future<GetsResponse<T, _AS>> _fetchByIds<T extends Entity>({
+  Future<DataGetsResponse<T, _AS>> _fetchByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     required List<String> ids,
@@ -218,13 +218,13 @@ extension _ApiExtension on dio.Dio {
     return (result, snaps);
   }
 
-  Stream<GetsResponse<T, _AS>> _listen<T extends Entity>({
+  Stream<DataGetsResponse<T, _AS>> _listen<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
   }) {
-    final controller = StreamController<GetsResponse<T, _AS>>();
+    final controller = StreamController<DataGetsResponse<T, _AS>>();
     Timer.periodic(
       Duration(milliseconds: api.timer.streamReloadTime),
       (timer) {
@@ -239,14 +239,14 @@ extension _ApiExtension on dio.Dio {
     return controller.stream;
   }
 
-  Stream<GetResponse<T, _AS>> _listenById<T extends Entity>({
+  Stream<DataGetResponse<T, _AS>> _listenById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     required String id,
   }) {
-    final controller = StreamController<GetResponse<T, _AS>>();
+    final controller = StreamController<DataGetResponse<T, _AS>>();
     Timer.periodic(
       Duration(milliseconds: api.timer.streamReloadTime),
       (timer) {
@@ -262,14 +262,14 @@ extension _ApiExtension on dio.Dio {
     return controller.stream;
   }
 
-  Stream<GetsResponse<T, _AS>> _listenByIds<T extends Entity>({
+  Stream<DataGetsResponse<T, _AS>> _listenByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     required List<String> ids,
   }) {
-    final controller = StreamController<GetsResponse<T, _AS>>();
+    final controller = StreamController<DataGetsResponse<T, _AS>>();
     Timer.periodic(
       Duration(milliseconds: api.timer.streamReloadTime),
       (timer) {
@@ -285,9 +285,9 @@ extension _ApiExtension on dio.Dio {
     return controller.stream;
   }
 
-  Stream<GetsResponse<T, _AS>> _listenByQuery<T extends Entity>({
+  Stream<DataGetsResponse<T, _AS>> _listenByQuery<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     List<DataQuery> queries = const [],
@@ -295,7 +295,7 @@ extension _ApiExtension on dio.Dio {
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
   }) {
-    final controller = StreamController<GetsResponse<T, _AS>>();
+    final controller = StreamController<DataGetsResponse<T, _AS>>();
     Timer.periodic(
       Duration(milliseconds: api.timer.streamReloadTime),
       (timer) {
@@ -314,9 +314,9 @@ extension _ApiExtension on dio.Dio {
     return controller.stream;
   }
 
-  Future<GetsResponse<T, _AS>> _query<T extends Entity>({
+  Future<DataGetsResponse<T, _AS>> _query<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     List<DataQuery> queries = const [],
@@ -360,9 +360,9 @@ extension _ApiExtension on dio.Dio {
     }).onError(ApiDataExtensionalException.future);
   }
 
-  Future<GetsResponse<T, _AS>> _search<T extends Entity>({
+  Future<DataGetsResponse<T, _AS>> _search<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     required Checker checker,
@@ -400,7 +400,7 @@ extension _ApiExtension on dio.Dio {
 
   Future<bool> _updateById<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     required Map<String, dynamic> data,
@@ -446,7 +446,7 @@ extension _ApiExtension on dio.Dio {
 
   Future<bool> _updateByIds<T extends Entity>({
     required DataBuilder<T> builder,
-    Encryptor? encryptor,
+    DataEncryptor? encryptor,
     required Api api,
     required String endPoint,
     required List<UpdatingInfo> data,

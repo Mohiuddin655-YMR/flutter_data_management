@@ -1,6 +1,6 @@
 part of 'configs.dart';
 
-enum FieldValues {
+enum DataFieldValues {
   arrayUnion,
   arrayRemove,
   delete,
@@ -21,29 +21,29 @@ enum FieldValues {
   bool get isNone => this == none;
 }
 
-class FieldValue {
+class DataFieldValue {
   final Object? value;
-  final FieldValues type;
+  final DataFieldValues type;
 
-  const FieldValue(this.value, [this.type = FieldValues.none]);
+  const DataFieldValue(this.value, [this.type = DataFieldValues.none]);
 
-  factory FieldValue.arrayUnion(List<dynamic> elements) {
-    return FieldValue(elements, FieldValues.arrayUnion);
+  factory DataFieldValue.arrayUnion(List<dynamic> elements) {
+    return DataFieldValue(elements, DataFieldValues.arrayUnion);
   }
 
-  factory FieldValue.arrayRemove(List<dynamic> elements) {
-    return FieldValue(elements, FieldValues.arrayRemove);
+  factory DataFieldValue.arrayRemove(List<dynamic> elements) {
+    return DataFieldValue(elements, DataFieldValues.arrayRemove);
   }
 
-  factory FieldValue.delete() {
-    return const FieldValue(null, FieldValues.delete);
+  factory DataFieldValue.delete() {
+    return const DataFieldValue(null, DataFieldValues.delete);
   }
 
-  factory FieldValue.serverTimestamp() {
-    return const FieldValue(null, FieldValues.serverTimestamp);
+  factory DataFieldValue.serverTimestamp() {
+    return const DataFieldValue(null, DataFieldValues.serverTimestamp);
   }
 
-  factory FieldValue.increment(num value) {
-    return FieldValue(value, FieldValues.increment);
+  factory DataFieldValue.increment(num value) {
+    return DataFieldValue(value, DataFieldValues.increment);
   }
 }

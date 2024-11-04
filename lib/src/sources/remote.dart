@@ -1,10 +1,4 @@
-import 'package:flutter_entity/flutter_entity.dart';
-
-import '../core/configs.dart';
-import '../models/checker.dart';
-import '../models/updating_info.dart';
-import '../utils/encryptor.dart';
-import 'base.dart';
+import 'package:data_management/core.dart';
 
 /// ## Abstract class representing a data source for handling operations related to entities of type [T].
 ///
@@ -50,7 +44,7 @@ import 'base.dart';
 /// ```
 ///
 abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
-  final Encryptor? encryptor;
+  final DataEncryptor? encryptor;
 
   bool get isEncryptor => encryptor.isValid;
 
@@ -70,7 +64,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<Response<T>> checkById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -84,7 +78,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// ```
   @override
   Future<Response<T>> clear({
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -101,7 +95,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<Response<T>> create(
     T data, {
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -118,7 +112,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<Response<T>> creates(
     List<T> data, {
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -134,7 +128,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<Response<T>> deleteById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -151,7 +145,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<Response<T>> deleteByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -165,7 +159,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// ```
   @override
   Future<Response<T>> get({
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -181,7 +175,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<Response<T>> getById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -198,7 +192,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<Response<T>> getByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -214,7 +208,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// ```
   @override
   Future<Response<T>> getByQuery({
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -232,7 +226,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// ```
   @override
   Stream<Response<T>> listen({
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -248,7 +242,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Stream<Response<T>> listenById(
     String id, {
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -265,7 +259,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Stream<Response<T>> listenByIds(
     List<String> ids, {
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -281,7 +275,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   /// ```
   @override
   Stream<Response<T>> listenByQuery({
-    FieldParams? params,
+    DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
@@ -302,7 +296,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<Response<T>> search(
     Checker checker, {
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -320,7 +314,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 
@@ -340,7 +334,7 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
   @override
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
-    FieldParams? params,
+    DataFieldParams? params,
     bool isConnected = false,
   });
 }
