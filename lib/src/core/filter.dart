@@ -1,24 +1,72 @@
 part of 'configs.dart';
 
-class DataFilter extends Filter {
+enum DataFilters {
+  and,
+  or,
+  none;
+
+  bool get isAndFilter => this == and;
+
+  bool get isOrFilter => this == or;
+
+  bool get isNoneFilter => this == none;
+}
+
+class DataFilter {
+  final DataFilters type;
+  final Object field;
+  final Object? isEqualTo;
+  final Object? isNotEqualTo;
+  final Object? isLessThan;
+  final Object? isLessThanOrEqualTo;
+  final Object? isGreaterThan;
+  final Object? isGreaterThanOrEqualTo;
+  final Object? arrayContains;
+  final Object? arrayNotContains;
+  final Iterable<Object?>? arrayContainsAny;
+  final Iterable<Object?>? arrayNotContainsAny;
+  final Iterable<Object?>? whereIn;
+  final Iterable<Object?>? whereNotIn;
+  final bool? isNull;
+
   const DataFilter(
-    super.field, {
-    super.isEqualTo,
-    super.isNotEqualTo,
-    super.isLessThan,
-    super.isLessThanOrEqualTo,
-    super.isGreaterThan,
-    super.isGreaterThanOrEqualTo,
-    super.arrayContains,
-    super.arrayNotContains,
-    super.arrayContainsAny,
-    super.arrayNotContainsAny,
-    super.whereIn,
-    super.whereNotIn,
-    super.isNull,
+    this.field, {
+    this.isEqualTo,
+    this.isNotEqualTo,
+    this.isLessThan,
+    this.isLessThanOrEqualTo,
+    this.isGreaterThan,
+    this.isGreaterThanOrEqualTo,
+    this.arrayContains,
+    this.arrayNotContains,
+    this.arrayContainsAny,
+    this.arrayNotContainsAny,
+    this.whereIn,
+    this.whereNotIn,
+    this.isNull,
+  }) : type = DataFilters.none;
+
+  const DataFilter._(
+    this.field, {
+    this.isEqualTo,
+    this.isNotEqualTo,
+    this.isLessThan,
+    this.isLessThanOrEqualTo,
+    this.isGreaterThan,
+    this.isGreaterThanOrEqualTo,
+    this.arrayContains,
+    this.arrayNotContains,
+    this.arrayContainsAny,
+    this.arrayNotContainsAny,
+    this.whereIn,
+    this.whereNotIn,
+    this.isNull,
+    this.type = DataFilters.none,
   });
 
-  const DataFilter.and(super.filters) : super.and();
+  const DataFilter.and(List<DataFilter> filters)
+      : this._(filters, type: DataFilters.and);
 
-  const DataFilter.or(super.filters) : super.or();
+  const DataFilter.or(List<DataFilter> filters)
+      : this._(filters, type: DataFilters.or);
 }

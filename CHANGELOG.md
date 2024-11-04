@@ -1,3 +1,12 @@
+## 2.0.0
+
+* External libraries removed
+* Convert delegates mode using delegate library:
+    - data_management_api_delegate,
+    - data_management_firestore_delegate,
+    - data_management_realtime_delegate,
+    - data_management_local_delegate
+
 ## 1.0.1
 
 * Update external libraries

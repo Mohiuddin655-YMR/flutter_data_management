@@ -1,25 +1,74 @@
 part of 'configs.dart';
 
-class DataSelection extends Selection {
-  const DataSelection.empty() : super.empty();
+enum DataSelections {
+  endAt,
+  endAtDocument,
+  endBefore,
+  endBeforeDocument,
+  startAfter,
+  startAfterDocument,
+  startAt,
+  startAtDocument,
+  none;
 
-  const DataSelection.from(Object super.snapshot, super.type) : super.from();
+  bool get isNone => this == none;
 
-  const DataSelection.endAt(super.values) : super.endAt();
+  bool get isEndAt => this == endAt;
 
-  const DataSelection.endAtDocument(super.snapshot) : super.endAtDocument();
+  bool get isEndAtDocument => this == endAtDocument;
 
-  const DataSelection.endBefore(super.values) : super.endBefore();
+  bool get isEndBefore => this == endBefore;
 
-  const DataSelection.endBeforeDocument(super.snapshot)
-      : super.endBeforeDocument();
+  bool get isEndBeforeDocument => this == endBeforeDocument;
 
-  const DataSelection.startAfter(super.values) : super.startAfter();
+  bool get isStartAfter => this == startAfter;
 
-  const DataSelection.startAfterDocument(super.snapshot)
-      : super.startAfterDocument();
+  bool get isStartAfterDocument => this == startAfterDocument;
 
-  const DataSelection.startAt(super.values) : super.startAt();
+  bool get isStartAt => this == startAt;
 
-  const DataSelection.startAtDocument(super.snapshot) : super.startAtDocument();
+  bool get isStartAtDocument => this == startAtDocument;
+}
+
+class DataSelection {
+  final Object? value;
+  final DataSelections type;
+
+  Iterable<Object?>? get values {
+    return value is Iterable<Object?> ? value as Iterable<Object?> : null;
+  }
+
+  const DataSelection._(
+    this.value, {
+    this.type = DataSelections.none,
+  });
+
+  const DataSelection.empty() : this._(null);
+
+  const DataSelection.from(Object? snapshot, DataSelections type)
+      : this._(snapshot, type: type);
+
+  const DataSelection.endAt(Iterable<Object?>? values)
+      : this._(values, type: DataSelections.endAt);
+
+  const DataSelection.endAtDocument(Object? snapshot)
+      : this._(snapshot, type: DataSelections.endAtDocument);
+
+  const DataSelection.endBefore(Iterable<Object?>? values)
+      : this._(values, type: DataSelections.endBefore);
+
+  const DataSelection.endBeforeDocument(Object? snapshot)
+      : this._(snapshot, type: DataSelections.endBeforeDocument);
+
+  const DataSelection.startAfter(Iterable<Object?>? values)
+      : this._(values, type: DataSelections.startAfter);
+
+  const DataSelection.startAfterDocument(Object? snapshot)
+      : this._(snapshot, type: DataSelections.startAfterDocument);
+
+  const DataSelection.startAt(Iterable<Object?>? values)
+      : this._(values, type: DataSelections.startAt);
+
+  const DataSelection.startAtDocument(Object? snapshot)
+      : this._(snapshot, type: DataSelections.startAtDocument);
 }

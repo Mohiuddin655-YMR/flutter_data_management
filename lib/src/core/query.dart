@@ -1,24 +1,37 @@
 part of 'configs.dart';
 
-class DataQuery extends Query {
+class DataQuery {
+  final Object field;
+  final Object? isEqualTo;
+  final Object? isNotEqualTo;
+  final Object? isLessThan;
+  final Object? isLessThanOrEqualTo;
+  final Object? isGreaterThan;
+  final Object? isGreaterThanOrEqualTo;
+  final Object? arrayContains;
+  final Object? arrayNotContains;
+  final Iterable<Object?>? arrayContainsAny;
+  final Iterable<Object?>? arrayNotContainsAny;
+  final Iterable<Object?>? whereIn;
+  final Iterable<Object?>? whereNotIn;
+  final bool? isNull;
+
   const DataQuery(
-    super.field, {
-    super.isEqualTo,
-    super.isNotEqualTo,
-    super.isLessThan,
-    super.isLessThanOrEqualTo,
-    super.isGreaterThan,
-    super.isGreaterThanOrEqualTo,
-    super.arrayContains,
-    super.arrayNotContains,
-    super.arrayContainsAny,
-    super.arrayNotContainsAny,
-    super.whereIn,
-    super.whereNotIn,
-    super.isNull,
+    this.field, {
+    this.isEqualTo,
+    this.isNotEqualTo,
+    this.isLessThan,
+    this.isLessThanOrEqualTo,
+    this.isGreaterThan,
+    this.isGreaterThanOrEqualTo,
+    this.arrayContains,
+    this.arrayNotContains,
+    this.arrayContainsAny,
+    this.arrayNotContainsAny,
+    this.whereIn,
+    this.whereNotIn,
+    this.isNull,
   });
 
-  const DataQuery.filter(Filter filter) : this(filter);
-
-  const DataQuery.path(InAppFieldPath path) : this(path);
+  const DataQuery.filter(DataFilter filter) : this(filter);
 }

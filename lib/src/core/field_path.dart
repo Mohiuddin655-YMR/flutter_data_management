@@ -1,12 +1,24 @@
 part of 'configs.dart';
 
-class FieldPath extends InAppFieldPath {
+enum FieldPaths {
+  documentId,
+  none;
+
+  bool get isDocumentId => this == documentId;
+
+  bool get isNone => this == none;
+}
+
+class FieldPath {
+  final Object? field;
+  final FieldPaths type;
+
   const FieldPath(
-    super.field, [
-    super.type = InAppFieldPaths.none,
+    this.field, [
+    this.type = FieldPaths.none,
   ]);
 
   static FieldPath get documentId {
-    return const FieldPath(null, InAppFieldPaths.documentId);
+    return const FieldPath(null, FieldPaths.documentId);
   }
 }
