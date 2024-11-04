@@ -14,11 +14,10 @@ typedef _Snapshot = fdb.InAppDocumentSnapshot;
 ///
 /// You can use base class [Data] without [Entity]
 ///
-abstract class LocalDataSourceImpl<T extends Entity>
-    extends LocalDataSource<T> {
+abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   final fdb.InAppDatabase database;
 
-  const LocalDataSourceImpl({
+  const InAppDataSource({
     required super.path,
     required this.database,
     super.reloadDuration,
