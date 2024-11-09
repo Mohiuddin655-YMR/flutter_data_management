@@ -97,6 +97,31 @@ abstract class FirestoreDataSource<T extends Entity>
     }
   }
 
+  /// Method to count data.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.count(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  @override
+  Future<Response<int>> count({
+    bool isConnected = false,
+    DataFieldParams? params,
+  }) async {
+    if (isConnected) {
+      var finder = await _source(params).counter();
+      return Response(
+        data: finder.$1,
+        error: finder.$2,
+        status: finder.$3,
+      );
+    } else {
+      return Response(status: Status.networkError);
+    }
+  }
+
   /// Method to create data with optional data source builder.
   ///
   /// Example:

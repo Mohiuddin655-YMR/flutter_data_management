@@ -127,6 +127,39 @@ class RemoteDataRepository<T extends Entity> extends DataRepository<T> {
     }
   }
 
+  /// Method to count data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.count(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  @override
+  Future<Response<int>> count({
+    DataFieldParams? params,
+  }) {
+    if (isLocalMode) {
+      return backup!.count(params: params);
+    } else {
+      return isConnected.then((connected) {
+        if (!connected && isCacheMode) {
+          return backup!.count(params: params);
+        } else {
+          return source
+              .count(isConnected: connected, params: params)
+              .then((value) {
+            if (value.isSuccessful && isCacheMode) {
+              return backup!.count(params: params).then((_) => value);
+            } else {
+              return value;
+            }
+          });
+        }
+      });
+    }
+  }
+
   /// Method to create data with optional data source builder.
   ///
   /// Example:

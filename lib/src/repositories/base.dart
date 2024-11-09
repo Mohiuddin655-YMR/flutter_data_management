@@ -51,6 +51,20 @@ abstract class DataRepository<T extends Entity> {
     throw const DataRepositoryException('clear method is not implemented');
   }
 
+  /// Method to count data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.count(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  Future<Response<int>> count({
+    DataFieldParams? params,
+  }) {
+    throw const DataRepositoryException('count method is not implemented');
+  }
+
   /// Method to create data with optional data source builder.
   ///
   /// Example:

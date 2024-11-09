@@ -59,6 +59,20 @@ class LocalDataRepository<T extends Entity> {
     return source.clear(params: params);
   }
 
+  /// Method to count data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.count(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  Future<Response<int>> count({
+    DataFieldParams? params,
+  }) {
+    return source.count(params: params);
+  }
+
   /// Method to create data with optional data source builder.
   ///
   /// Example:

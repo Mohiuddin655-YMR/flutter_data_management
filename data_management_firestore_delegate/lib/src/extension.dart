@@ -476,3 +476,12 @@ extension _FireStoreCollectionExtension on fdb.CollectionReference {
     return data.length == counter;
   }
 }
+
+extension _FirestoreQueryExtension on fdb.Query {
+  Future<int> _count() {
+    return count()
+        .get()
+        .then((response) => response.count ?? 0)
+        .onError(FirestoreDataExtensionalException.future);
+  }
+}

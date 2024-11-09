@@ -1,5 +1,11 @@
 part of 'source.dart';
 
+typedef DataCountFinder = (
+  int value,
+  String? error,
+  Status? status,
+);
+
 extension _FireStoreCollectionFinder on fdb.CollectionReference {
   Future<DataCheckFinder<T, _FS>> checkById<T extends Entity>({
     required DataBuilder<T> builder,
@@ -53,6 +59,17 @@ extension _FireStoreCollectionFinder on fdb.CollectionReference {
       });
     } catch (error) {
       return (null, "$error", Status.failure);
+    }
+  }
+
+  Future<DataCountFinder> counter() async {
+    try {
+      return _count().then((value) {
+        if (value < 0) return (value, null, Status.notFound);
+        return (value, null, Status.ok);
+      });
+    } catch (error) {
+      return (0, "$error", Status.failure);
     }
   }
 

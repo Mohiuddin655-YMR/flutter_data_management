@@ -82,6 +82,20 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
     bool isConnected = false,
   });
 
+  /// Method to count data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.count(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  @override
+  Future<Response<int>> count({
+    DataFieldParams? params,
+    bool isConnected = false,
+  });
+
   /// Method to create data with optional data source builder.
   ///
   /// Example:

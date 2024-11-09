@@ -1,6 +1,6 @@
 name: data_management_firestore_delegate
 description: Collection of service with advanced style and controlling system.
-version: 1.0.1
+version: 1.0.2
 repository: https://github.com/P-YMR/flutter_data_management.git
 
 environment:

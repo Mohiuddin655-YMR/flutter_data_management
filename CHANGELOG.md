@@ -1,3 +1,7 @@
+## 2.0.3
+
+* Add count function to count docs
+
 ## 2.0.2
 
 * Add error parser
