@@ -1,6 +1,6 @@
 name: data_management_realtime_delegate
 description: Collection of service with advanced style and controlling system.
-version: 1.0.1
+version: 1.0.2
 repository: https://github.com/P-YMR/flutter_data_management.git
 
 environment:
@@ -12,7 +12,7 @@ dependencies:
     sdk: flutter
 
   firebase_database: ^11.1.4
-  data_management: ^2.0.2
+  data_management: ^2.0.3
 
 dev_dependencies:
   flutter_test:

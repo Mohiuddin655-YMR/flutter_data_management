@@ -1,5 +1,7 @@
 part of 'source.dart';
 
+typedef DataCounterFinder = (int value, String? error, Status? status);
+
 extension _LocalDataFinder on fdb.InAppQueryReference {
   Future<DataCheckFinder<T, _Snapshot>> checkById<T extends Entity>({
     required DataBuilder<T> builder,
@@ -53,6 +55,20 @@ extension _LocalDataFinder on fdb.InAppQueryReference {
       });
     } catch (error) {
       return (null, "$error", Status.failure);
+    }
+  }
+
+  Future<DataCounterFinder> counter() async {
+    try {
+      return _count().then((value) {
+        if (value > 0) {
+          return (value, null, Status.ok);
+        } else {
+          return (0, null, Status.notFound);
+        }
+      });
+    } catch (error) {
+      return (0, "$error", Status.failure);
     }
   }
 

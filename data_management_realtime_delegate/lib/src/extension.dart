@@ -73,6 +73,12 @@ extension _RealtimeReferenceExtension on rdb.DatabaseReference {
     }).onError(RealtimeDataException.future);
   }
 
+  Future<int> _count() {
+    return get()
+        .then((response) => response.children.length)
+        .onError(RealtimeDataException.future);
+  }
+
   Future<bool> _deleteById<T extends Entity>({
     required DataBuilder<T> builder,
     DataEncryptor? encryptor,

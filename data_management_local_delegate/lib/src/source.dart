@@ -82,6 +82,12 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
     );
   }
 
+  @override
+  Future<Response<int>> count({DataFieldParams? params}) async {
+    var finder = await _source(params).counter();
+    return Response(data: finder.$1, error: finder.$2, status: finder.$3);
+  }
+
   /// Method to create data with optional data source builder.
   ///
   /// Example:

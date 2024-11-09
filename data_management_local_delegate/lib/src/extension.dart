@@ -58,6 +58,13 @@ extension on fdb.InAppQueryReference {
     }).onError(LocalDataException.future);
   }
 
+  Future<int> _count() {
+    return count()
+        .get()
+        .then((response) => response.docs)
+        .onError(LocalDataException.future);
+  }
+
   Future<bool> _deleteById<T extends Entity>({
     required DataBuilder<T> builder,
     DataEncryptor? encryptor,

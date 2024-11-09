@@ -112,11 +112,7 @@ abstract class FirestoreDataSource<T extends Entity>
   }) async {
     if (isConnected) {
       var finder = await _source(params).counter();
-      return Response(
-        data: finder.$1,
-        error: finder.$2,
-        status: finder.$3,
-      );
+      return Response(data: finder.$1, error: finder.$2, status: finder.$3);
     } else {
       return Response(status: Status.networkError);
     }
