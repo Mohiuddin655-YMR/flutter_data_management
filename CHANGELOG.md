@@ -1,3 +1,11 @@
+## 2.0.4+1
+
+* Add listenCount function to count docs lively
+
+## 2.0.4
+
+* Update 'flutter_entity' library 1.0.8 to 1.0.9
+
 ## 2.0.3
 
 * Add count function to count docs

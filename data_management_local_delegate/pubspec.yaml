@@ -1,6 +1,6 @@
 name: data_management_local_delegate
 description: Collection of service with advanced style and controlling system.
-version: 1.0.3
+version: 1.0.4
 repository: https://github.com/P-YMR/flutter_data_management.git
 
 environment:
@@ -11,8 +11,9 @@ dependencies:
   flutter:
     sdk: flutter
 
-  in_app_database: ^1.2.7
-  data_management: ^2.0.3
+  async: ^2.11.0
+  in_app_database: ^1.2.8
+  data_management: ^2.0.4+1
 
 dev_dependencies:
   flutter_test:

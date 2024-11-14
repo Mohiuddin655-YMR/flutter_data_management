@@ -4,11 +4,12 @@ import '../core/configs.dart';
 import '../models/checker.dart';
 import '../models/updating_info.dart';
 import '../sources/local.dart';
+import 'base.dart';
 
 ///
 /// You can use [Data] without [Entity]
 ///
-class LocalDataRepository<T extends Entity> {
+class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   /// The primary local data source responsible for data operations.
   final LocalDataSource<T> source;
 
@@ -37,6 +38,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Future<Response<T>> checkById(
     String id, {
     DataFieldParams? params,
@@ -53,6 +55,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Future<Response<T>> clear({
     DataFieldParams? params,
   }) {
@@ -67,6 +70,7 @@ class LocalDataRepository<T extends Entity> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
+  @override
   Future<Response<int>> count({
     DataFieldParams? params,
   }) {
@@ -84,6 +88,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Future<Response<T>> create(
     T data, {
     DataFieldParams? params,
@@ -102,6 +107,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Future<Response<T>> creates(
     List<T> data, {
     DataFieldParams? params,
@@ -119,6 +125,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Future<Response<T>> deleteById(
     String id, {
     DataFieldParams? params,
@@ -137,6 +144,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Future<Response<T>> deleteByIds(
     List<String> ids, {
     DataFieldParams? params,
@@ -153,6 +161,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Future<Response<T>> get({
     DataFieldParams? params,
   }) {
@@ -169,6 +178,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Future<Response<T>> getById(
     String id, {
     DataFieldParams? params,
@@ -187,6 +197,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Future<Response<T>> getByIds(
     List<String> ids, {
     DataFieldParams? params,
@@ -205,6 +216,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Future<Response<T>> getByQuery({
     DataFieldParams? params,
     List<DataQuery> queries = const [],
@@ -230,10 +242,26 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Stream<Response<T>> listen({
     DataFieldParams? params,
   }) {
     return source.listen(params: params);
+  }
+
+  /// Method to listenCount data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.listenCount(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  @override
+  Stream<Response<int>> listenCount({
+    DataFieldParams? params,
+  }) {
+    return source.listenCount(params: params);
   }
 
   /// Stream method to listen for data changes by ID with optional data source builder.
@@ -246,6 +274,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Stream<Response<T>> listenById(
     String id, {
     DataFieldParams? params,
@@ -264,6 +293,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Stream<Response<T>> listenByIds(
     List<String> ids, {
     DataFieldParams? params,
@@ -282,6 +312,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Stream<Response<T>> listenByQuery({
     DataFieldParams? params,
     List<DataQuery> queries = const [],
@@ -309,6 +340,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Future<Response<T>> search(
     Checker checker, {
     DataFieldParams? params,
@@ -327,6 +359,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
@@ -349,6 +382,7 @@ class LocalDataRepository<T extends Entity> {
   /// );
   /// ```
 
+  @override
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
     DataFieldParams? params,

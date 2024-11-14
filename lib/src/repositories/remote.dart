@@ -510,6 +510,44 @@ class RemoteDataRepository<T extends Entity> extends DataRepository<T> {
     return controller.stream;
   }
 
+  /// Method to listenCount data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.listenCount(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  @override
+  Stream<Response<int>> listenCount({
+    DataFieldParams? params,
+  }) {
+    final controller = StreamController<Response<int>>();
+    if (isLocalMode) {
+      backup!.listenCount(params: params).listen(controller.add);
+    } else {
+      isConnected.then((connected) {
+        if (!connected && isCacheMode) {
+          backup!.listenCount(params: params).listen(controller.add);
+        } else {
+          source
+              .listenCount(isConnected: connected, params: params)
+              .listen((value) {
+            if (value.isSuccessful && value.result.isNotEmpty && isCacheMode) {
+              // backup!
+              //     .keep(value.result, params: params)
+              //     .then((_) => value)
+              //     .then(controller.add);
+            } else {
+              controller.add(value);
+            }
+          });
+        }
+      });
+    }
+    return controller.stream;
+  }
+
   /// Stream method to listen for data changes by ID with optional data source builder.
   ///
   /// Example:

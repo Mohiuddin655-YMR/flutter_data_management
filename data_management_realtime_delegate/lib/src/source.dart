@@ -1,19 +1,14 @@
 import 'dart:async';
 
+import 'package:async/async.dart';
 import 'package:data_management/core.dart';
 import 'package:firebase_database/firebase_database.dart' as rdb;
 
-import 'exceptions.dart';
-
 part 'config.dart';
-part 'extension.dart';
-part 'finder.dart';
 
 ///
 /// You can use base class [Data] without [Entity]
 ///
-
-typedef _RS = rdb.DataSnapshot;
 
 abstract class RealtimeDataSource<T extends Entity>
     extends RemoteDataSource<T> {
@@ -44,28 +39,16 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> checkById(
     String id, {
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      if (id.isNotEmpty) {
-        var finder = await _source(params).checkById(
-          builder: build,
-          encryptor: encryptor,
-          id: id,
-        );
-        return Response(
-          data: finder.$1?.$1,
-          snapshot: finder.$1?.$2,
-          error: finder.$2,
-          status: finder.$3,
-        );
-      } else {
-        return Response(status: Status.invalidId);
-      }
-    } else {
-      return Response(status: Status.networkError);
-    }
+    if (!isConnected) return Response(status: Status.networkError);
+    return _source(params).child(id).get().then((value) async {
+      if (!value.exists) return Response(status: Status.notFound);
+      final data = value.value;
+      final v = isEncryptor ? await encryptor.output(data) : data;
+      return Response(status: Status.ok, data: build(v), snapshot: value);
+    }, onError: error);
   }
 
   /// Method to clear data with optional data source builder.
@@ -78,43 +61,33 @@ abstract class RealtimeDataSource<T extends Entity>
   /// ```
   @override
   Future<Response<T>> clear({
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      var finder = await _source(params).clear(
-        builder: build,
-        encryptor: encryptor,
-      );
-      return Response(
-        backups: finder.$1,
-        error: finder.$2,
-        status: finder.$3,
-      );
-    } else {
-      return Response(status: Status.networkError);
-    }
+    if (!isConnected) return Response(status: Status.networkError);
+    return _source(params).get().then((value) async {
+      if (!value.exists) return Response(status: Status.notFound);
+      final ids = value.children.map((e) => e.key).whereType<String>().toList();
+      if (ids.isEmpty) return Response(status: Status.notFound);
+      return deleteByIds(ids, params: params).then((deleted) {
+        return deleted.copy(
+          backups: value.children.map((e) => build(e.value)).toList(),
+          snapshot: value,
+          status: Status.ok,
+        );
+      }, onError: error);
+    }, onError: error);
   }
 
-  /// Method to count data.
-  ///
-  /// Example:
-  /// ```dart
-  /// repository.count(
-  ///   params: Params({"field1": "value1", "field2": "value2"}),
-  /// );
-  /// ```
   @override
   Future<Response<int>> count({
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      var finder = await _source(params).counter();
-      return Response(data: finder.$1, error: finder.$2, status: finder.$3);
-    } else {
-      return Response(status: Status.networkError);
-    }
+    if (!isConnected) return Response(status: Status.networkError);
+    return _source(params).get().then((value) {
+      return Response(status: Status.ok, data: value.children.length);
+    }, onError: error);
   }
 
   /// Method to create data with optional data source builder.
@@ -130,22 +103,27 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> create(
     T data, {
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      if (data.id.isNotEmpty) {
-        final finder = await _source(params).create(
-          builder: build,
-          encryptor: encryptor,
-          data: data,
+    if (data.id.isEmpty) return Response(status: Status.invalidId);
+    if (!isConnected) return Response(status: Status.networkError);
+    final ref = _source(params).child(data.id);
+    if (isEncryptor) {
+      final raw = await encryptor.input(data.source);
+      if (raw.isEmpty) {
+        return Response(
+          status: Status.error,
+          error: "Encryption error!",
         );
-        return Response(error: finder.$1, status: finder.$2);
-      } else {
-        return Response(status: Status.invalidId);
       }
+      return ref.set(raw).then((value) {
+        return Response(status: Status.ok, data: data);
+      }, onError: error);
     } else {
-      return Response(status: Status.networkError);
+      return ref.set(data.source).then((value) {
+        return Response(status: Status.ok, data: data);
+      }, onError: error);
     }
   }
 
@@ -162,23 +140,20 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> creates(
     List<T> data, {
-    bool isConnected = false,
     DataFieldParams? params,
+    bool store = false,
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      if (data.isNotEmpty) {
-        final finder = await _source(params).creates(
-          builder: build,
-          encryptor: encryptor,
-          data: data,
-        );
-        return Response(error: finder.$1, status: finder.$2);
-      } else {
-        return Response(status: Status.invalidId);
-      }
-    } else {
-      return Response(status: Status.networkError);
-    }
+    if (data.isEmpty) return Response(status: Status.invalid);
+    if (!isConnected) return Response(status: Status.networkError);
+    final callbacks = data.map((e) => create(e, params: params));
+    return Future.wait(callbacks).then((value) {
+      final x = value.where((e) => e.isSuccessful);
+      return Response(
+        status: x.length == data.length ? Status.ok : Status.canceled,
+        snapshot: value,
+      );
+    }, onError: error);
   }
 
   /// Method to delete data by ID with optional data source builder.
@@ -193,23 +168,18 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> deleteById(
     String id, {
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      if (id.isNotEmpty) {
-        var finder = await _source(params).deleteById(
-          builder: build,
-          encryptor: encryptor,
-          id: id,
-        );
-        return Response(error: finder.$1, status: finder.$2);
-      } else {
-        return Response(status: Status.invalidId);
-      }
-    } else {
-      return Response(status: Status.networkError);
-    }
+    if (id.isEmpty) return Response(status: Status.invalidId);
+    if (!isConnected) return Response(status: Status.networkError);
+    final old = await getById(id);
+    return _source(params).child(id).remove().then((value) {
+      return Response(
+        status: Status.ok,
+        backups: [if (old.isValid) old.data!],
+      );
+    }, onError: error);
   }
 
   /// Method to delete data by multiple IDs with optional data source builder.
@@ -225,23 +195,20 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> deleteByIds(
     List<String> ids, {
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      if (ids.isNotEmpty) {
-        var finder = await _source(params).deleteByIds(
-          builder: build,
-          encryptor: encryptor,
-          ids: ids,
-        );
-        return Response(error: finder.$1, status: finder.$2);
-      } else {
-        return Response(status: Status.invalidId);
-      }
-    } else {
-      return Response(status: Status.networkError);
-    }
+    if (ids.isEmpty) return Response(status: Status.invalid);
+    if (!isConnected) return Response(status: Status.networkError);
+    final callbacks = ids.map((e) => deleteById(e, params: params));
+    return Future.wait(callbacks).then((value) {
+      final x = value.where((e) => e.isSuccessful);
+      return Response(
+        status: x.length == ids.length ? Status.ok : Status.canceled,
+        snapshot: value,
+        backups: value.map((e) => e.data).whereType<T>().toList(),
+      );
+    }, onError: error);
   }
 
   /// Method to get data with optional data source builder.
@@ -254,23 +221,25 @@ abstract class RealtimeDataSource<T extends Entity>
   /// ```
   @override
   Future<Response<T>> get({
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      var finder = await _source(params).fetch(
-        builder: build,
-        encryptor: encryptor,
-      );
-      return Response(
-        result: finder.$1?.$1,
-        snapshot: finder.$1?.$2,
-        error: finder.$2,
-        status: finder.$3,
-      );
-    } else {
-      return Response(status: Status.networkError);
-    }
+    if (!isConnected) return Response(status: Status.networkError);
+    List<T> result = [];
+    List<rdb.DataSnapshot> docs = [];
+    return _source(params).get().then((event) async {
+      if (!event.exists) return Response(status: Status.notFound);
+      result.clear();
+      docs.clear();
+      docs = event.children.toList();
+      for (var i in docs) {
+        if (!i.exists) continue;
+        final v = isEncryptor ? await encryptor.output(i.value) : i.value;
+        result.add(build(v));
+      }
+      if (result.isEmpty) return Response(status: Status.notFound);
+      return Response(result: result, snapshot: docs, status: Status.ok);
+    }, onError: error);
   }
 
   /// Method to get data by ID with optional data source builder.
@@ -285,24 +254,17 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> getById(
     String id, {
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      var finder = await _source(params).fetchById(
-        builder: build,
-        encryptor: encryptor,
-        id: id,
-      );
-      return Response(
-        data: finder.$1?.$1,
-        snapshot: finder.$1?.$2,
-        message: finder.$2,
-        status: finder.$3,
-      );
-    } else {
-      return Response(status: Status.networkError);
-    }
+    if (id.isEmpty) return Response(status: Status.invalidId);
+    if (!isConnected) return Response(status: Status.networkError);
+    return _source(params).child(id).get().then((event) async {
+      if (!event.exists) return Response(status: Status.notFound);
+      final data = event.value;
+      final v = isEncryptor ? await encryptor.output(data) : data;
+      return Response(status: Status.ok, data: build(v), snapshot: event);
+    }, onError: error);
   }
 
   /// Method to get data by multiple IDs with optional data source builder.
@@ -318,24 +280,19 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> getByIds(
     List<String> ids, {
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      var finder = await _source(params).fetchByIds(
-        builder: build,
-        encryptor: encryptor,
-        ids: ids,
-      );
+    if (ids.isEmpty) return Response(status: Status.invalid);
+    if (!isConnected) return Response(status: Status.networkError);
+    final callbacks = ids.map((e) => getById(e, params: params));
+    return Future.wait(callbacks).then((value) {
+      final x = value.where((e) => e.isSuccessful);
       return Response(
-        result: finder.$1?.$1,
-        snapshot: finder.$1?.$2,
-        message: finder.$2,
-        status: finder.$3,
+        status: x.length == ids.length ? Status.ok : Status.canceled,
+        result: value.map((e) => e.data).whereType<T>().toList(),
       );
-    } else {
-      return Response(status: Status.networkError);
-    }
+    }, onError: error);
   }
 
   /// Method to get data by query with optional data source builder.
@@ -350,31 +307,35 @@ abstract class RealtimeDataSource<T extends Entity>
   /// ```
   @override
   Future<Response<T>> getByQuery({
-    bool isConnected = false,
     DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      var finder = await _source(params).query(
-        builder: build,
-        encryptor: encryptor,
-        queries: queries,
-        selections: selections,
-        sorts: sorts,
-        options: options,
-      );
-      return Response(
-        result: finder.$1?.$1,
-        snapshot: finder.$1?.$2,
-        error: finder.$2,
-        status: finder.$3,
-      );
-    } else {
-      return Response(status: Status.networkError);
-    }
+    if (!isConnected) return Response(status: Status.networkError);
+    List<T> result = [];
+    List<rdb.DataSnapshot> docs = [];
+    return _QHelper.query(
+      reference: _source(params),
+      queries: queries,
+      sorts: sorts,
+      selections: selections,
+      options: options,
+    ).get().then((event) async {
+      if (!event.exists) return Response(status: Status.notFound);
+      result.clear();
+      docs.clear();
+      docs = event.children.toList();
+      for (var i in docs) {
+        if (!i.exists) continue;
+        final v = isEncryptor ? await encryptor.output(i.value) : i.value;
+        result.add(build(v));
+      }
+      if (result.isEmpty) return Response(status: Status.notFound);
+      return Response(result: result, snapshot: docs, status: Status.ok);
+    }, onError: error);
   }
 
   /// Stream method to listen for data changes with optional data source builder.
@@ -387,35 +348,48 @@ abstract class RealtimeDataSource<T extends Entity>
   /// ```
   @override
   Stream<Response<T>> listen({
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) {
-    final controller = StreamController<Response<T>>();
-    if (isConnected) {
-      try {
-        _source(params)
-            .listen(
-          builder: build,
-          encryptor: encryptor,
-        )
-            .listen((finder) {
-          controller.add(Response(
-            result: finder.$1?.$1,
-            snapshot: finder.$1?.$2,
-            error: finder.$2,
-            status: finder.$3,
-          ));
-        });
-      } catch (e) {
-        controller.add(Response(
-          error: "$e",
-          status: Status.failure,
-        ));
-      }
-    } else {
-      controller.add(Response(status: Status.networkError));
+    if (!isConnected) {
+      return Stream.value(Response(status: Status.networkError));
     }
-    return controller.stream;
+    List<T> result = [];
+    List<rdb.DataSnapshot> docs = [];
+    return _source(params).onValue.asyncMap((event) async {
+      if (!event.snapshot.exists) return Response(status: Status.notFound);
+      result.clear();
+      docs.clear();
+      docs = event.snapshot.children.toList();
+      for (var i in docs) {
+        if (!i.exists) continue;
+        final v = isEncryptor ? await encryptor.output(i.value) : i.value;
+        result.add(build(v));
+      }
+      if (result.isEmpty) return Response(status: Status.notFound);
+      return Response(result: result, snapshot: docs, status: Status.ok);
+    });
+  }
+
+  /// Method to listenCount data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.listenCount(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  @override
+  Stream<Response<int>> listenCount({
+    DataFieldParams? params,
+    bool isConnected = false,
+  }) {
+    if (!isConnected) {
+      return Stream.value(Response(status: Status.networkError));
+    }
+    return _source(params).onValue.map((e) {
+      return Response(data: e.snapshot.children.length, status: Status.ok);
+    });
   }
 
   /// Stream method to listen for data changes by ID with optional data source builder.
@@ -430,32 +404,19 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Stream<Response<T>> listenById(
     String id, {
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) {
-    final controller = StreamController<Response<T>>();
-    if (isConnected) {
-      try {
-        _source(params)
-            .liveById(builder: build, encryptor: encryptor, id: id)
-            .listen((finder) {
-          controller.add(Response(
-            data: finder.$1?.$1,
-            snapshot: finder.$1?.$2,
-            message: finder.$2,
-            status: finder.$3,
-          ));
-        });
-      } catch (e) {
-        controller.add(Response(
-          error: "$e",
-          status: Status.failure,
-        ));
-      }
-    } else {
-      controller.add(Response(status: Status.networkError));
+    if (id.isEmpty) return Stream.value(Response(status: Status.invalidId));
+    if (!isConnected) {
+      return Stream.value(Response(status: Status.networkError));
     }
-    return controller.stream;
+    return _source(params).child(id).onValue.asyncMap((event) async {
+      if (!event.snapshot.exists) return Response(status: Status.notFound);
+      var data = event.snapshot.value;
+      final v = isEncryptor ? await encryptor.output(data) : data;
+      return Response(status: Status.ok, data: build(v), snapshot: event);
+    });
   }
 
   /// Stream method to listen for data changes by multiple IDs with optional data source builder.
@@ -471,32 +432,29 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Stream<Response<T>> listenByIds(
     List<String> ids, {
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) {
-    final controller = StreamController<Response<T>>();
-    if (isConnected) {
-      try {
-        _source(params)
-            .liveByIds(builder: build, encryptor: encryptor, ids: ids)
-            .listen((finder) {
-          controller.add(Response(
-            result: finder.$1?.$1,
-            snapshot: finder.$1?.$2,
-            message: finder.$2,
-            status: finder.$3,
-          ));
-        });
-      } catch (e) {
-        controller.add(Response(
-          error: "$e",
-          status: Status.failure,
-        ));
-      }
-    } else {
-      controller.add(Response(status: Status.networkError));
+    if (ids.isEmpty) return Stream.value(Response(status: Status.invalid));
+    if (!isConnected) {
+      return Stream.value(Response(status: Status.networkError));
     }
-    return controller.stream;
+    Map<String, T> map = {};
+    Map<String, rdb.DataSnapshot> snaps = {};
+    return StreamGroup.merge(ids.map((e) {
+      return listenById(e, params: params);
+    })).map((event) {
+      final data = event.data;
+      final snap = event.snapshot;
+      if (data != null) map[data.id] = data;
+      if (snap is rdb.DataSnapshot) snaps[snap.key ?? ''] = snap;
+      if (map.isEmpty) return Response(status: Status.notFound);
+      return Response(
+        result: map.values.toList(),
+        snapshot: snaps.values.toList(),
+        status: Status.ok,
+      );
+    });
   }
 
   /// Stream method to listen for data changes by query with optional data source builder.
@@ -511,43 +469,37 @@ abstract class RealtimeDataSource<T extends Entity>
   /// ```
   @override
   Stream<Response<T>> listenByQuery({
-    bool isConnected = false,
     DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
+    bool isConnected = false,
   }) {
-    final controller = StreamController<Response<T>>();
-    if (isConnected) {
-      try {
-        _source(params)
-            .listenByQuery(
-          builder: build,
-          encryptor: encryptor,
-          queries: queries,
-          selections: selections,
-          sorts: sorts,
-          options: options,
-        )
-            .listen((finder) {
-          controller.add(Response(
-            result: finder.$1?.$1,
-            snapshot: finder.$1?.$2,
-            error: finder.$2,
-            status: finder.$3,
-          ));
-        });
-      } catch (e) {
-        controller.add(Response(
-          error: "$e",
-          status: Status.failure,
-        ));
-      }
-    } else {
-      controller.add(Response(status: Status.networkError));
+    if (!isConnected) {
+      return Stream.value(Response(status: Status.networkError));
     }
-    return controller.stream;
+    List<T> result = [];
+    List<rdb.DataSnapshot> docs = [];
+    return _QHelper.query(
+      reference: _source(params),
+      queries: queries,
+      sorts: sorts,
+      selections: selections,
+      options: options,
+    ).onValue.asyncMap((event) async {
+      if (!event.snapshot.exists) return Response(status: Status.notFound);
+      result.clear();
+      docs.clear();
+      docs = event.snapshot.children.toList();
+      for (var i in docs) {
+        if (!i.exists) continue;
+        final v = isEncryptor ? await encryptor.output(i.value) : i.value;
+        result.add(build(v));
+      }
+      if (result.isEmpty) return Response(status: Status.notFound);
+      return Response(result: result, snapshot: docs, status: Status.ok);
+    });
   }
 
   /// Method to check data by query with optional data source builder.
@@ -563,24 +515,25 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> search(
     Checker checker, {
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      var finder = await _source(params).search(
-        builder: build,
-        encryptor: encryptor,
-        checker: checker,
-      );
-      return Response(
-        result: finder.$1?.$1,
-        snapshot: finder.$1?.$2,
-        error: finder.$2,
-        status: finder.$3,
-      );
-    } else {
-      return Response(status: Status.networkError);
-    }
+    if (checker.field.isEmpty) return Response(status: Status.invalid);
+    if (!isConnected) return Response(status: Status.networkError);
+    List<T> result = [];
+    return _QHelper.search(_source(params), checker).get().then((event) async {
+      if (!event.exists) return Response(status: Status.notFound);
+      result.clear();
+      for (final i in event.children) {
+        if (i.exists) {
+          final data = i.value;
+          final v = isEncryptor ? await encryptor.output(data) : data;
+          result.add(build(v));
+        }
+      }
+      if (result.isEmpty) return Response(status: Status.notFound);
+      return Response(status: Status.ok, result: result, snapshot: event);
+    });
   }
 
   /// Method to update data by ID with optional data source builder.
@@ -597,24 +550,22 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      if (id.isNotEmpty) {
-        final finder = await _source(params).updateById(
-          builder: build,
-          encryptor: encryptor,
-          id: id,
-          data: data,
-        );
-        return Response(error: finder.$1, status: finder.$2);
-      } else {
-        return Response(status: Status.invalidId);
-      }
-    } else {
-      return Response(status: Status.networkError);
+    if (id.isEmpty || data.isEmpty) return Response(status: Status.invalid);
+    if (!isConnected) return Response(status: Status.networkError);
+    final ref = _source(params).child(id);
+    if (!isEncryptor) {
+      return ref.update(data).then((value) => Response(status: Status.ok));
     }
+    return getById(id, params: params).then((value) async {
+      final x = value.data?.source ?? {};
+      x.addAll(data);
+      final v = await encryptor.input(x);
+      if (v.isEmpty) return Response(status: Status.nullable);
+      return ref.update(v).then((value) => Response(status: Status.ok));
+    });
   }
 
   /// Method to update data by multiple IDs with optional data source builder.
@@ -633,22 +584,28 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
-    bool isConnected = false,
     DataFieldParams? params,
+    bool isConnected = false,
   }) async {
-    if (isConnected) {
-      if (updates.isNotEmpty) {
-        final finder = await _source(params).updateByIds(
-          builder: build,
-          encryptor: encryptor,
-          data: updates,
-        );
-        return Response(error: finder.$1, status: finder.$2);
-      } else {
-        return Response(status: Status.invalidId);
-      }
-    } else {
-      return Response(status: Status.networkError);
-    }
+    if (updates.isEmpty) return Response(status: Status.invalid);
+    if (!isConnected) return Response(status: Status.networkError);
+    final callbacks = updates.map((e) {
+      return updateById(e.id, e.data, params: params);
+    });
+    return Future.wait(callbacks).then((value) {
+      final x = value.where((e) => e.isSuccessful);
+      return Response(
+        status: x.length == updates.length ? Status.ok : Status.canceled,
+        snapshot: value,
+        backups: value.map((e) => e.data).whereType<T>().toList(),
+      );
+    }, onError: error);
   }
+}
+
+Future<Response<T>> error<T extends Object>(
+  Object? error,
+  StackTrace stackTrace,
+) async {
+  return Response(status: Status.failure, error: error.toString());
 }

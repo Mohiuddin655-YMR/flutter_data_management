@@ -258,6 +258,20 @@ abstract class DataSource<T extends Entity> {
     throw const DataSourceException('listen method is not implemented');
   }
 
+  /// Method to listenCount data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.listenCount(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  Stream<Response<int>> listenCount({
+    DataFieldParams? params,
+  }) {
+    throw const DataSourceException('listenCount method is not implemented');
+  }
+
   /// Stream method to listen for data changes by ID with optional data source builder.
   ///
   /// Example:

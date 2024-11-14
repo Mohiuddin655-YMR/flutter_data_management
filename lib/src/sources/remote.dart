@@ -244,6 +244,20 @@ abstract class RemoteDataSource<T extends Entity> extends DataSource<T> {
     bool isConnected = false,
   });
 
+  /// Method to listenCount data with optional data source builder.
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.listenCount(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  @override
+  Stream<Response<int>> listenCount({
+    DataFieldParams? params,
+    bool isConnected = false,
+  });
+
   /// Stream method to listen for data changes by ID with optional data source builder.
   ///
   /// Example:
