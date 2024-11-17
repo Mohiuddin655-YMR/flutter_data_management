@@ -1,3 +1,7 @@
+## 2.0.5
+
+* Remove all unnecessary code
+
 ## 2.0.4+1
 
 * Add listenCount function to count docs lively

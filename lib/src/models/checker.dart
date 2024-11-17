@@ -8,6 +8,20 @@ class Checker {
     this.type = CheckerType.contains,
     this.value,
   });
+
+  @override
+  int get hashCode => field.hashCode ^ value.hashCode ^ type.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    return other is Checker &&
+        other.field == field &&
+        other.value == value &&
+        other.type == type;
+  }
+
+  @override
+  String toString() => "$Checker(field: $field, value: $value, type: $type)";
 }
 
 enum CheckerType {

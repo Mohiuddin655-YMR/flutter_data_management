@@ -18,7 +18,5 @@ class DataSorting {
   }
 
   @override
-  String toString() {
-    return field;
-  }
+  String toString() => field;
 }

@@ -66,6 +66,16 @@ import '../utils/errors.dart';
 abstract class DataSource<T extends Entity> {
   const DataSource();
 
+  Future<Response<S>> execute<S extends Object>(
+    Future<Response<S>> Function() callback,
+  ) async {
+    try {
+      return callback();
+    } catch (error) {
+      return Response<S>(status: Status.failure, error: error.toString());
+    }
+  }
+
   /// Method to check data by ID with optional data source builder.
   ///
   /// Example:
