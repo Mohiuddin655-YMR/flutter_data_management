@@ -66,7 +66,7 @@ abstract class FirestoreDataSource<T extends Entity>
   }) async {
     if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
-      return source(params).get().then((value) async {
+      return source(params).get().then((value) {
         if (value.docs.isEmpty) return Response(status: Status.notFound);
         final ids = value.docs.map((e) => e.id).toList();
         if (ids.isEmpty) return Response(status: Status.notFound);
@@ -114,28 +114,27 @@ abstract class FirestoreDataSource<T extends Entity>
   }) async {
     if (data.id.isEmpty) return Response(status: Status.invalidId);
     if (!isConnected) return Response(status: Status.networkError);
-    final ref = source(params).doc(data.id);
-    if (isEncryptor) {
-      return execute(() async {
-        final raw = await encryptor.input(data.source);
-        if (raw.isEmpty) {
-          return Response(
-            status: Status.error,
-            error: "Encryption error!",
-          );
-        }
-        return ref.set(raw).then((value) {
-          return Response(status: Status.ok, data: data);
+    return execute(() {
+      final ref = source(params).doc(data.id);
+      if (isEncryptor) {
+        return encryptor.input(data.source).then((raw) {
+          if (raw.isEmpty) {
+            return Response(
+              status: Status.error,
+              error: "Encryption error!",
+            );
+          }
+          return ref.set(raw).then((value) {
+            return Response(status: Status.ok, data: data);
+          });
         });
-      });
-    } else {
-      return execute(() {
+      } else {
         final options = fdb.SetOptions(merge: true);
         return ref.set(data.source, options).then((value) {
           return Response(status: Status.ok, data: data);
         });
-      });
-    }
+      }
+    });
   }
 
   /// Method to create multiple data entries with optional data source builder.
@@ -186,13 +185,15 @@ abstract class FirestoreDataSource<T extends Entity>
   }) async {
     if (id.isEmpty) return Response(status: Status.invalidId);
     if (!isConnected) return Response(status: Status.networkError);
-    final old = await getById(id);
     return execute(() {
-      return source(params).doc(id).delete().then((value) {
-        return Response(
-          status: Status.ok,
-          backups: [if (old.isValid) old.data!],
-        );
+      return getById(id).then((old) {
+        if (!old.isValid) return old;
+        return source(params).doc(id).delete().then((value) {
+          return Response(
+            status: Status.ok,
+            backups: [old.data!],
+          );
+        });
       });
     });
   }
@@ -410,7 +411,7 @@ abstract class FirestoreDataSource<T extends Entity>
     if (!isConnected) {
       return Stream.value(Response(status: Status.networkError));
     }
-    try {
+    return executeStream(() {
       List<T> result = [];
       List<fdb.DocumentSnapshot> docs = [];
       return source(params).snapshots().asyncMap((event) async {
@@ -430,11 +431,7 @@ abstract class FirestoreDataSource<T extends Entity>
         if (result.isEmpty) return Response(status: Status.notFound);
         return Response(result: result, snapshot: docs, status: Status.ok);
       });
-    } catch (error) {
-      return Stream.value(
-        Response(status: Status.failure, error: error.toString()),
-      );
-    }
+    });
   }
 
   /// Method to listenCount data with optional data source builder.
@@ -453,15 +450,11 @@ abstract class FirestoreDataSource<T extends Entity>
     if (!isConnected) {
       return Stream.value(Response(status: Status.networkError));
     }
-    try {
+    return executeStream(() {
       return Stream.fromFuture(source(params).count().get().then((e) {
         return Response(data: e.count, status: Status.ok);
       }));
-    } catch (error) {
-      return Stream.value(
-        Response(status: Status.failure, error: error.toString()),
-      );
-    }
+    });
   }
 
   /// Stream method to listen for data changes by ID with optional data source builder.
@@ -483,18 +476,14 @@ abstract class FirestoreDataSource<T extends Entity>
     if (!isConnected) {
       return Stream.value(Response(status: Status.networkError));
     }
-    try {
+    return executeStream(() {
       return source(params).doc(id).snapshots().asyncMap((event) async {
         if (!event.exists) return Response(status: Status.notFound);
         var data = event.data;
         final v = isEncryptor ? await encryptor.output(data) : data;
         return Response(status: Status.ok, data: build(v), snapshot: event);
       });
-    } catch (error) {
-      return Stream.value(
-        Response(status: Status.failure, error: error.toString()),
-      );
-    }
+    });
   }
 
   /// Stream method to listen for data changes by multiple IDs with optional data source builder.
@@ -517,7 +506,7 @@ abstract class FirestoreDataSource<T extends Entity>
     if (!isConnected) {
       return Stream.value(Response(status: Status.networkError));
     }
-    try {
+    return executeStream(() {
       if (ids.length > _Limitations.whereIn) {
         Map<String, T> map = {};
         Map<String, fdb.DocumentSnapshot> snaps = {};
@@ -560,11 +549,7 @@ abstract class FirestoreDataSource<T extends Entity>
           return Response(status: Status.notFound);
         });
       }
-    } catch (error) {
-      return Stream.value(
-        Response(status: Status.failure, error: error.toString()),
-      );
-    }
+    });
   }
 
   /// Stream method to listen for data changes by query with optional data source builder.
@@ -590,7 +575,7 @@ abstract class FirestoreDataSource<T extends Entity>
     if (!isConnected) {
       return Stream.value(Response(status: Status.networkError));
     }
-    try {
+    return executeStream(() {
       List<T> result = [];
       List<fdb.DocumentSnapshot> docs = [];
       return _QHelper.query(
@@ -616,11 +601,7 @@ abstract class FirestoreDataSource<T extends Entity>
         if (result.isEmpty) return Response(status: Status.notFound);
         return Response(result: result, snapshot: docs, status: Status.ok);
       });
-    } catch (error) {
-      return Stream.value(
-        Response(status: Status.failure, error: error.toString()),
-      );
-    }
+    });
   }
 
   /// Method to check data by query with optional data source builder.
@@ -641,7 +622,7 @@ abstract class FirestoreDataSource<T extends Entity>
   }) async {
     if (checker.field.isEmpty) return Response(status: Status.invalid);
     if (!isConnected) return Response(status: Status.networkError);
-    try {
+    return execute(() {
       List<T> result = [];
       return _QHelper.search(source(params), checker).get().then((event) async {
         if (event.docs.isEmpty) return Response(status: Status.notFound);
@@ -656,9 +637,7 @@ abstract class FirestoreDataSource<T extends Entity>
         if (result.isEmpty) return Response(status: Status.notFound);
         return Response(status: Status.ok, result: result, snapshot: event);
       });
-    } catch (error) {
-      return Response(status: Status.failure, error: error.toString());
-    }
+    });
   }
 
   /// Method to update data by ID with optional data source builder.
@@ -680,21 +659,20 @@ abstract class FirestoreDataSource<T extends Entity>
   }) async {
     if (id.isEmpty || data.isEmpty) return Response(status: Status.invalid);
     if (!isConnected) return Response(status: Status.networkError);
-    try {
+    return execute(() {
       final ref = source(params).doc(id);
       if (!isEncryptor) {
         return ref.update(data).then((value) => Response(status: Status.ok));
       }
-      return getById(id, params: params).then((value) async {
+      return getById(id, params: params).then((value) {
         final x = value.data?.source ?? {};
         x.addAll(data);
-        final v = await encryptor.input(x);
-        if (v.isEmpty) return Response(status: Status.nullable);
-        return ref.update(v).then((value) => Response(status: Status.ok));
+        return encryptor.input(x).then((v) {
+          if (v.isEmpty) return Response(status: Status.nullable);
+          return ref.update(v).then((value) => Response(status: Status.ok));
+        });
       });
-    } catch (error) {
-      return Response(status: Status.failure, error: error.toString());
-    }
+    });
   }
 
   /// Method to update data by multiple IDs with optional data source builder.
@@ -718,7 +696,7 @@ abstract class FirestoreDataSource<T extends Entity>
   }) async {
     if (updates.isEmpty) return Response(status: Status.invalid);
     if (!isConnected) return Response(status: Status.networkError);
-    try {
+    return execute(() {
       final callbacks = updates.map((e) {
         return updateById(e.id, e.data, params: params);
       });
@@ -730,8 +708,6 @@ abstract class FirestoreDataSource<T extends Entity>
           backups: value.map((e) => e.data).whereType<T>().toList(),
         );
       });
-    } catch (error) {
-      return Response(status: Status.failure, error: error.toString());
-    }
+    });
   }
 }

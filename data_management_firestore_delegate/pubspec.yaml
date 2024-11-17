@@ -13,7 +13,7 @@ dependencies:
 
   async: ^2.11.0
   cloud_firestore: ^5.5.0
-  data_management: ^2.0.5
+  data_management: ^2.0.6
 
 dev_dependencies:
   flutter_test:
