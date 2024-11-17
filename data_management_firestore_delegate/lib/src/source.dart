@@ -45,7 +45,8 @@ abstract class FirestoreDataSource<T extends Entity>
     return execute(() {
       return source(params).doc(id).get().then((value) async {
         if (!value.exists) return Response(status: Status.notFound);
-        final v = isEncryptor ? await encryptor.output(value.data) : value.data;
+        final data = value.data();
+        final v = isEncryptor ? await encryptor.output(data) : data;
         return Response(status: Status.ok, data: build(v), snapshot: value);
       });
     });
@@ -73,7 +74,7 @@ abstract class FirestoreDataSource<T extends Entity>
         return execute(() {
           return deleteByIds(ids, params: params).then((deleted) {
             return deleted.copy(
-              backups: value.docs.map((e) => build(e.data)).toList(),
+              backups: value.docs.map((e) => build(e.data())).toList(),
               snapshot: value,
               status: Status.ok,
             );
@@ -258,7 +259,8 @@ abstract class FirestoreDataSource<T extends Entity>
             : event.docs;
         for (var i in docs) {
           if (!i.exists) continue;
-          final v = isEncryptor ? await encryptor.output(i.data) : i.data;
+          final data = i.data();
+          final v = isEncryptor ? await encryptor.output(data) : data;
           result.add(build(v));
         }
         if (result.isEmpty) return Response(status: Status.notFound);
@@ -287,7 +289,7 @@ abstract class FirestoreDataSource<T extends Entity>
     return execute(() {
       return source(params).doc(id).get().then((event) async {
         if (!event.exists) return Response(status: Status.notFound);
-        final data = event.data;
+        final data = event.data();
         final v = isEncryptor ? await encryptor.output(data) : data;
         return Response(status: Status.ok, data: build(v), snapshot: event);
       });
@@ -332,7 +334,7 @@ abstract class FirestoreDataSource<T extends Entity>
           result.clear();
           for (var i in event.docs) {
             if (i.exists) {
-              var data = i.data;
+              var data = i.data();
               var v = isEncryptor ? await encryptor.output(data) : data;
               result.add(build(v));
             }
@@ -385,7 +387,8 @@ abstract class FirestoreDataSource<T extends Entity>
             : event.docs;
         for (var i in docs) {
           if (!i.exists) continue;
-          final v = isEncryptor ? await encryptor.output(i.data) : i.data;
+          final data = i.data();
+          final v = isEncryptor ? await encryptor.output(data) : data;
           result.add(build(v));
         }
         if (result.isEmpty) return Response(status: Status.notFound);
@@ -425,7 +428,8 @@ abstract class FirestoreDataSource<T extends Entity>
             : event.docs;
         for (var i in docs) {
           if (!i.exists) continue;
-          final v = isEncryptor ? await encryptor.output(i.data) : i.data;
+          final data = i.data();
+          final v = isEncryptor ? await encryptor.output(data) : data;
           result.add(build(v));
         }
         if (result.isEmpty) return Response(status: Status.notFound);
@@ -479,7 +483,7 @@ abstract class FirestoreDataSource<T extends Entity>
     return executeStream(() {
       return source(params).doc(id).snapshots().asyncMap((event) async {
         if (!event.exists) return Response(status: Status.notFound);
-        var data = event.data;
+        var data = event.data();
         final v = isEncryptor ? await encryptor.output(data) : data;
         return Response(status: Status.ok, data: build(v), snapshot: event);
       });
@@ -533,7 +537,7 @@ abstract class FirestoreDataSource<T extends Entity>
           result.clear();
           if (event.docs.isNotEmpty) {
             for (final i in event.docs) {
-              final data = i.data;
+              final data = i.data();
               if (i.exists) {
                 final v = isEncryptor ? await encryptor.output(data) : data;
                 result.add(build(v));
@@ -595,7 +599,8 @@ abstract class FirestoreDataSource<T extends Entity>
             : event.docs;
         for (var i in docs) {
           if (!i.exists) continue;
-          final v = isEncryptor ? await encryptor.output(i.data) : i.data;
+          final data = i.data();
+          final v = isEncryptor ? await encryptor.output(data) : data;
           result.add(build(v));
         }
         if (result.isEmpty) return Response(status: Status.notFound);
@@ -629,7 +634,7 @@ abstract class FirestoreDataSource<T extends Entity>
         result.clear();
         for (final i in event.docs) {
           if (i.exists) {
-            final data = i.data;
+            final data = i.data();
             final v = isEncryptor ? await encryptor.output(data) : data;
             result.add(build(v));
           }
