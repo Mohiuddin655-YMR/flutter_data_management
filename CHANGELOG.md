@@ -1,3 +1,7 @@
+## 2.0.6
+
+* Add execute and executeStream to handle callback using try catch
+
 ## 2.0.5
 
 * Remove all unnecessary code

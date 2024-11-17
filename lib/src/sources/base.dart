@@ -76,6 +76,18 @@ abstract class DataSource<T extends Entity> {
     }
   }
 
+  Stream<Response<S>> executeStream<S extends Object>(
+    Stream<Response<S>> Function() callback,
+  ) {
+    try {
+      return callback();
+    } catch (error) {
+      return Stream.value(
+        Response<S>(status: Status.failure, error: error.toString()),
+      );
+    }
+  }
+
   /// Method to check data by ID with optional data source builder.
   ///
   /// Example:
