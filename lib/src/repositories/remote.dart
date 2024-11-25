@@ -343,6 +343,7 @@ class RemoteDataRepository<T extends Entity> extends DataRepository<T> {
     return DataSingletonCallback.i.call(
       "getById",
       singleton: singleton,
+      keyProps: [id],
       callback: () async {
         if (isLocalMode) return backup!.getById(id, params: params);
         final connected = await isConnected;

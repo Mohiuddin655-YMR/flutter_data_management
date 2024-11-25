@@ -187,6 +187,7 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
     return DataSingletonCallback.i.call(
       "getById",
       singleton: singleton,
+      keyProps: [id],
       callback: () async => source.getById(id, params: params),
     );
   }

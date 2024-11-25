@@ -1,3 +1,5 @@
+## 2.0.6+2
+
 ## 2.0.6+1
 
 * Add singleton callback
