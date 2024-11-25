@@ -1,3 +1,7 @@
+## 2.0.6+1
+
+* Add singleton callback
+
 ## 2.0.6
 
 * Add execute and executeStream to handle callback using try catch

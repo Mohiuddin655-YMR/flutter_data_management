@@ -316,28 +316,13 @@ class RemoteDataRepository<T extends Entity> extends DataRepository<T> {
   @override
   Future<Response<T>> get({
     DataFieldParams? params,
-  }) {
-    if (isLocalMode) {
-      return backup!.get(params: params);
-    } else {
-      return isConnected.then((connected) {
-        if (!connected && isCacheMode) {
-          return backup!.get(params: params);
-        } else {
-          return source
-              .get(isConnected: connected, params: params)
-              .then((value) {
-            if (value.isSuccessful && value.result.isNotEmpty && isCacheMode) {
-              return backup!
-                  .keep(value.result, params: params)
-                  .then((_) => value);
-            } else {
-              return value;
-            }
-          });
-        }
-      });
-    }
+  }) async {
+    if (isLocalMode) return backup!.get(params: params);
+    final connected = await isConnected;
+    if (!connected && isCacheMode) return backup!.get(params: params);
+    final value = await source.get(isConnected: connected, params: params);
+    if (!value.isValid || !isCacheMode) return value;
+    return backup!.keep(value.result, params: params);
   }
 
   /// Method to get data by ID with optional data source builder.
@@ -352,28 +337,27 @@ class RemoteDataRepository<T extends Entity> extends DataRepository<T> {
   @override
   Future<Response<T>> getById(
     String id, {
+    bool singleton = false,
     DataFieldParams? params,
   }) {
-    if (isLocalMode) {
-      return backup!.getById(id, params: params);
-    } else {
-      return isConnected.then((connected) {
+    return DataSingletonCallback.i.call(
+      "getById",
+      singleton: singleton,
+      callback: () async {
+        if (isLocalMode) return backup!.getById(id, params: params);
+        final connected = await isConnected;
         if (!connected && isCacheMode) {
           return backup!.getById(id, params: params);
-        } else {
-          return source
-              .getById(id, isConnected: connected, params: params)
-              .then((value) {
-            if (value.isSuccessful && value.data != null && isCacheMode) {
-              return backup!
-                  .keep([value.data!], params: params).then((_) => value);
-            } else {
-              return value;
-            }
-          });
         }
-      });
-    }
+        final value = await source.getById(
+          id,
+          params: params,
+          isConnected: connected,
+        );
+        if (!value.isValid || !isCacheMode) return value;
+        return backup!.keep([value.data!], params: params);
+      },
+    );
   }
 
   /// Method to get data by multiple IDs with optional data source builder.

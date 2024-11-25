@@ -181,9 +181,14 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   @override
   Future<Response<T>> getById(
     String id, {
+    bool singleton = false,
     DataFieldParams? params,
   }) {
-    return source.getById(id, params: params);
+    return DataSingletonCallback.i.call(
+      "getById",
+      singleton: singleton,
+      callback: () async => source.getById(id, params: params),
+    );
   }
 
   /// Method to get data by multiple IDs with optional data source builder.
