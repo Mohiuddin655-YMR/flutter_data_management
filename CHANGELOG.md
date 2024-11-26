@@ -1,3 +1,7 @@
+## 2.0.7+1
+
+* Update cache mechanism
+
 ## 2.0.7
 
 * DataCacheManager supported

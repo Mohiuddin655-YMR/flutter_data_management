@@ -85,36 +85,18 @@ class RemoteDataRepository<T extends Entity> extends DataRepository<T> {
     Future<Response<S>> Function(Response<S> feedback)? keep,
   }) async {
     try {
-      if (isLocalMode) {
-        // Fetch from the backup when in local mode
-        return await backup();
-      }
-
+      if (isLocalMode) return await backup();
       if (await isDisconnected) {
-        // If disconnected, fetch from backup or return network error
-        if (!isCacheMode) {
-          return Response<S>(status: Status.networkError);
-        }
+        if (!isCacheMode) return Response<S>(status: Status.networkError);
         return await backup();
       }
-
-      // Fetch from the source (server or live data)
       final feedback = await source();
-
       if (isCacheMode && feedback.isSuccessful) {
-        // Optionally keep feedback in local storage
-        if (keep != null && feedback.isValid) {
-          return await keep(feedback);
-        }
-        if (auto) {
-          // Return backup data if auto is enabled
-          return await backup();
-        }
+        if (keep != null && feedback.isValid) await keep(feedback);
+        if (auto) return await backup();
       }
-
-      return feedback; // Return the source feedback by default
+      return feedback;
     } catch (error) {
-      // Handle any errors
       return Response<S>(status: Status.failure, error: error.toString());
     }
   }
@@ -164,10 +146,7 @@ class RemoteDataRepository<T extends Entity> extends DataRepository<T> {
 
         await for (final feedback in source()) {
           if (isCacheMode && feedback.isSuccessful) {
-            if (keep != null && feedback.isValid) {
-              final keptFeedback = await keep(feedback);
-              yield keptFeedback;
-            }
+            if (keep != null && feedback.isValid) await keep(feedback);
             if (auto) {
               yield* backup();
               continue;
