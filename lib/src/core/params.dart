@@ -19,6 +19,17 @@ class KeyParams extends DataFieldParams {
   final Map<String, String> values;
 
   const KeyParams(this.values);
+
+  @override
+  int get hashCode => values.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    return other is KeyParams && other.values == values;
+  }
+
+  @override
+  String toString() => "$KeyParams#$hashCode($values)";
 }
 
 /// Replaces placeholders in the given [path] using values from the [params] iterable.
@@ -33,6 +44,17 @@ class IterableParams extends DataFieldParams {
   final List<String> values;
 
   const IterableParams(this.values);
+
+  @override
+  int get hashCode => values.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    return other is IterableParams && other.values == values;
+  }
+
+  @override
+  String toString() => "$IterableParams#$hashCode($values)";
 }
 
 extension DataFieldParamsHelper on DataFieldParams? {

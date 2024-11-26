@@ -71,4 +71,17 @@ class DataSelection {
 
   const DataSelection.startAtDocument(Object? snapshot)
       : this._(snapshot, type: DataSelections.startAtDocument);
+
+  @override
+  int get hashCode => value.hashCode ^ type.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    return other is DataSelection && other.value == value && other.type == type;
+  }
+
+  @override
+  String toString() {
+    return "$DataSelection#$hashCode(${type.name})";
+  }
 }

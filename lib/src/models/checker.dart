@@ -1,3 +1,12 @@
+enum CheckerType {
+  contains,
+  equal;
+
+  bool get isContains => this == CheckerType.contains;
+
+  bool get isEqual => this == CheckerType.equal;
+}
+
 class Checker {
   final String field;
   final String? value;
@@ -8,6 +17,10 @@ class Checker {
     this.type = CheckerType.contains,
     this.value,
   });
+
+  const Checker.contains(this.field, this.value) : type = CheckerType.contains;
+
+  const Checker.equal(this.field, this.value) : type = CheckerType.equal;
 
   @override
   int get hashCode => field.hashCode ^ value.hashCode ^ type.hashCode;
@@ -21,14 +34,7 @@ class Checker {
   }
 
   @override
-  String toString() => "$Checker(field: $field, value: $value, type: $type)";
-}
-
-enum CheckerType {
-  contains,
-  equal;
-
-  bool get isContains => this == CheckerType.contains;
-
-  bool get isEqual => this == CheckerType.equal;
+  String toString() {
+    return "$Checker#$hashCode(field: $field, value: $value, type: $type)";
+  }
 }

@@ -10,13 +10,15 @@ class DataSorting {
   });
 
   @override
-  int get hashCode => field.hashCode;
+  int get hashCode => field.hashCode ^ descending.hashCode;
 
   @override
   bool operator ==(Object other) {
-    return field.hashCode == other.hashCode;
+    return other is DataSorting &&
+        other.field == field &&
+        other.descending == descending;
   }
 
   @override
-  String toString() => field;
+  String toString() => "$DataSorting#$hashCode($field)";
 }

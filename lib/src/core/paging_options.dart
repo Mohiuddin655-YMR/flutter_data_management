@@ -22,4 +22,24 @@ class DataPagingOptions {
       fetchFromLast: fetchFromLast ?? this.fetchFromLast,
     );
   }
+
+  @override
+  int get hashCode {
+    return fetchFromLast.hashCode ^
+        fetchingSize.hashCode ^
+        initialSize.hashCode;
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is DataPagingOptions &&
+        other.fetchFromLast == fetchFromLast &&
+        other.fetchingSize == fetchingSize &&
+        other.initialSize == initialSize;
+  }
+
+  @override
+  String toString() {
+    return "$DataPagingOptions#$hashCode(fetchingSize: $fetchingSize, initialSize: $initialSize, fetchFromLast: $fetchFromLast)";
+  }
 }

@@ -54,6 +54,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> checkById(
     String id, {
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException('checkById method is not implemented');
@@ -68,6 +69,7 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Future<Response<T>> clear({
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException('clear method is not implemented');
@@ -82,6 +84,7 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Future<Response<int>> count({
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException('count method is not implemented');
@@ -99,6 +102,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> create(
     T data, {
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException('create method is not implemented');
@@ -116,6 +120,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> creates(
     List<T> data, {
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException('creates method is not implemented');
@@ -132,6 +137,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> deleteById(
     String id, {
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException('deleteById method is not implemented');
@@ -149,6 +155,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> deleteByIds(
     List<String> ids, {
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException(
@@ -165,6 +172,7 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Future<Response<T>> get({
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException('get method is not implemented');
@@ -181,7 +189,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> getById(
     String id, {
-    bool singleton = false,
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException('getById method is not implemented');
@@ -199,6 +207,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> getByIds(
     List<String> ids, {
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException('getByIds method is not implemented');
@@ -215,6 +224,7 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Future<Response<T>> getByQuery({
+    bool? cached,
     DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
@@ -233,6 +243,7 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Stream<Response<T>> listen({
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException('listen method is not implemented');
@@ -247,6 +258,7 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Stream<Response<int>> listenCount({
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataSourceException('listenCount method is not implemented');
@@ -263,6 +275,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Stream<Response<T>> listenById(
     String id, {
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException('listenById method is not implemented');
@@ -280,6 +293,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Stream<Response<T>> listenByIds(
     List<String> ids, {
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException(
@@ -298,6 +312,7 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Stream<Response<T>> listenByQuery({
+    bool? cached,
     DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
@@ -321,6 +336,7 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> search(
     Checker checker, {
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException('search method is not implemented');
@@ -339,6 +355,7 @@ abstract class DataRepository<T extends Entity> {
   Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException('updateById method is not implemented');
@@ -359,45 +376,11 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
+    bool? cached,
     DataFieldParams? params,
   }) {
     throw const DataRepositoryException(
       'updateByIds method is not implemented',
     );
   }
-}
-
-class DataSingletonCallback {
-  static DataSingletonCallback? _i;
-
-  static DataSingletonCallback get i => _i ??= DataSingletonCallback._();
-
-  final Map<String, dynamic> _db = {};
-
-  DataSingletonCallback._();
-
-  String _key(String name, [Iterable<Object?> props = const []]) {
-    if (props.isEmpty) return name;
-    final generated = props
-        .map((e) {
-          if (e == null) return null;
-          return e.toString().toLowerCase();
-        })
-        .where((e) => e != null)
-        .join("_");
-    return "${name}_$generated";
-  }
-
-  Future<T> call<T>(
-    String name, {
-    bool singleton = true,
-    Iterable<Object?> keyProps = const [],
-    required Future<T> Function() callback,
-  }) async {
-    if (!singleton) return callback();
-    final reference = "${_key(name, keyProps)}_${T.toString().toLowerCase()}";
-    return _db[reference] ??= await callback();
-  }
-
-  void clear() => _db.clear();
 }
