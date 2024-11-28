@@ -72,7 +72,11 @@ abstract class FirestoreDataSource<T extends Entity>
         final ids = value.docs.map((e) => e.id).toList();
         if (ids.isEmpty) return Response(status: Status.notFound);
         return execute(() {
-          return deleteByIds(ids, params: params).then((deleted) {
+          return deleteByIds(
+            ids,
+            params: params,
+            isConnected: isConnected,
+          ).then((deleted) {
             return deleted.copy(
               backups: value.docs.map((e) => build(e.data())).toList(),
               snapshot: value,
@@ -158,7 +162,13 @@ abstract class FirestoreDataSource<T extends Entity>
     if (data.isEmpty) return Response(status: Status.invalid);
     if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
-      final callbacks = data.map((e) => create(e, params: params));
+      final callbacks = data.map((e) {
+        return create(
+          e,
+          params: params,
+          isConnected: isConnected,
+        );
+      });
       return Future.wait(callbacks).then((value) {
         final x = value.where((e) => e.isSuccessful);
         return Response(
@@ -187,7 +197,7 @@ abstract class FirestoreDataSource<T extends Entity>
     if (id.isEmpty) return Response(status: Status.invalidId);
     if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
-      return getById(id).then((old) {
+      return getById(id, isConnected: isConnected).then((old) {
         if (!old.isValid) return old;
         return source(params).doc(id).delete().then((value) {
           return Response(
@@ -218,7 +228,13 @@ abstract class FirestoreDataSource<T extends Entity>
     if (ids.isEmpty) return Response(status: Status.invalid);
     if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
-      final callbacks = ids.map((e) => deleteById(e, params: params));
+      final callbacks = ids.map((e) {
+        return deleteById(
+          e,
+          params: params,
+          isConnected: isConnected,
+        );
+      });
       return Future.wait(callbacks).then((value) {
         final x = value.where((e) => e.isSuccessful);
         return Response(
@@ -316,7 +332,13 @@ abstract class FirestoreDataSource<T extends Entity>
     if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       if (ids.length > _Limitations.whereIn) {
-        final callbacks = ids.map((e) => getById(e, params: params));
+        final callbacks = ids.map((e) {
+          return getById(
+            e,
+            params: params,
+            isConnected: isConnected,
+          );
+        });
         return Future.wait(callbacks).then((value) {
           final x = value.where((e) => e.isSuccessful);
           return Response(
@@ -515,7 +537,11 @@ abstract class FirestoreDataSource<T extends Entity>
         Map<String, T> map = {};
         Map<String, fdb.DocumentSnapshot> snaps = {};
         return StreamGroup.merge(ids.map((e) {
-          return listenById(e, params: params);
+          return listenById(
+            e,
+            params: params,
+            isConnected: isConnected,
+          );
         })).map((event) {
           final data = event.data;
           final snap = event.snapshot;
@@ -669,7 +695,11 @@ abstract class FirestoreDataSource<T extends Entity>
       if (!isEncryptor) {
         return ref.update(data).then((value) => Response(status: Status.ok));
       }
-      return getById(id, params: params).then((value) {
+      return getById(
+        id,
+        params: params,
+        isConnected: isConnected,
+      ).then((value) {
         final x = value.data?.source ?? {};
         x.addAll(data);
         return encryptor.input(x).then((v) {
@@ -703,7 +733,12 @@ abstract class FirestoreDataSource<T extends Entity>
     if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final callbacks = updates.map((e) {
-        return updateById(e.id, e.data, params: params);
+        return updateById(
+          e.id,
+          e.data,
+          params: params,
+          isConnected: isConnected,
+        );
       });
       return Future.wait(callbacks).then((value) {
         final x = value.where((e) => e.isSuccessful);
