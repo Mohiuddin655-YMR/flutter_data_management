@@ -1,7 +1,5 @@
 import 'package:flutter_entity/flutter_entity.dart';
 
-import '../core/configs.dart';
-import '../utils/encryptor.dart';
 import 'base.dart';
 
 /// ## Abstract class representing a data source for handling operations related to entities of type [T].
@@ -29,18 +27,10 @@ import 'base.dart';
 abstract class LocalDataSource<T extends Entity> extends DataSource<T> {
   final Duration reloadDuration;
   final String path;
-  final DataEncryptor? encryptor;
-
-  bool get isEncryptor => encryptor.isValid;
 
   const LocalDataSource({
+    super.encryptor,
     required this.path,
     this.reloadDuration = const Duration(seconds: 2),
-    this.encryptor,
-  });
-
-  Future<Response<T>> keep(
-    List<T> data, {
-    DataFieldParams? params,
   });
 }

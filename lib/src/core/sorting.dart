@@ -20,5 +20,7 @@ class DataSorting {
   }
 
   @override
-  String toString() => "$DataSorting#$hashCode($field)";
+  String toString() {
+    return "$DataSorting#$hashCode(field: $field, descending: $descending)";
+  }
 }

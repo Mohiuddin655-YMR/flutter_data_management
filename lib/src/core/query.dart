@@ -88,7 +88,7 @@ class DataQuery {
       if (whereIn != null) "$field.where($whereIn.contains)",
       if (whereNotIn != null) "$field.where((e)=>!$whereNotIn.contains(e))",
       if (isNull != null) "$field==$isNull",
-    ].where(whereIn!.contains);
-    return "$DataQuery#$hashCode($type)";
+    ].where(whereIn!.contains).toList();
+    return "$DataQuery#$hashCode(${type.join(", ")})";
   }
 }

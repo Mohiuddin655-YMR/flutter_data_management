@@ -1,63 +1,70 @@
+import 'dart:async';
+
 import 'package:flutter_entity/entity.dart';
 
-import '../core/cache_manager.dart';
 import '../core/configs.dart';
 import '../models/checker.dart';
 import '../models/updating_info.dart';
-import '../sources/local.dart';
+import '../sources/base.dart';
 import 'base.dart';
 
 ///
 /// You can use [Data] without [Entity]
 ///
 class LocalDataRepository<T extends Entity> extends DataRepository<T> {
-  /// The primary local data source responsible for data operations.
-  final LocalDataSource<T> source;
+  final bool backupOnlineData;
 
-  /// Constructor for creating a [LocalDataRepository].
+  /// Constructor for creating a [RemoteDataRepository] implement.
   ///
   /// Parameters:
-  /// - [source]: The primary local data source. Ex [LocalDataSourceImpl].
+  /// - [source]: The primary remote data source. Ex: [LocalDataSourceImpl].
+  /// - [backup]: An optional local backup or cache data source. Ex: [ApiDataSource], [FirestoreDataSource], and [RealtimeDataSource].
   ///
-  /// Example:
-  /// ```dart
-  /// LocalDataRepository<User> userRepository = LocalDataRepository.create(
-  ///   source: LocalDataSourceImpl<User>(),
-  /// );
-  /// ```
   const LocalDataRepository({
-    required this.source,
-  });
+    super.id,
+    required super.source,
+    super.backup,
+    super.connectivity,
+    super.lazy,
+    this.backupOnlineData = true,
+  }) : super.local();
 
-  Future<Response<S>> cache<S extends Object>(
-    String name, {
-    bool? cached,
-    Iterable<Object?> keyProps = const [],
-    required Future<Response<S>> Function() callback,
-  }) async {
+  Future<Response<S>> _backup<S extends Object>(
+    Future<Response<S>> Function(DataSource<T> source) callback,
+  ) async {
     try {
-      return DataCacheManager.i.cache(
-        name,
-        cached: cached,
-        keyProps: keyProps,
-        callback: callback,
-      );
+      if (optional == null) return Response(status: Status.undefined);
+      final connected = await isConnected;
+      if (!connected) return Response(status: Status.networkError);
+      return callback(optional!);
     } catch (error) {
-      return Response<S>(status: Status.failure, error: error.toString());
+      return Response(status: Status.failure, error: error.toString());
     }
   }
 
-  Stream<Response<S>> cacheStream<S extends Object>(
-    String name, {
-    bool? cached,
-    bool auto = true,
-    Iterable<Object?> keyProps = const [],
-    required Stream<Response<S>> Function() callback,
-  }) async* {
-    try {
-      yield* callback();
-    } catch (error) {
-      yield Response<S>(status: Status.failure, error: error.toString());
+  /// Method to restore remote data as local data
+  ///
+  /// Example:
+  /// ```dart
+  /// repository.pull(
+  ///   params: Params({"field1": "value1", "field2": "value2"}),
+  /// );
+  /// ```
+  Future<void> pull({
+    DataFieldParams? params,
+    Object? args,
+    bool? lazy,
+  }) async {
+    if (!backupOnlineData) return;
+    final local = await _backup((source) {
+      return source.get(params: params, args: args);
+    });
+    if (local.isValid) {
+      if (lazy ?? this.lazy) {
+        primary.creates(local.result, params: params, args: args);
+      } else {
+        await primary.creates(local.result, params: params, args: args);
+      }
     }
   }
 
@@ -70,19 +77,26 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
   Future<Response<T>> checkById(
     String id, {
-    bool? cached,
     DataFieldParams? params,
-  }) {
-    return cache(
-      "CHECK_BY_ID",
-      cached: cached,
-      keyProps: [params, id],
-      callback: () => source.checkById(id, params: params),
-    );
+    Object? args,
+    bool? lazy,
+  }) async {
+    final local = await primary.checkById(id, params: params, args: args);
+    if (local.isValid) return local;
+    final remote = await _backup((source) {
+      return source.checkById(id, params: params, args: args);
+    });
+    if (remote.isValid) {
+      if (lazy ?? this.lazy) {
+        primary.creates(remote.result, params: params, args: args);
+      } else {
+        await primary.creates(remote.result, params: params, args: args);
+      }
+    }
+    return remote;
   }
 
   /// Method to clear data with optional data source builder.
@@ -93,18 +107,18 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
   Future<Response<T>> clear({
-    bool? cached,
     DataFieldParams? params,
-  }) {
-    return cache(
-      "CLEAR",
-      cached: cached,
-      keyProps: [params],
-      callback: () => source.clear(params: params),
-    );
+    Object? args,
+    bool? lazy,
+  }) async {
+    if (lazy ?? this.lazy) {
+      _backup((source) => source.clear(params: params, args: args));
+    } else {
+      await _backup((source) => source.clear(params: params, args: args));
+    }
+    return primary.clear(params: params, args: args);
   }
 
   /// Method to count data with optional data source builder.
@@ -117,15 +131,23 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   /// ```
   @override
   Future<Response<int>> count({
-    bool? cached,
     DataFieldParams? params,
-  }) {
-    return cache(
-      "COUNT",
-      cached: cached,
-      keyProps: [params],
-      callback: () => source.count(params: params),
-    );
+    Object? args,
+    bool? lazy,
+  }) async {
+    final local = await primary.count(params: params, args: args);
+    if (local.isValid) return local;
+    final remote = await _backup((source) {
+      return source.get(params: params, args: args);
+    });
+    if (remote.isValid) {
+      if (lazy ?? this.lazy) {
+        primary.creates(remote.result, params: params, args: args);
+      } else {
+        await primary.creates(remote.result, params: params, args: args);
+      }
+    }
+    return local.copy(data: remote.result.length);
   }
 
   /// Method to create data with optional data source builder.
@@ -138,19 +160,21 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
   Future<Response<T>> create(
     T data, {
-    bool? cached,
     DataFieldParams? params,
-  }) {
-    return cache(
-      "CREATE",
-      cached: cached,
-      keyProps: [params, data],
-      callback: () => source.create(data, params: params),
-    );
+    Object? args,
+    bool? lazy,
+  }) async {
+    if (lazy ?? this.lazy) {
+      _backup((source) => source.create(data, params: params, args: args));
+    } else {
+      await _backup((source) {
+        return source.create(data, params: params, args: args);
+      });
+    }
+    return primary.create(data, params: params, args: args);
   }
 
   /// Method to create multiple data entries with optional data source builder.
@@ -163,19 +187,21 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
   Future<Response<T>> creates(
     List<T> data, {
-    bool? cached,
     DataFieldParams? params,
-  }) {
-    return cache(
-      "CREATES",
-      cached: cached,
-      keyProps: [params, data],
-      callback: () => source.creates(data, params: params),
-    );
+    Object? args,
+    bool? lazy,
+  }) async {
+    if (lazy ?? this.lazy) {
+      _backup((source) => source.creates(data, params: params, args: args));
+    } else {
+      await _backup((source) {
+        return source.creates(data, params: params, args: args);
+      });
+    }
+    return primary.creates(data, params: params, args: args);
   }
 
   /// Method to delete data by ID with optional data source builder.
@@ -187,19 +213,21 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
   Future<Response<T>> deleteById(
     String id, {
-    bool? cached,
     DataFieldParams? params,
-  }) {
-    return cache(
-      "DELETE_BY_ID",
-      cached: cached,
-      keyProps: [params, id],
-      callback: () => source.deleteById(id, params: params),
-    );
+    Object? args,
+    bool? lazy,
+  }) async {
+    if (lazy ?? this.lazy) {
+      _backup((source) => source.deleteById(id, params: params, args: args));
+    } else {
+      await _backup((source) {
+        return source.deleteById(id, params: params, args: args);
+      });
+    }
+    return primary.deleteById(id, params: params, args: args);
   }
 
   /// Method to delete data by multiple IDs with optional data source builder.
@@ -212,19 +240,21 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
   Future<Response<T>> deleteByIds(
     List<String> ids, {
-    bool? cached,
     DataFieldParams? params,
-  }) {
-    return cache(
-      "DELETE_BY_IDS",
-      cached: cached,
-      keyProps: [params, ids],
-      callback: () => source.deleteByIds(ids, params: params),
-    );
+    Object? args,
+    bool? lazy,
+  }) async {
+    if (lazy ?? this.lazy) {
+      _backup((source) => source.deleteByIds(ids, params: params, args: args));
+    } else {
+      await _backup((source) {
+        return source.deleteByIds(ids, params: params, args: args);
+      });
+    }
+    return primary.deleteByIds(ids, params: params, args: args);
   }
 
   /// Method to get data with optional data source builder.
@@ -235,15 +265,25 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
-  Future<Response<T>> get({bool? cached, DataFieldParams? params}) {
-    return cache(
-      "GET",
-      cached: cached,
-      keyProps: [params],
-      callback: () => source.get(params: params),
-    );
+  Future<Response<T>> get({
+    DataFieldParams? params,
+    Object? args,
+    bool? lazy,
+  }) async {
+    final local = await primary.get(params: params, args: args);
+    if (local.isValid) return local;
+    final remote = await _backup((source) {
+      return source.get(params: params, args: args);
+    });
+    if (remote.isValid) {
+      if (lazy ?? this.lazy) {
+        primary.creates(remote.result, params: params, args: args);
+      } else {
+        await primary.creates(remote.result, params: params, args: args);
+      }
+    }
+    return remote;
   }
 
   /// Method to get data by ID with optional data source builder.
@@ -255,19 +295,26 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
   Future<Response<T>> getById(
     String id, {
-    bool? cached,
     DataFieldParams? params,
-  }) {
-    return cache(
-      "GET_BY_ID",
-      cached: cached,
-      keyProps: [params, id],
-      callback: () => source.getById(id, params: params),
-    );
+    Object? args,
+    bool? lazy,
+  }) async {
+    final local = await primary.getById(id, params: params, args: args);
+    if (local.isValid) return local;
+    final remote = await _backup((source) {
+      return source.getById(id, params: params, args: args);
+    });
+    if (remote.isValid) {
+      if (lazy ?? this.lazy) {
+        primary.creates(remote.result, params: params, args: args);
+      } else {
+        await primary.creates(remote.result, params: params, args: args);
+      }
+    }
+    return remote;
   }
 
   /// Method to get data by multiple IDs with optional data source builder.
@@ -280,19 +327,26 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
   Future<Response<T>> getByIds(
     List<String> ids, {
-    bool? cached,
     DataFieldParams? params,
-  }) {
-    return cache(
-      "GET_BY_IDS",
-      cached: cached,
-      keyProps: [params, ids],
-      callback: () => source.getByIds(ids, params: params),
-    );
+    Object? args,
+    bool? lazy,
+  }) async {
+    final local = await primary.getByIds(ids, params: params, args: args);
+    if (local.isValid) return local;
+    final remote = await _backup((source) {
+      return source.getByIds(ids, params: params, args: args);
+    });
+    if (remote.isValid) {
+      if (lazy ?? this.lazy) {
+        primary.creates(remote.result, params: params, args: args);
+      } else {
+        await primary.creates(remote.result, params: params, args: args);
+      }
+    }
+    return remote;
   }
 
   /// Method to get data by query with optional data source builder.
@@ -305,28 +359,43 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   queries: queries,
   /// );
   /// ```
-
   @override
   Future<Response<T>> getByQuery({
-    bool? cached,
     DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
-  }) {
-    return cache(
-      "GET_BY_QUERY",
-      cached: cached,
-      keyProps: [params, queries, selections, sorts, options],
-      callback: () => source.getByQuery(
+    Object? args,
+    bool? lazy,
+  }) async {
+    final local = await primary.getByQuery(
+      params: params,
+      queries: queries,
+      selections: selections,
+      sorts: sorts,
+      options: options,
+      args: args,
+    );
+    if (local.isValid) return local;
+    final remote = await _backup((source) {
+      return source.getByQuery(
         params: params,
         queries: queries,
         selections: selections,
         sorts: sorts,
         options: options,
-      ),
-    );
+        args: args,
+      );
+    });
+    if (remote.isValid) {
+      if (lazy ?? this.lazy) {
+        primary.creates(remote.result, params: params, args: args);
+      } else {
+        await primary.creates(remote.result, params: params, args: args);
+      }
+    }
+    return remote;
   }
 
   /// Stream method to listen for data changes with optional data source builder.
@@ -337,15 +406,12 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
-  Stream<Response<T>> listen({bool? cached, DataFieldParams? params}) {
-    return cacheStream(
-      "LISTEN",
-      cached: cached,
-      keyProps: [params],
-      callback: () => source.listen(params: params),
-    );
+  Stream<Response<T>> listen({
+    DataFieldParams? params,
+    Object? args,
+  }) {
+    return primary.listen(params: params, args: args);
   }
 
   /// Method to listenCount data with optional data source builder.
@@ -357,13 +423,11 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   /// );
   /// ```
   @override
-  Stream<Response<int>> listenCount({bool? cached, DataFieldParams? params}) {
-    return cacheStream(
-      "LISTEN_COUNT",
-      cached: cached,
-      keyProps: [params],
-      callback: () => source.listenCount(params: params),
-    );
+  Stream<Response<int>> listenCount({
+    DataFieldParams? params,
+    Object? args,
+  }) {
+    return primary.listenCount(params: params, args: args);
   }
 
   /// Stream method to listen for data changes by ID with optional data source builder.
@@ -375,19 +439,13 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
   Stream<Response<T>> listenById(
     String id, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
-    return cacheStream(
-      "LISTEN_BY_ID",
-      cached: cached,
-      keyProps: [params, id],
-      callback: () => source.listenById(id, params: params),
-    );
+    return primary.listenById(id, params: params, args: args);
   }
 
   /// Stream method to listen for data changes by multiple IDs with optional data source builder.
@@ -400,19 +458,13 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
   Stream<Response<T>> listenByIds(
     List<String> ids, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
-    return cacheStream(
-      "LISTEN_BY_IDS",
-      cached: cached,
-      keyProps: [params, ids],
-      callback: () => source.listenByIds(ids, params: params),
-    );
+    return primary.listenByIds(ids, params: params, args: args);
   }
 
   /// Stream method to listen for data changes by query with optional data source builder.
@@ -425,27 +477,22 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   queries: queries,
   /// );
   /// ```
-
   @override
   Stream<Response<T>> listenByQuery({
-    bool? cached,
     DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
+    Object? args,
   }) {
-    return cacheStream(
-      "LISTEN_BY_QUERY",
-      cached: cached,
-      keyProps: [params, queries, selections, sorts, options],
-      callback: () => source.listenByQuery(
-        params: params,
-        queries: queries,
-        selections: selections,
-        sorts: sorts,
-        options: options,
-      ),
+    return primary.listenByQuery(
+      params: params,
+      queries: queries,
+      selections: selections,
+      sorts: sorts,
+      options: options,
+      args: args,
     );
   }
 
@@ -459,19 +506,26 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
   Future<Response<T>> search(
     Checker checker, {
-    bool? cached,
     DataFieldParams? params,
-  }) {
-    return cache(
-      "SEARCH",
-      cached: cached,
-      keyProps: [params, checker],
-      callback: () => source.search(checker, params: params),
-    );
+    Object? args,
+    bool? lazy,
+  }) async {
+    final local = await primary.search(checker, params: params, args: args);
+    if (local.isValid) return local;
+    final remote = await _backup((source) {
+      return source.search(checker, params: params, args: args);
+    });
+    if (remote.isValid) {
+      if (lazy ?? this.lazy) {
+        primary.creates(remote.result, params: params, args: args);
+      } else {
+        await primary.creates(remote.result, params: params, args: args);
+      }
+    }
+    return remote;
   }
 
   /// Method to update data by ID with optional data source builder.
@@ -484,20 +538,24 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
   Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    bool? cached,
     DataFieldParams? params,
-  }) {
-    return cache(
-      "UPDATE_BY_ID",
-      cached: cached,
-      keyProps: [params, id, data],
-      callback: () => source.updateById(id, data, params: params),
-    );
+    Object? args,
+    bool? lazy,
+  }) async {
+    if (lazy ?? this.lazy) {
+      _backup((source) {
+        return source.updateById(id, data, params: params, args: args);
+      });
+    } else {
+      await _backup((source) {
+        return source.updateById(id, data, params: params, args: args);
+      });
+    }
+    return primary.updateById(id, data, params: params, args: args);
   }
 
   /// Method to update data by multiple IDs with optional data source builder.
@@ -513,18 +571,22 @@ class LocalDataRepository<T extends Entity> extends DataRepository<T> {
   ///   params: Params({"field1": "value1", "field2": "value2"}),
   /// );
   /// ```
-
   @override
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
-    bool? cached,
     DataFieldParams? params,
-  }) {
-    return cache(
-      "UPDATE_BY_IDS",
-      cached: cached,
-      keyProps: [params, updates],
-      callback: () => source.updateByIds(updates, params: params),
-    );
+    Object? args,
+    bool? lazy,
+  }) async {
+    if (lazy ?? this.lazy) {
+      _backup((source) {
+        return source.updateByIds(updates, params: params, args: args);
+      });
+    } else {
+      await _backup((source) {
+        return source.updateByIds(updates, params: params, args: args);
+      });
+    }
+    return primary.updateByIds(updates, params: params, args: args);
   }
 }

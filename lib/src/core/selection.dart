@@ -82,6 +82,6 @@ class DataSelection {
 
   @override
   String toString() {
-    return "$DataSelection#$hashCode(${type.name})";
+    return "$DataSelection#$hashCode(type: $type, value: $value)";
   }
 }

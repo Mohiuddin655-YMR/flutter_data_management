@@ -1,3 +1,8 @@
+## 2.1.7
+
+* Add DataManagementProvider, DataManagementMixin
+* Update RemoteDataRepository and LocalDataRepository with offline, cache and backup mechanism
+
 ## 2.0.7+1
 
 * Update cache mechanism

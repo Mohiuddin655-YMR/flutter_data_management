@@ -3,45 +3,95 @@ import 'package:flutter_entity/entity.dart';
 import '../core/configs.dart';
 import '../models/checker.dart';
 import '../models/updating_info.dart';
+import '../sources/base.dart';
+import '../sources/local.dart';
+import '../sources/remote.dart';
 import '../utils/errors.dart';
+
+typedef FutureConnectivityCallback = Future<bool> Function();
 
 /// ## Abstract class representing a generic data repository with methods for CRUD operations.
 ///
 /// This abstract class defines the structure of a generic data repository.
 /// It is not intended to be used directly. Instead, use its implementations:
-/// * <b>[RemoteDataRepositoryImpl]</b> : Use for all remote database related data.
-/// * <b>[LocalDataRepositoryImpl]</b> : Use for all local database related data.
+/// * <b>[RemoteDataRepository]</b> : Use for all remote database related data.
+/// * <b>[LocalDataRepository]</b> : Use for all local database related data.
 ///
 /// Example:
 /// ```dart
-/// final DataRepository userRepository = RemoteDataRepositoryImpl();
-/// final DataRepository<Post> postRepository = LocalDataRepositoryImpl<Post>();
+/// final DataRepository userRepository = RemoteDataRepository();
+/// final DataRepository<Post> postRepository = LocalDataRepository<Post>();
 /// ```
 
 abstract class DataRepository<T extends Entity> {
-  const DataRepository();
+  final String? id;
+  final bool lazy;
 
-  Future<Response<S>> execute<S extends Object>(
-    Future<Response<S>> Function() callback,
-  ) async {
-    try {
-      return callback();
-    } catch (error) {
-      return Response<S>(status: Status.failure, error: error.toString());
-    }
+  /// The primary remote data source responsible for fetching data.
+  final DataSource<T> primary;
+
+  /// An optional local data source used as a backup or cache when in cache mode.
+  final DataSource<T>? optional;
+
+  /// Connectivity provider for checking internet connectivity.
+  final FutureConnectivityCallback? _connectivity;
+
+  /// Getter for checking if the device is connected to the internet.
+  Future<bool> get isConnected async {
+    if (_connectivity != null) return _connectivity!();
+    return false;
   }
 
-  Stream<Response<S>> executeStream<S extends Object>(
-    Stream<Response<S>> Function() callback,
-  ) {
-    try {
-      return callback();
-    } catch (error) {
-      return Stream.value(
-        Response<S>(status: Status.failure, error: error.toString()),
-      );
-    }
-  }
+  /// Getter for checking if the device is disconnected from the internet.
+  Future<bool> get isDisconnected async => !(await isConnected);
+
+  /// Constructor for creating a [RemoteDataRepository] implement.
+  ///
+  /// Parameters:
+  /// - [source]: The primary data source. Ex: [LocalDataSourceImpl], [ApiDataSource], [FirestoreDataSource], and [RealtimeDataSource].
+  /// - [backup]: An optional data source. Ex: [LocalDataSourceImpl], [ApiDataSource], [FirestoreDataSource], and [RealtimeDataSource].
+  ///
+  const DataRepository.custom({
+    this.id,
+    this.lazy = true,
+    required DataSource<T> source,
+    DataSource<T>? backup,
+    FutureConnectivityCallback? connectivity,
+  })  : primary = source,
+        optional = backup,
+        _connectivity = connectivity;
+
+  /// Constructor for creating a [RemoteDataRepository] implement.
+  ///
+  /// Parameters:
+  /// - [source]: The primary local data source. Ex: [LocalDataSourceImpl].
+  /// - [backup]: An optional remote data source. Ex: [ApiDataSource], [FirestoreDataSource], and [RealtimeDataSource].
+  ///
+  const DataRepository.local({
+    this.id,
+    this.lazy = true,
+    required LocalDataSource<T> source,
+    RemoteDataSource<T>? backup,
+    FutureConnectivityCallback? connectivity,
+  })  : primary = source,
+        optional = backup,
+        _connectivity = connectivity;
+
+  /// Constructor for creating a [RemoteDataRepository] implement.
+  ///
+  /// Parameters:
+  /// - [source]: The primary remote data source. Ex: [ApiDataSource], [FirestoreDataSource], and [RealtimeDataSource].
+  /// - [backup]: An optional cache data source. Ex: [LocalDataSourceImpl].
+  ///
+  const DataRepository.remote({
+    this.id,
+    this.lazy = true,
+    required RemoteDataSource<T> source,
+    LocalDataSource<T>? backup,
+    FutureConnectivityCallback? connectivity,
+  })  : primary = source,
+        optional = backup,
+        _connectivity = connectivity;
 
   /// Method to check data by ID with optional data source builder.
   ///
@@ -54,8 +104,8 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> checkById(
     String id, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException('checkById method is not implemented');
   }
@@ -69,8 +119,8 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Future<Response<T>> clear({
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException('clear method is not implemented');
   }
@@ -84,8 +134,8 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Future<Response<int>> count({
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException('count method is not implemented');
   }
@@ -102,8 +152,8 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> create(
     T data, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException('create method is not implemented');
   }
@@ -120,8 +170,8 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> creates(
     List<T> data, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException('creates method is not implemented');
   }
@@ -137,8 +187,8 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> deleteById(
     String id, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException('deleteById method is not implemented');
   }
@@ -155,8 +205,8 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> deleteByIds(
     List<String> ids, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException(
       'deleteByIds method is not implemented',
@@ -172,8 +222,8 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Future<Response<T>> get({
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException('get method is not implemented');
   }
@@ -189,8 +239,8 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> getById(
     String id, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException('getById method is not implemented');
   }
@@ -207,8 +257,8 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> getByIds(
     List<String> ids, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException('getByIds method is not implemented');
   }
@@ -224,12 +274,12 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Future<Response<T>> getByQuery({
-    bool? cached,
     DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
+    Object? args,
   }) {
     throw const DataRepositoryException('getByQuery method is not implemented');
   }
@@ -243,8 +293,8 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Stream<Response<T>> listen({
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException('listen method is not implemented');
   }
@@ -258,8 +308,8 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Stream<Response<int>> listenCount({
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('listenCount method is not implemented');
   }
@@ -275,8 +325,8 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Stream<Response<T>> listenById(
     String id, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException('listenById method is not implemented');
   }
@@ -293,8 +343,8 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Stream<Response<T>> listenByIds(
     List<String> ids, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException(
       'listenByIds method is not implemented',
@@ -312,12 +362,12 @@ abstract class DataRepository<T extends Entity> {
   /// );
   /// ```
   Stream<Response<T>> listenByQuery({
-    bool? cached,
     DataFieldParams? params,
     List<DataQuery> queries = const [],
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
+    Object? args,
   }) {
     throw const DataRepositoryException(
       'listenByQuery method is not implemented',
@@ -336,8 +386,8 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> search(
     Checker checker, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException('search method is not implemented');
   }
@@ -355,8 +405,8 @@ abstract class DataRepository<T extends Entity> {
   Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException('updateById method is not implemented');
   }
@@ -376,8 +426,8 @@ abstract class DataRepository<T extends Entity> {
   /// ```
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
-    bool? cached,
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataRepositoryException(
       'updateByIds method is not implemented',

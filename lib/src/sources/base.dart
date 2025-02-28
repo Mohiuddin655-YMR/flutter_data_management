@@ -3,6 +3,7 @@ import 'package:flutter_entity/flutter_entity.dart';
 import '../core/configs.dart';
 import '../models/checker.dart';
 import '../models/updating_info.dart';
+import '../utils/encryptor.dart';
 import '../utils/errors.dart';
 
 /// # Won't Use Directly
@@ -64,7 +65,13 @@ import '../utils/errors.dart';
 /// ```
 ///
 abstract class DataSource<T extends Entity> {
-  const DataSource();
+  final DataEncryptor? encryptor;
+
+  bool get isEncryptor => encryptor.isValid;
+
+  const DataSource({
+    this.encryptor,
+  });
 
   Future<Response<S>> execute<S extends Object>(
     Future<Response<S>> Function() callback,
@@ -100,6 +107,7 @@ abstract class DataSource<T extends Entity> {
   Future<Response<T>> checkById(
     String id, {
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('checkById method is not implemented');
   }
@@ -114,6 +122,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Future<Response<T>> clear({
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('clear method is not implemented');
   }
@@ -128,6 +137,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Future<Response<int>> count({
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('count method is not implemented');
   }
@@ -145,6 +155,7 @@ abstract class DataSource<T extends Entity> {
   Future<Response<T>> create(
     T data, {
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('create method is not implemented');
   }
@@ -162,6 +173,7 @@ abstract class DataSource<T extends Entity> {
   Future<Response<T>> creates(
     List<T> data, {
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('creates method is not implemented');
   }
@@ -178,6 +190,7 @@ abstract class DataSource<T extends Entity> {
   Future<Response<T>> deleteById(
     String id, {
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('deleteById method is not implemented');
   }
@@ -195,6 +208,7 @@ abstract class DataSource<T extends Entity> {
   Future<Response<T>> deleteByIds(
     List<String> ids, {
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('deleteByIds method is not implemented');
   }
@@ -209,6 +223,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Future<Response<T>> get({
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('get method is not implemented');
   }
@@ -225,6 +240,7 @@ abstract class DataSource<T extends Entity> {
   Future<Response<T>> getById(
     String id, {
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('getById method is not implemented');
   }
@@ -242,6 +258,7 @@ abstract class DataSource<T extends Entity> {
   Future<Response<T>> getByIds(
     List<String> ids, {
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('getByIds method is not implemented');
   }
@@ -262,6 +279,7 @@ abstract class DataSource<T extends Entity> {
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
+    Object? args,
   }) {
     throw const DataSourceException('getByQuery method is not implemented');
   }
@@ -276,6 +294,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Stream<Response<T>> listen({
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('listen method is not implemented');
   }
@@ -290,6 +309,7 @@ abstract class DataSource<T extends Entity> {
   /// ```
   Stream<Response<int>> listenCount({
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('listenCount method is not implemented');
   }
@@ -306,6 +326,7 @@ abstract class DataSource<T extends Entity> {
   Stream<Response<T>> listenById(
     String id, {
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('listenById method is not implemented');
   }
@@ -323,6 +344,7 @@ abstract class DataSource<T extends Entity> {
   Stream<Response<T>> listenByIds(
     List<String> ids, {
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('listenByIds method is not implemented');
   }
@@ -343,6 +365,7 @@ abstract class DataSource<T extends Entity> {
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
+    Object? args,
   }) {
     throw const DataSourceException('listenByQuery method is not implemented');
   }
@@ -360,6 +383,7 @@ abstract class DataSource<T extends Entity> {
   Future<Response<T>> search(
     Checker checker, {
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('checkByQuery method is not implemented');
   }
@@ -378,6 +402,7 @@ abstract class DataSource<T extends Entity> {
     String id,
     Map<String, dynamic> data, {
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('updateById method is not implemented');
   }
@@ -398,6 +423,7 @@ abstract class DataSource<T extends Entity> {
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
     DataFieldParams? params,
+    Object? args,
   }) {
     throw const DataSourceException('updateByIds method is not implemented');
   }
