@@ -183,7 +183,7 @@ enum ApiResponseType {
         return dio.ResponseType.plain;
       case bytes:
         return dio.ResponseType.bytes;
-      }
+    }
   }
 }
 
@@ -209,7 +209,7 @@ enum ApiListFormat {
         return dio.ListFormat.multi;
       case multiCompatible:
         return dio.ListFormat.multiCompatible;
-      }
+    }
   }
 }
 

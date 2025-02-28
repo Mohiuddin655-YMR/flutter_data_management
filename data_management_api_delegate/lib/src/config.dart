@@ -9,14 +9,10 @@ class _Limitations {
 class _QHelper {
   const _QHelper._();
 
-  static Map<String, dynamic> search<T extends Object?>(
-    dio.Dio ref,
-    Checker checker,
-  ) {
+  static Map<String, dynamic> search<T extends Object?>(Checker checker) {
     final field = checker.field;
     final value = checker.value;
     final type = checker.type;
-
     if (value is String) {
       if (type.isContains) {
         return {

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
-import 'package:data_management/core.dart';
+import 'package:data_management/data_management.dart';
 import 'package:in_app_database/in_app_database.dart' as fdb;
 
 part 'config.dart';
@@ -35,6 +35,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   Future<Response<T>> checkById(
     String id, {
     DataFieldParams? params,
+    Object? args,
   }) {
     return execute(() {
       return source(params).doc(id).get().then((value) async {
@@ -56,6 +57,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   @override
   Future<Response<T>> clear({
     DataFieldParams? params,
+    Object? args,
   }) {
     return execute(() {
       return source(params).get().then((value) {
@@ -74,7 +76,10 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   }
 
   @override
-  Future<Response<int>> count({DataFieldParams? params}) {
+  Future<Response<int>> count({
+    DataFieldParams? params,
+    Object? args,
+  }) {
     return execute(() {
       return source(params).count().get().then((value) {
         return Response(status: Status.ok, data: value.count);
@@ -96,6 +101,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   Future<Response<T>> create(
     T data, {
     DataFieldParams? params,
+    Object? args,
   }) async {
     if (data.id.isEmpty) return Response(status: Status.invalidId);
     return execute(() {
@@ -141,7 +147,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   Future<Response<T>> creates(
     List<T> data, {
     DataFieldParams? params,
-    bool store = false,
+    Object? args,
   }) async {
     if (data.isEmpty) return Response(status: Status.invalid);
     return execute(() {
@@ -169,6 +175,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   Future<Response<T>> deleteById(
     String id, {
     DataFieldParams? params,
+    Object? args,
   }) async {
     if (id.isEmpty) return Response(status: Status.invalidId);
     return execute(() {
@@ -198,6 +205,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   Future<Response<T>> deleteByIds(
     List<String> ids, {
     DataFieldParams? params,
+    Object? args,
   }) async {
     if (ids.isEmpty) return Response(status: Status.invalid);
     return execute(() {
@@ -224,6 +232,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   @override
   Future<Response<T>> get({
     DataFieldParams? params,
+    Object? args,
     bool onlyUpdates = false,
   }) async {
     return execute(() {
@@ -262,6 +271,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   Future<Response<T>> getById(
     String id, {
     DataFieldParams? params,
+    Object? args,
   }) async {
     if (id.isEmpty) return Response(status: Status.invalidId);
     return execute(() {
@@ -288,6 +298,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   Future<Response<T>> getByIds(
     List<String> ids, {
     DataFieldParams? params,
+    Object? args,
   }) async {
     if (ids.isEmpty) return Response(status: Status.invalid);
     return execute(() {
@@ -346,6 +357,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
+    Object? args,
     bool onlyUpdates = false,
   }) async {
     return execute(() {
@@ -388,6 +400,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   @override
   Stream<Response<T>> listen({
     DataFieldParams? params,
+    Object? args,
     bool onlyUpdates = false,
   }) {
     return executeStream(() {
@@ -422,7 +435,10 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   /// );
   /// ```
   @override
-  Stream<Response<int>> listenCount({DataFieldParams? params}) {
+  Stream<Response<int>> listenCount({
+    DataFieldParams? params,
+    Object? args,
+  }) {
     return executeStream(() {
       return source(params).count().snapshots().map((e) {
         return Response(data: e.count, status: Status.ok);
@@ -443,6 +459,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   Stream<Response<T>> listenById(
     String id, {
     DataFieldParams? params,
+    Object? args,
   }) {
     if (id.isEmpty) return Stream.value(Response(status: Status.invalidId));
     return executeStream(() {
@@ -469,6 +486,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   Stream<Response<T>> listenByIds(
     List<String> ids, {
     DataFieldParams? params,
+    Object? args,
   }) {
     if (ids.isEmpty) return Stream.value(Response(status: Status.invalid));
     return executeStream(() {
@@ -534,6 +552,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
+    Object? args,
     bool onlyUpdates = false,
   }) {
     return executeStream(() {
@@ -579,6 +598,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   Future<Response<T>> search(
     Checker checker, {
     DataFieldParams? params,
+    Object? args,
   }) async {
     if (checker.field.isEmpty) return Response(status: Status.invalid);
     return execute(() {
@@ -614,6 +634,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
     String id,
     Map<String, dynamic> data, {
     DataFieldParams? params,
+    Object? args,
   }) async {
     if (id.isEmpty || data.isEmpty) return Response(status: Status.invalid);
     return execute(() {
@@ -648,6 +669,7 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
     DataFieldParams? params,
+    Object? args,
   }) async {
     if (updates.isEmpty) return Response(status: Status.invalid);
     return execute(() {
@@ -661,22 +683,6 @@ abstract class InAppDataSource<T extends Entity> extends LocalDataSource<T> {
           snapshot: value,
           backups: value.map((e) => e.data).whereType<T>().toList(),
         );
-      });
-    });
-  }
-
-  @override
-  Future<Response<T>> keep(
-    List<T> data, {
-    DataFieldParams? params,
-  }) async {
-    if (data.isEmpty) return Response(status: Status.invalid);
-    return execute(() {
-      final children = List.of(data.map((e) {
-        return fdb.InAppDocumentSnapshot(e.id, e.source);
-      }));
-      return source(params).set(children).then((event) {
-        return Response(status: event == null ? Status.error : Status.ok);
       });
     });
   }

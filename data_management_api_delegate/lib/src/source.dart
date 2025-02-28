@@ -1,15 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:data_management/core.dart';
+import 'package:data_management/data_management.dart';
 import 'package:dio/dio.dart' as dio;
-
-import 'exceptions.dart';
 
 part 'base.dart';
 part 'config.dart';
-part 'extension.dart';
-part 'finder.dart';
 
 ///
 /// You can use base class [Data] without [Entity]
@@ -46,11 +42,9 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> checkById(
     String id, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
-      var isEncryptor = encryptor != null;
       var endPoint = _source(params);
       final I = api._parent(endPoint);
       final request =
@@ -78,19 +72,22 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> clear({
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       var isEncryptor = encryptor != null;
-      final endPoint = _source(params);
+      var endPoint = _source(params);
       final I = api._parent(endPoint);
       final request =
           api.request.isGetRequest ? database.get(I) : database.post(I);
 
       List<T> result = [];
       List<_AS> snaps = [];
-      return request.then((value) {
+
+      return request.then((value) async {
+        if (value.statusCode != api.status.ok) {
+          return Response(status: Status.notFound, error: value.statusMessage);
+        }
         result.clear();
         snaps.clear();
         return request.then((value) async {
@@ -105,7 +102,7 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
 
           for (var i in value.data) {
             snaps.add(i);
-            final data = i is Map<String, dynamic>
+            final data = i is Map
                 ? i
                 : i is String
                     ? jsonDecode(i)
@@ -117,20 +114,14 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
           }
 
           if (snaps.isEmpty) return Response(status: Status.notFound);
-          final ids = value.docs.map((e) => e.id).toList();
+          final ids = result.map((e) => e.id).toList();
           if (ids.isEmpty) return Response(status: Status.notFound);
-          return execute(() {
-            return deleteByIds(
-              ids,
-              params: params,
-              isConnected: isConnected,
-            ).then((deleted) {
-              return deleted.copy(
-                backups: value.docs.map((e) => build(e.data())).toList(),
-                snapshot: value,
-                status: Status.ok,
-              );
-            });
+          return deleteByIds(ids, params: params, args: args).then((deleted) {
+            return deleted.copy(
+              backups: result,
+              snapshot: snaps,
+              status: Status.ok,
+            );
           });
         });
       });
@@ -150,24 +141,33 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> create(
     T data, {
-    bool isConnected = false,
     DataFieldParams? params,
+    Object? args,
   }) async {
-    if (isConnected) {
-      if (data.id.isNotEmpty) {
-        final finder = await database.create(
-          builder: build,
-          encryptor: encryptor,
-          api: api,
-          endPoint: _source(params),
-          data: data,
-        );
-        return Response(error: finder.$1, status: finder.$2);
+    if (data.id.isEmpty) return Response(status: Status.invalidId);
+    final endPoint = _source(params);
+    var I = api._parent(endPoint).child(data.id, api.autoGenerateId);
+    if (isEncryptor) {
+      var raw = await encryptor.input(data.source);
+      if (raw.isNotEmpty) {
+        final result = await database.post(I, data: raw);
+        final code = result.statusCode;
+        if (code == api.status.created || code == api.status.ok) {
+          return Response(status: Status.ok);
+        } else {
+          return Response(error: "Data hasn't inserted!");
+        }
       } else {
-        return Response(status: Status.invalidId);
+        return Response(error: "Encryption error!");
       }
     } else {
-      return Response(status: Status.networkError);
+      final result = await database.post(I, data: data.source);
+      final code = result.statusCode;
+      if (code == api.status.created || code == api.status.ok) {
+        return Response(status: Status.ok);
+      } else {
+        return Response(error: "Data hasn't inserted!");
+      }
     }
   }
 
@@ -184,25 +184,15 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> creates(
     List<T> data, {
-    bool isConnected = false,
     DataFieldParams? params,
+    Object? args,
   }) async {
-    if (isConnected) {
-      if (data.isNotEmpty) {
-        final finder = await database.creates(
-          builder: build,
-          encryptor: encryptor,
-          api: api,
-          endPoint: _source(params),
-          data: data,
-        );
-        return Response(error: finder.$1, status: finder.$2);
-      } else {
-        return Response(status: Status.invalidId);
-      }
-    } else {
-      return Response(status: Status.networkError);
-    }
+    if (data.isEmpty) return Response(status: Status.invalidId);
+    return Future.wait(data.map((e) {
+      return create(e, params: params, args: args);
+    })).then((value) {
+      return Response(status: Status.ok);
+    });
   }
 
   /// Method to delete data by ID with optional data source builder.
@@ -217,25 +207,20 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> deleteById(
     String id, {
-    bool isConnected = false,
     DataFieldParams? params,
+    Object? args,
   }) async {
-    if (isConnected) {
-      if (id.isNotEmpty) {
-        var finder = await database.deleteById(
-          builder: build,
-          encryptor: encryptor,
-          api: api,
-          endPoint: _source(params),
-          id: id,
-        );
-        return Response(error: finder.$1, status: finder.$2);
+    if (id.isEmpty) return Response(status: Status.invalidId);
+    final endPoint = _source(params);
+    final I = api._parent(endPoint).child(id);
+    return database.delete(I).then((value) {
+      var code = value.statusCode;
+      if (code == api.status.ok || code == api.status.deleted) {
+        return Response(status: Status.ok);
       } else {
-        return Response(status: Status.invalidId);
+        return Response(error: "Data hasn't deleted!");
       }
-    } else {
-      return Response(status: Status.networkError);
-    }
+    });
   }
 
   /// Method to delete data by multiple IDs with optional data source builder.
@@ -251,25 +236,15 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> deleteByIds(
     List<String> ids, {
-    bool isConnected = false,
     DataFieldParams? params,
+    Object? args,
   }) async {
-    if (isConnected) {
-      if (ids.isNotEmpty) {
-        var finder = await database.deleteByIds(
-          builder: build,
-          encryptor: encryptor,
-          api: api,
-          endPoint: _source(params),
-          ids: ids,
-        );
-        return Response(error: finder.$1, status: finder.$2);
-      } else {
-        return Response(status: Status.invalidId);
-      }
-    } else {
-      return Response(status: Status.networkError);
-    }
+    if (ids.isEmpty) return Response(status: Status.invalidId);
+    return Future.wait(ids.map((e) {
+      return deleteById(e, params: params, args: args);
+    })).then((value) {
+      return Response(status: Status.ok);
+    });
   }
 
   /// Method to get data with optional data source builder.
@@ -282,25 +257,38 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   /// ```
   @override
   Future<Response<T>> get({
-    bool isConnected = false,
     DataFieldParams? params,
+    Object? args,
   }) async {
-    if (isConnected) {
-      var finder = await database.fetchAll(
-        builder: build,
-        encryptor: encryptor,
-        api: api,
-        endPoint: _source(params),
-      );
-      return Response(
-        result: finder.$1?.$1,
-        snapshot: finder.$1?.$2,
-        error: finder.$2,
-        status: finder.$3,
-      );
-    } else {
-      return Response(status: Status.networkError);
-    }
+    final endPoint = _source(params);
+    final I = api._parent(endPoint);
+    final request =
+        api.request.isGetRequest ? database.get(I) : database.post(I);
+    List<T> result = [];
+    List<_AS> snaps = [];
+    return request.then((response) async {
+      result.clear();
+      snaps.clear();
+      if (response.statusCode == api.status.ok) {
+        if (response.data is List) {
+          for (var i in response.data) {
+            snaps.add(i);
+            final data = i is Map<String, dynamic>
+                ? i
+                : i is String
+                    ? jsonDecode(i)
+                    : null;
+            if (data is Map<String, dynamic>) {
+              var v = isEncryptor ? await encryptor.output(data) : data;
+              result.add(build(v));
+            }
+          }
+        }
+        return Response(result: result, snapshot: snaps);
+      } else {
+        return Response(error: "Data hasn't found!");
+      }
+    });
   }
 
   /// Method to get data by ID with optional data source builder.
@@ -315,11 +303,10 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> getById(
     String id, {
-    bool isConnected = false,
     DataFieldParams? params,
+    Object? args,
   }) async {
     if (id.isEmpty) return Response(status: Status.invalidId);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final isEncryptor = encryptor != null;
       final endPoint = _source(params);
@@ -354,13 +341,12 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> getByIds(
     List<String> ids, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (ids.isEmpty) return Response(status: Status.invalid);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final callbacks = ids.map((e) {
-        return getById(e, params: params, isConnected: isConnected);
+        return getById(e, params: params, args: args);
       });
       return Future.wait(callbacks).then((value) {
         final x = value.where((e) => e.isSuccessful);
@@ -390,10 +376,9 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
+    Object? args,
     bool onlyUpdates = false,
-    bool isConnected = false,
   }) async {
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final endPoint = _source(params);
       final I = api._parent(endPoint);
@@ -446,36 +431,15 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   /// ```
   @override
   Stream<Response<T>> listen({
-    bool isConnected = false,
     DataFieldParams? params,
+    Object? args,
   }) {
     final controller = StreamController<Response<T>>();
-    if (isConnected) {
-      try {
-        database
-            .listen(
-          builder: build,
-          encryptor: encryptor,
-          api: api,
-          endPoint: _source(params),
-        )
-            .listen((finder) {
-          controller.add(Response(
-            result: finder.$1?.$1,
-            snapshot: finder.$1?.$2,
-            error: finder.$2,
-            status: finder.$3,
-          ));
-        });
-      } catch (error) {
-        controller.add(Response(
-          error: "$error",
-          status: Status.failure,
-        ));
-      }
-    } else {
-      controller.add(Response(status: Status.networkError));
-    }
+    final duration = Duration(milliseconds: api.timer.streamReloadTime);
+    Timer.periodic(duration, (_) async {
+      final feedback = await get(params: params, args: args);
+      controller.add(feedback);
+    });
     return controller.stream;
   }
 
@@ -491,37 +455,15 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Stream<Response<T>> listenById(
     String id, {
-    bool isConnected = false,
     DataFieldParams? params,
+    Object? args,
   }) {
     final controller = StreamController<Response<T>>();
-    if (isConnected) {
-      try {
-        database
-            .liveById(
-          builder: build,
-          encryptor: encryptor,
-          api: api,
-          endPoint: _source(params),
-          id: id,
-        )
-            .listen((finder) {
-          controller.add(Response(
-            data: finder.$1?.$1,
-            snapshot: finder.$1?.$2,
-            message: finder.$2,
-            status: finder.$3,
-          ));
-        });
-      } catch (error) {
-        controller.add(Response(
-          error: "$error",
-          status: Status.failure,
-        ));
-      }
-    } else {
-      controller.add(Response(status: Status.networkError));
-    }
+    final duration = Duration(milliseconds: api.timer.streamReloadTime);
+    Timer.periodic(duration, (_) async {
+      final feedback = await getById(id, params: params, args: args);
+      controller.add(feedback);
+    });
     return controller.stream;
   }
 
@@ -538,37 +480,15 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Stream<Response<T>> listenByIds(
     List<String> ids, {
-    bool isConnected = false,
     DataFieldParams? params,
+    Object? args,
   }) {
     final controller = StreamController<Response<T>>();
-    if (isConnected) {
-      try {
-        database
-            .liveByIds(
-          builder: build,
-          encryptor: encryptor,
-          api: api,
-          endPoint: _source(params),
-          ids: ids,
-        )
-            .listen((finder) {
-          controller.add(Response(
-            result: finder.$1?.$1,
-            snapshot: finder.$1?.$2,
-            message: finder.$2,
-            status: finder.$3,
-          ));
-        });
-      } catch (e) {
-        controller.add(Response(
-          error: "$e",
-          status: Status.failure,
-        ));
-      }
-    } else {
-      controller.add(Response(status: Status.networkError));
-    }
+    final duration = Duration(milliseconds: api.timer.streamReloadTime);
+    Timer.periodic(duration, (_) async {
+      final feedback = await getByIds(ids, params: params, args: args);
+      controller.add(feedback);
+    });
     return controller.stream;
   }
 
@@ -589,64 +509,23 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
+    Object? args,
     bool onlyUpdates = false,
-    bool isConnected = false,
-    Future<bool> Function()? isConnected2,
   }) {
     final duration = Duration(milliseconds: api.timer.streamReloadTime);
     final controller = StreamController<Response<T>>();
     Timer.periodic(duration, (_) async {
       final feedback = await getByQuery(
+        params: params,
         queries: queries,
         selections: selections,
         sorts: sorts,
         options: options,
-        isConnected: await isConnected2!(),
+        args: args,
+        onlyUpdates: onlyUpdates,
       );
       controller.add(feedback);
     });
-    return controller.stream;
-  }
-
-  Stream<Response<T>> listenByQuery2({
-    bool isConnected = false,
-    DataFieldParams? params,
-    List<DataQuery> queries = const [],
-    List<DataSelection> selections = const [],
-    List<DataSorting> sorts = const [],
-    DataPagingOptions options = const DataPagingOptions(),
-  }) {
-    final controller = StreamController<Response<T>>();
-    if (isConnected) {
-      try {
-        database
-            .listenByQuery(
-          builder: build,
-          encryptor: encryptor,
-          api: api,
-          endPoint: _source(params),
-          queries: queries,
-          selections: selections,
-          sorts: sorts,
-          options: options,
-        )
-            .listen((finder) {
-          controller.add(Response(
-            result: finder.$1?.$1,
-            snapshot: finder.$1?.$2,
-            error: finder.$2,
-            status: finder.$3,
-          ));
-        });
-      } catch (e) {
-        controller.add(Response(
-          error: "$e",
-          status: Status.failure,
-        ));
-      }
-    } else {
-      controller.add(Response(status: Status.networkError));
-    }
     return controller.stream;
   }
 
@@ -663,26 +542,37 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> search(
     Checker checker, {
-    bool isConnected = false,
     DataFieldParams? params,
+    Object? args,
   }) async {
-    if (isConnected) {
-      var finder = await database.search(
-        builder: build,
-        encryptor: encryptor,
-        api: api,
-        endPoint: _source(params),
-        checker: checker,
-      );
-      return Response(
-        result: finder.$1?.$1,
-        snapshot: finder.$1?.$2,
-        error: finder.$2,
-        status: finder.$3,
-      );
-    } else {
-      return Response(status: Status.networkError);
-    }
+    final endPoint = _source(params);
+    final I = api._parent(endPoint);
+    final query = _QHelper.search(checker);
+    final request = api.request.isPostRequest
+        ? database.post(I, data: query)
+        : database.get(I, data: query);
+
+    List<T> result = [];
+    List<_AS> docs = [];
+
+    return request.then((response) async {
+      result.clear();
+      docs.clear();
+      if (response.statusCode == api.status.ok) {
+        if (response.data is List) {
+          for (var i in response.data) {
+            docs.add(i);
+            if (i != null && i is Map<String, dynamic>) {
+              var v = isEncryptor ? await encryptor.output(i) : i;
+              result.add(build(v));
+            }
+          }
+        }
+        return Response(result: result, snapshot: docs);
+      } else {
+        return Response(error: "Data hasn't found!");
+      }
+    });
   }
 
   /// Method to update data by ID with optional data source builder.
@@ -699,25 +589,39 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   Future<Response<T>> updateById(
     String id,
     Map<String, dynamic> data, {
-    bool isConnected = false,
     DataFieldParams? params,
+    Object? args,
   }) async {
-    if (isConnected) {
-      if (id.isNotEmpty) {
-        final finder = await database.updateById(
-          builder: build,
-          encryptor: encryptor,
-          api: api,
-          endPoint: _source(params),
-          id: id,
-          data: data,
-        );
-        return Response(error: finder.$1, status: finder.$2);
-      } else {
-        return Response(status: Status.invalidId);
-      }
+    if (id.isEmpty) return Response(status: Status.invalidId);
+    final endPoint = _source(params);
+    var I = api._parent(endPoint).child(id);
+    if (isEncryptor) {
+      return getById(id, params: params, args: args).then((value) async {
+        final x = value.data?.source ?? {};
+        x.addAll(data);
+        var v = await encryptor.input(x);
+        if (v.isNotEmpty) {
+          return database.put(I, data: v).then((value) {
+            final code = value.statusCode;
+            if (code == api.status.ok || code == api.status.updated) {
+              return Response(status: Status.ok);
+            } else {
+              return Response(error: "Data hasn't updated!");
+            }
+          });
+        } else {
+          return Response(error: "Encryption error!");
+        }
+      });
     } else {
-      return Response(status: Status.networkError);
+      return database.put(I, data: data).then((value) {
+        final code = value.statusCode;
+        if (code == api.status.ok || code == api.status.updated) {
+          return Response(status: Status.ok);
+        } else {
+          return Response(error: "Data hasn't updated!");
+        }
+      });
     }
   }
 
@@ -737,24 +641,24 @@ abstract class ApiDataSource<T extends Entity> extends RemoteDataSource<T> {
   @override
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
-    bool isConnected = false,
     DataFieldParams? params,
+    Object? args,
   }) async {
-    if (isConnected) {
-      if (updates.isNotEmpty) {
-        final finder = await database.updateByIds(
-          builder: build,
-          encryptor: encryptor,
-          api: api,
-          endPoint: _source(params),
-          data: updates,
-        );
-        return Response(error: finder.$1, status: finder.$2);
-      } else {
-        return Response(status: Status.invalidId);
-      }
+    if (updates.isEmpty) return Response(status: Status.invalid);
+    return Future.wait(updates.map((e) {
+      return updateById(e.id, e.data, params: params, args: args);
+    })).then((value) {
+      return Response(status: Status.ok);
+    });
+  }
+}
+
+extension _ApiPathExtension on String {
+  String child(String path, [bool ignoreId = false]) {
+    if (ignoreId) {
+      return this;
     } else {
-      return Response(status: Status.networkError);
+      return "$this/$path";
     }
   }
 }

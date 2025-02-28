@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:async/async.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' as fdb;
-import 'package:data_management/core.dart';
+import 'package:data_management/data_management.dart';
 
 part 'config.dart';
 
@@ -39,9 +39,8 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> checkById(
     String id, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       return source(params).doc(id).get().then((value) async {
         if (!value.exists) return Response(status: Status.notFound);
@@ -63,20 +62,15 @@ abstract class FirestoreDataSource<T extends Entity>
   @override
   Future<Response<T>> clear({
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       return source(params).get().then((value) {
         if (value.docs.isEmpty) return Response(status: Status.notFound);
         final ids = value.docs.map((e) => e.id).toList();
         if (ids.isEmpty) return Response(status: Status.notFound);
         return execute(() {
-          return deleteByIds(
-            ids,
-            params: params,
-            isConnected: isConnected,
-          ).then((deleted) {
+          return deleteByIds(ids, params: params, args: args).then((deleted) {
             return deleted.copy(
               backups: value.docs.map((e) => build(e.data())).toList(),
               snapshot: value,
@@ -91,9 +85,8 @@ abstract class FirestoreDataSource<T extends Entity>
   @override
   Future<Response<int>> count({
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       return source(params).count().get().then((value) {
         return Response(status: Status.ok, data: value.count);
@@ -115,10 +108,9 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> create(
     T data, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (data.id.isEmpty) return Response(status: Status.invalidId);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final ref = source(params).doc(data.id);
       if (isEncryptor) {
@@ -156,19 +148,11 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> creates(
     List<T> data, {
     DataFieldParams? params,
-    bool store = false,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (data.isEmpty) return Response(status: Status.invalid);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
-      final callbacks = data.map((e) {
-        return create(
-          e,
-          params: params,
-          isConnected: isConnected,
-        );
-      });
+      final callbacks = data.map((e) => create(e, params: params, args: args));
       return Future.wait(callbacks).then((value) {
         final x = value.where((e) => e.isSuccessful);
         return Response(
@@ -192,12 +176,11 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> deleteById(
     String id, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (id.isEmpty) return Response(status: Status.invalidId);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
-      return getById(id, isConnected: isConnected).then((old) {
+      return getById(id, params: params, args: args).then((old) {
         if (!old.isValid) return old;
         return source(params).doc(id).delete().then((value) {
           return Response(
@@ -223,17 +206,12 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> deleteByIds(
     List<String> ids, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (ids.isEmpty) return Response(status: Status.invalid);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final callbacks = ids.map((e) {
-        return deleteById(
-          e,
-          params: params,
-          isConnected: isConnected,
-        );
+        return deleteById(e, params: params, args: args);
       });
       return Future.wait(callbacks).then((value) {
         final x = value.where((e) => e.isSuccessful);
@@ -257,10 +235,9 @@ abstract class FirestoreDataSource<T extends Entity>
   @override
   Future<Response<T>> get({
     DataFieldParams? params,
+    Object? args,
     bool onlyUpdates = false,
-    bool isConnected = false,
   }) async {
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       List<T> result = [];
       List<fdb.DocumentSnapshot> docs = [];
@@ -298,10 +275,9 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> getById(
     String id, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (id.isEmpty) return Response(status: Status.invalidId);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       return source(params).doc(id).get().then((event) async {
         if (!event.exists) return Response(status: Status.notFound);
@@ -326,18 +302,13 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> getByIds(
     List<String> ids, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (ids.isEmpty) return Response(status: Status.invalid);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       if (ids.length > _Limitations.whereIn) {
         final callbacks = ids.map((e) {
-          return getById(
-            e,
-            params: params,
-            isConnected: isConnected,
-          );
+          return getById(e, params: params, args: args);
         });
         return Future.wait(callbacks).then((value) {
           final x = value.where((e) => e.isSuccessful);
@@ -385,10 +356,9 @@ abstract class FirestoreDataSource<T extends Entity>
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
+    Object? args,
     bool onlyUpdates = false,
-    bool isConnected = false,
   }) async {
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       List<T> result = [];
       List<fdb.DocumentSnapshot> docs = [];
@@ -430,12 +400,9 @@ abstract class FirestoreDataSource<T extends Entity>
   @override
   Stream<Response<T>> listen({
     DataFieldParams? params,
+    Object? args,
     bool onlyUpdates = false,
-    bool isConnected = false,
   }) {
-    if (!isConnected) {
-      return Stream.value(Response(status: Status.networkError));
-    }
     return executeStream(() {
       List<T> result = [];
       List<fdb.DocumentSnapshot> docs = [];
@@ -471,11 +438,8 @@ abstract class FirestoreDataSource<T extends Entity>
   @override
   Stream<Response<int>> listenCount({
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) {
-    if (!isConnected) {
-      return Stream.value(Response(status: Status.networkError));
-    }
     return executeStream(() {
       return Stream.fromFuture(source(params).count().get().then((e) {
         return Response(data: e.count, status: Status.ok);
@@ -496,12 +460,9 @@ abstract class FirestoreDataSource<T extends Entity>
   Stream<Response<T>> listenById(
     String id, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) {
     if (id.isEmpty) return Stream.value(Response(status: Status.invalidId));
-    if (!isConnected) {
-      return Stream.value(Response(status: Status.networkError));
-    }
     return executeStream(() {
       return source(params).doc(id).snapshots().asyncMap((event) async {
         if (!event.exists) return Response(status: Status.notFound);
@@ -526,22 +487,15 @@ abstract class FirestoreDataSource<T extends Entity>
   Stream<Response<T>> listenByIds(
     List<String> ids, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) {
     if (ids.isEmpty) return Stream.value(Response(status: Status.invalid));
-    if (!isConnected) {
-      return Stream.value(Response(status: Status.networkError));
-    }
     return executeStream(() {
       if (ids.length > _Limitations.whereIn) {
         Map<String, T> map = {};
         Map<String, fdb.DocumentSnapshot> snaps = {};
         return StreamGroup.merge(ids.map((e) {
-          return listenById(
-            e,
-            params: params,
-            isConnected: isConnected,
-          );
+          return listenById(e, params: params, args: args);
         })).map((event) {
           final data = event.data;
           final snap = event.snapshot;
@@ -599,12 +553,9 @@ abstract class FirestoreDataSource<T extends Entity>
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
+    Object? args,
     bool onlyUpdates = false,
-    bool isConnected = false,
   }) {
-    if (!isConnected) {
-      return Stream.value(Response(status: Status.networkError));
-    }
     return executeStream(() {
       List<T> result = [];
       List<fdb.DocumentSnapshot> docs = [];
@@ -649,10 +600,9 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> search(
     Checker checker, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (checker.field.isEmpty) return Response(status: Status.invalid);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       List<T> result = [];
       return _QHelper.search(source(params), checker).get().then((event) async {
@@ -686,20 +636,15 @@ abstract class FirestoreDataSource<T extends Entity>
     String id,
     Map<String, dynamic> data, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (id.isEmpty || data.isEmpty) return Response(status: Status.invalid);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final ref = source(params).doc(id);
       if (!isEncryptor) {
         return ref.update(data).then((value) => Response(status: Status.ok));
       }
-      return getById(
-        id,
-        params: params,
-        isConnected: isConnected,
-      ).then((value) {
+      return getById(id, params: params, args: args).then((value) {
         final x = value.data?.source ?? {};
         x.addAll(data);
         return encryptor.input(x).then((v) {
@@ -727,18 +672,12 @@ abstract class FirestoreDataSource<T extends Entity>
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (updates.isEmpty) return Response(status: Status.invalid);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final callbacks = updates.map((e) {
-        return updateById(
-          e.id,
-          e.data,
-          params: params,
-          isConnected: isConnected,
-        );
+        return updateById(e.id, e.data, params: params, args: args);
       });
       return Future.wait(callbacks).then((value) {
         final x = value.where((e) => e.isSuccessful);

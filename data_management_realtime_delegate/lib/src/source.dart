@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
-import 'package:data_management/core.dart';
+import 'package:data_management/data_management.dart';
 import 'package:firebase_database/firebase_database.dart' as rdb;
 
 part 'config.dart';
@@ -40,9 +40,8 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> checkById(
     String id, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       return source(params).child(id).get().then((value) async {
         if (!value.exists) return Response(status: Status.notFound);
@@ -64,9 +63,8 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> clear({
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       return source(params).get().then((value) {
         if (!value.exists) return Response(status: Status.notFound);
@@ -87,9 +85,8 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<int>> count({
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       return source(params).get().then((value) {
         return Response(status: Status.ok, data: value.children.length);
@@ -111,10 +108,9 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> create(
     T data, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (data.id.isEmpty) return Response(status: Status.invalidId);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final ref = source(params).child(data.id);
       if (isEncryptor) {
@@ -152,10 +148,9 @@ abstract class RealtimeDataSource<T extends Entity>
     List<T> data, {
     DataFieldParams? params,
     bool store = false,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (data.isEmpty) return Response(status: Status.invalid);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final callbacks = data.map((e) => create(e, params: params));
       return Future.wait(callbacks).then((value) {
@@ -181,10 +176,9 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> deleteById(
     String id, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (id.isEmpty) return Response(status: Status.invalidId);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       return getById(id).then((old) {
         if (!old.isValid) return old;
@@ -212,10 +206,9 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> deleteByIds(
     List<String> ids, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (ids.isEmpty) return Response(status: Status.invalid);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final callbacks = ids.map((e) => deleteById(e, params: params));
       return Future.wait(callbacks).then((value) {
@@ -240,9 +233,8 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Future<Response<T>> get({
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       List<T> result = [];
       List<rdb.DataSnapshot> docs = [];
@@ -275,10 +267,9 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> getById(
     String id, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (id.isEmpty) return Response(status: Status.invalidId);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       return source(params).child(id).get().then((event) async {
         if (!event.exists) return Response(status: Status.notFound);
@@ -303,10 +294,9 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> getByIds(
     List<String> ids, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (ids.isEmpty) return Response(status: Status.invalid);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final callbacks = ids.map((e) => getById(e, params: params));
       return Future.wait(callbacks).then((value) {
@@ -336,9 +326,8 @@ abstract class RealtimeDataSource<T extends Entity>
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
-    bool isConnected = false,
+    Object? args,
   }) async {
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       List<T> result = [];
       List<rdb.DataSnapshot> docs = [];
@@ -375,11 +364,8 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Stream<Response<T>> listen({
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) {
-    if (!isConnected) {
-      return Stream.value(Response(status: Status.networkError));
-    }
     return executeStream(() {
       List<T> result = [];
       List<rdb.DataSnapshot> docs = [];
@@ -410,11 +396,8 @@ abstract class RealtimeDataSource<T extends Entity>
   @override
   Stream<Response<int>> listenCount({
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) {
-    if (!isConnected) {
-      return Stream.value(Response(status: Status.networkError));
-    }
     return executeStream(() {
       return source(params).onValue.map((e) {
         return Response(data: e.snapshot.children.length, status: Status.ok);
@@ -435,12 +418,9 @@ abstract class RealtimeDataSource<T extends Entity>
   Stream<Response<T>> listenById(
     String id, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) {
     if (id.isEmpty) return Stream.value(Response(status: Status.invalidId));
-    if (!isConnected) {
-      return Stream.value(Response(status: Status.networkError));
-    }
     return executeStream(() {
       return source(params).child(id).onValue.asyncMap((event) async {
         if (!event.snapshot.exists) return Response(status: Status.notFound);
@@ -465,12 +445,9 @@ abstract class RealtimeDataSource<T extends Entity>
   Stream<Response<T>> listenByIds(
     List<String> ids, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) {
     if (ids.isEmpty) return Stream.value(Response(status: Status.invalid));
-    if (!isConnected) {
-      return Stream.value(Response(status: Status.networkError));
-    }
     return executeStream(() {
       Map<String, T> map = {};
       Map<String, rdb.DataSnapshot> snaps = {};
@@ -508,11 +485,8 @@ abstract class RealtimeDataSource<T extends Entity>
     List<DataSelection> selections = const [],
     List<DataSorting> sorts = const [],
     DataPagingOptions options = const DataPagingOptions(),
-    bool isConnected = false,
+    Object? args,
   }) {
-    if (!isConnected) {
-      return Stream.value(Response(status: Status.networkError));
-    }
     return executeStream(() {
       List<T> result = [];
       List<rdb.DataSnapshot> docs = [];
@@ -552,10 +526,9 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> search(
     Checker checker, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (checker.field.isEmpty) return Response(status: Status.invalid);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       List<T> result = [];
       return _QHelper.search(source(params), checker).get().then((event) async {
@@ -589,10 +562,9 @@ abstract class RealtimeDataSource<T extends Entity>
     String id,
     Map<String, dynamic> data, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (id.isEmpty || data.isEmpty) return Response(status: Status.invalid);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final ref = source(params).child(id);
       if (!isEncryptor) {
@@ -625,10 +597,9 @@ abstract class RealtimeDataSource<T extends Entity>
   Future<Response<T>> updateByIds(
     List<UpdatingInfo> updates, {
     DataFieldParams? params,
-    bool isConnected = false,
+    Object? args,
   }) async {
     if (updates.isEmpty) return Response(status: Status.invalid);
-    if (!isConnected) return Response(status: Status.networkError);
     return execute(() {
       final callbacks = updates.map((e) {
         return updateById(e.id, e.data, params: params);
