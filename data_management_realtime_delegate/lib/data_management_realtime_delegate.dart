@@ -1,3 +1,3 @@
-library data_management_realtime_delegate;
+library;
 
 export 'src/source.dart';

@@ -1,11 +1,5 @@
 part of 'source.dart';
 
-class _Limitations {
-  const _Limitations._();
-
-  static const whereIn = 10;
-}
-
 class _QHelper {
   const _QHelper._();
 
