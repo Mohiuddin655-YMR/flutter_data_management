@@ -1,35 +1,6 @@
 part of 'source.dart';
 
 extension _ApiDataFinder on dio.Dio {
-  Future<DataCheckFinder<T, _AS>> checkById<T extends Entity>({
-    required DataBuilder<T> builder,
-    DataEncryptor? encryptor,
-    required Api api,
-    required String endPoint,
-    required String id,
-  }) async {
-    if (id.isNotEmpty) {
-      try {
-        return _checkById<T>(
-          builder: builder,
-          encryptor: encryptor,
-          api: api,
-          endPoint: endPoint,
-          id: id,
-        ).then((value) {
-          if (value.$1 != null) {
-            return (value, null, Status.ok);
-          } else {
-            return (null, null, Status.notFound);
-          }
-        });
-      } catch (e) {
-        return (null, "$e", Status.failure);
-      }
-    } else {
-      return (null, null, Status.invalidId);
-    }
-  }
 
   Future<DataClearFinder<T>> clear<T extends Entity>({
     required DataBuilder<T> builder,
@@ -221,65 +192,6 @@ extension _ApiDataFinder on dio.Dio {
     }
   }
 
-  Future<DataGetFinder<T, _AS>> fetchById<T extends Entity>({
-    required DataBuilder<T> builder,
-    DataEncryptor? encryptor,
-    required Api api,
-    required String endPoint,
-    required String id,
-  }) async {
-    if (id.isNotEmpty) {
-      try {
-        return _fetchById<T>(
-          builder: builder,
-          encryptor: encryptor,
-          api: api,
-          endPoint: endPoint,
-          id: id,
-        ).then((value) {
-          if (value.$1 != null) {
-            return (value, null, Status.ok);
-          } else {
-            return (value, null, Status.notFound);
-          }
-        });
-      } catch (error) {
-        return (null, "$error", Status.failure);
-      }
-    } else {
-      return (null, null, Status.invalidId);
-    }
-  }
-
-  Future<DataGetsFinder<T, _AS>> fetchByIds<T extends Entity>({
-    required DataBuilder<T> builder,
-    DataEncryptor? encryptor,
-    required Api api,
-    required String endPoint,
-    required List<String> ids,
-  }) async {
-    if (ids.isNotEmpty) {
-      try {
-        return _fetchByIds<T>(
-          builder: builder,
-          encryptor: encryptor,
-          api: api,
-          endPoint: endPoint,
-          ids: ids,
-        ).then((value) {
-          if (value.$1 != null) {
-            return (value, null, Status.ok);
-          } else {
-            return (value, null, Status.notFound);
-          }
-        });
-      } catch (error) {
-        return (null, "$error", Status.failure);
-      }
-    } else {
-      return (null, null, Status.invalidId);
-    }
-  }
 
   Stream<DataGetsFinder<T, _AS>> listen<T extends Entity>({
     required DataBuilder<T> builder,
@@ -409,37 +321,6 @@ extension _ApiDataFinder on dio.Dio {
     return controller.stream;
   }
 
-  Future<DataGetsFinder<T, _AS>> query<T extends Entity>({
-    required DataBuilder<T> builder,
-    DataEncryptor? encryptor,
-    required Api api,
-    required String endPoint,
-    List<DataQuery> queries = const [],
-    List<DataSelection> selections = const [],
-    List<DataSorting> sorts = const [],
-    DataPagingOptions options = const DataPagingOptions(),
-  }) async {
-    try {
-      return _query<T>(
-        builder: builder,
-        encryptor: encryptor,
-        api: api,
-        endPoint: endPoint,
-        queries: queries,
-        selections: selections,
-        sorts: sorts,
-        options: options,
-      ).then((value) {
-        if ((value.$1 ?? []).isNotEmpty) {
-          return (value, null, Status.ok);
-        } else {
-          return (value, null, Status.notFound);
-        }
-      });
-    } catch (error) {
-      return (null, "$error", Status.failure);
-    }
-  }
 
   Future<DataGetsFinder<T, _AS>> search<T extends Entity>({
     required DataBuilder<T> builder,

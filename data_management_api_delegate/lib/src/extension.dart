@@ -69,28 +69,6 @@ extension _ApiExtension on dio.Dio {
     return data.length == counter;
   }
 
-  Future<DataCheckResponse<T, _AS>> _checkById<T extends Entity>({
-    required DataBuilder<T> builder,
-    DataEncryptor? encryptor,
-    required Api api,
-    required String endPoint,
-    required String id,
-  }) async {
-    var isEncryptor = encryptor != null;
-    final I = api._parent(endPoint);
-    final request = api.request.isGetRequest ? get(I) : post(I);
-    return request.then((i) async {
-      var data = i.data;
-      if (i.statusCode == api.status.ok) {
-        if (data is Map<String, dynamic>) {
-          var v = isEncryptor ? await encryptor.output(data) : data;
-          return (builder(v), i);
-        }
-      }
-      return (null, i.data);
-    }).onError(ApiDataExtensionalException.future);
-  }
-
   Future<bool> _deleteById<T extends Entity>({
     required DataBuilder<T> builder,
     DataEncryptor? encryptor,
@@ -413,7 +391,7 @@ extension _ApiExtension on dio.Dio {
         return _fetchById(
                 builder: builder, api: api, endPoint: endPoint, id: id)
             .then((value) async {
-          final x = value.$1?.source ?? {};
+          final x = value.$1?.primary ?? {};
           x.addAll(data);
           var v = await encryptor.input(x);
           if (v.isNotEmpty) {

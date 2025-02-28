@@ -45,7 +45,9 @@ class _QHelper {
         reference = reference.where(
           i.field,
           arrayContains: i.arrayContains,
+          arrayNotContains: i.arrayNotContains,
           arrayContainsAny: i.arrayContainsAny,
+          arrayNotContainsAny: i.arrayNotContainsAny,
           isEqualTo: i.isEqualTo,
           isNotEqualTo: i.isNotEqualTo,
           isGreaterThan: i.isGreaterThan,
